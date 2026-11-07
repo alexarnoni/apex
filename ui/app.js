@@ -62,6 +62,26 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const $app = () => document.getElementById('app');
 const ord = (n) => `${n}º`;
 
+// --- tema: automático (segue o sistema) > claro > escuro ------------------------------
+
+const THEMES = ['auto', 'light', 'dark'];
+const THEME_LABEL = { auto: '◐ Auto', light: '☀ Claro', dark: '☾ Escuro' };
+function readTheme() {
+  try { const t = window.localStorage.getItem('bandeirada.theme'); return THEMES.includes(t) ? t : 'auto'; } catch { return 'auto'; }
+}
+function applyTheme(t) {
+  if (t === 'auto') document.documentElement.removeAttribute('data-theme');
+  else document.documentElement.setAttribute('data-theme', t);
+}
+let theme = readTheme();
+applyTheme(theme);
+function cycleTheme() {
+  theme = THEMES[(THEMES.indexOf(theme) + 1) % THEMES.length];
+  applyTheme(theme);
+  try { window.localStorage.setItem('bandeirada.theme', theme); } catch { /* sem armazenamento: vale só nesta sessão */ }
+}
+const themeBtn = () => `<button class="btn ghost small" data-act="theme" title="Trocar tema: automático, claro ou escuro" aria-label="Tema: ${esc(THEME_LABEL[theme])}">${THEME_LABEL[theme]}</button>`;
+
 // --- salvamento (slots no localStorage) ---------------------------------------
 
 function pickStorage() {
@@ -393,8 +413,9 @@ function ladder(view) {
   const cur = view.base ? Object.values(CATEGORIES).find((c) => c.name === view.base.category)?.id : null;
   const ids = [...BASE_LADDER, 'f1'];
   const curIdx = inF1 ? ids.length - 1 : ids.indexOf(cur);
+  const LADDER_COLOR = { kart: '#1fb877', f4: '#0aa5c9', f3: '#3b7dea', f2: '#9b4dff', f1: '#ff3d8b' };
   return `<div class="ladder" role="img" aria-label="Pirâmide de categorias">${ids.map((id, i) =>
-    `<div class="${i < curIdx ? 'done' : ''} ${i === curIdx ? 'now' : ''}">${esc(id === 'f1' ? 'F1' : id.toUpperCase())}</div>`).join('')}</div>`;
+    `<div class="${i < curIdx ? 'done' : ''} ${i === curIdx ? 'now' : ''}" style="--c:${LADDER_COLOR[id] ?? '#7b3fe4'}">${esc(id === 'f1' ? 'F1' : id.toUpperCase())}</div>`).join('')}</div>`;
 }
 
 function header(view) {
@@ -407,6 +428,7 @@ function header(view) {
     <button class="btn ghost small" data-act="undo" ${undoStack.length ? '' : 'disabled'}>Desfazer</button>
     <button class="btn ghost small" data-act="export-current">Salvar em arquivo</button>
     <button class="btn ghost small" data-act="help-open">Ajuda</button>
+    ${themeBtn()}
     <button class="btn ghost small" data-act="newgame">${saves.available ? 'Menu' : 'Sair'}</button>
   </header>${ui.confirmNew ? `<div class="note">Sem salvamento neste navegador: sair perde a carreira (use "Salvar em arquivo" antes). <button class="btn small" data-act="newgame-yes">Sair mesmo assim</button> <button class="btn ghost small" data-act="newgame-no">Cancelar</button></div>` : ''}
   ${ui.saveWarn ? `<div class="note err">O navegador recusou gravar a carreira. Ela continua nesta aba, mas use "Salvar em arquivo" para não perder.</div>` : ''}`;
@@ -438,6 +460,35 @@ function layout(view, main, aside = '') {
   </div>`;
 }
 
+// Atributos do piloto em barras: nível (com a faixa do teto estimado marcada), fama e estilo de pilotagem.
+function attributes(p) {
+  const clamp = (n) => Math.max(0, Math.min(100, n));
+  const skill = clamp(Math.round(p.skill));
+  const [lo, hi] = p.potentialBand;
+  const fame = Math.round(p.fame * 10) / 10;
+  const famePct = clamp((p.fame / 40) * 100);
+  const fameTier = [[2, 'Desconhecido'], [6, 'Promessa'], [12, 'Conhecido'], [22, 'Famoso'], [35, 'Estrela']].find(([lim]) => p.fame < lim)?.[1] ?? 'Lenda';
+  const style = STYLES[p.style];
+  const gap = hi - skill;
+  const room = gap <= 0 ? 'Você já está no topo da faixa estimada.' : `Falta até ${gap} ponto${gap === 1 ? '' : 's'} para o teto estimado.`;
+  return `<div class="attrs">
+    <div class="attr" title="Sua habilidade hoje. A faixa clara é o teto que os olheiros estimam.">
+      <div class="attr-head"><span>Nível</span><b class="num">${skill}</b></div>
+      <div class="meter lg"><i class="fill skill" style="width:${skill}%"></i><i class="band" style="left:${clamp(lo)}%;width:${clamp(hi) - clamp(lo)}%"></i></div>
+      <div class="attr-foot mute small">Teto estimado: <b class="num">${lo}–${hi}</b>. ${esc(room)}</div>
+    </div>
+    <div class="attr" title="Sobe com resultados e mídia; abre portas no mercado.">
+      <div class="attr-head"><span>Fama</span><b class="tier">${esc(fameTier)} <span class="num mute small">${fame}</span></b></div>
+      <div class="meter"><i class="fill fame" style="width:${famePct}%"></i></div>
+      <div class="attr-foot mute small">Sobe com títulos, pódios e mídia. Atrai equipes melhores.</div>
+    </div>
+    <div class="attr">
+      <div class="attr-head"><span>Estilo</span><b>${esc(style?.name ?? p.style)}</b></div>
+      <div class="attr-foot mute small">${esc(style?.text ?? '')}</div>
+    </div>
+  </div>`;
+}
+
 function ficha(view) {
   const p = view.player;
   const c = p.career;
@@ -458,13 +509,14 @@ function ficha(view) {
       <div class="bar-meter"><i style="width:${trustPct}%"></i></div></div>` : '';
   return `<section class="card ficha" aria-label="Ficha do piloto">
     <div class="ficha-top">
-      <div class="ovr" title="Nível: a sua habilidade hoje (0 a 100)"><b>${esc(p.skill)}</b><small>nível</small></div>
+      <div class="ovr" title="Nível: a sua habilidade hoje (0 a 100)"><b>${esc(Math.round(p.skill))}</b><small>nível</small></div>
       <div class="ficha-id">
         <div class="ficha-name">${esc(p.name)}</div>
         <div class="chips-row"><span class="chip">#${esc(p.number)}</span><span class="chip">${esc(p.flag ?? '')}</span><span class="chip">${esc(STYLES[p.style]?.name ?? p.style)}</span></div>
       </div>
     </div>
-    <div class="stats">${stat('Idade', p.age)}${stat('Fama', Math.round(p.fame * 10) / 10)}${stat('Teto estimado', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
+    ${attributes(p)}
+    <div class="stats">${stat('Idade', p.age)}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
     ${team}
     <div class="counters">${stat('GP', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Poles', c.poles)}</div>
     <div class="vitrine"><small class="mute">VITRINE</small> ${trophies.length ? trophies.join(' ') : '<span class="mute small">vazia por enquanto</span>'}</div>
@@ -485,7 +537,7 @@ function driversTable(f1) {
   for (const r of shown) {
     if (r.pos - prev > 1) rows.push('<tr><td colspan="5" class="mute" style="text-align:center">···</td></tr>');
     prev = r.pos;
-    rows.push(`<tr class="${r.isPlayer ? 'you' : ''}"><td class="pos">${r.pos}</td>
+    rows.push(`<tr class="${r.isPlayer ? 'you' : ''}"><td class="pos ${r.pos <= 3 ? `p${r.pos}` : ''}">${r.pos}</td>
       <td class="car"><i style="background:${esc(TEAM_COLOR[r.team] ?? 'var(--line)')}"></i></td>
       <td class="name">${esc(r.name)}</td><td class="dl">${delta(r.delta)}</td><td class="pts">${esc(r.points)}</td></tr>`);
   }
@@ -503,7 +555,7 @@ function teamsTable(f1) {
 function racesList(f1) {
   if (!f1.races.length) return '<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>';
   const items = [...f1.races].reverse().map((r) => {
-    const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? 'trophy' : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
+    const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? `trophy p${r.playerPos}` : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
     return `<li><div class="row" style="gap:8px"><b>C${r.n}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}</li>`;
   }).join('');
   return `<ul class="racelist">${items}</ul>`;
@@ -549,7 +601,7 @@ function screenCreate() {
     : free.length === 0 ? ''
       : `<label class="field">Salvar no slot<select id="f-slot">${free.map((s) => `<option value="${s.slot}" ${String(s.slot) === String(d.slot) ? 'selected' : ''}>Slot ${s.slot}</option>`).join('')}</select></label>`;
   const noSlots = saves.available && free.length === 0;
-  return `<header class="bar">${LOGO}<span class="chip">protótipo</span><button class="btn ghost small" data-act="help-open">Ajuda</button></header>
+  return `<header class="bar">${LOGO}<span class="chip">protótipo</span><button class="btn ghost small" data-act="help-open">Ajuda</button>${themeBtn()}</header>
   <section class="card">
     <h1>Da largada à bandeirada</h1>
     <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
@@ -918,6 +970,7 @@ document.addEventListener('click', (e) => {
     case 'terms': ui.terms = { years: ui.terms.years, clause: ui.terms.clause, exit: ui.terms.exit }; return decide({ years: ui.terms.years, clause: ui.terms.clause, exitClause: ui.terms.exit });
     case 'copy': return copySummary();
     case 'undo': return undo();
+    case 'theme': cycleTheme(); render(); return undefined;
     case 'copy-error': return copyErrorReport();
     case 'about-open': ui.aboutOpen = true; ui.helpOpen = false; ui.fb.open = false; render(); focusModal(); return undefined;
     case 'help-open': track('ajuda-aberta'); ui.aboutOpen = false; ui.helpOpen = true; ui.fb.open = false; render(); focusModal(); return undefined;
