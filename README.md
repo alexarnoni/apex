@@ -112,6 +112,8 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
 
 ## Publicar o jogo (GitHub Pages)
 
+**No ar:** https://alexarnoni.github.io/apex/ (publica sozinho a cada push na `main`).
+
 `npm run build` gera `dist/index.html` (o jogo inteiro em um arquivo). O workflow [.github/workflows/pages.yml](.github/workflows/pages.yml) roda os testes, constrói e publica a cada push na `main`.
 
 1. Criar o repositório e enviar o código (Pages gratuito exige repositório **público**, então o código fica visível):
