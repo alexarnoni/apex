@@ -1,0 +1,16 @@
+{
+  "name": "apex",
+  "version": "0.1.0",
+  "description": "Jogo de carreira de F1: do karting à glória. Engine de simulação isomórfica (Node + navegador).",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "balance": "node tools/balance.js",
+    "build": "node tools/build-ui.js",
+    "dev": "node tools/build-ui.js && npx serve dist"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

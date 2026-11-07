@@ -1,0 +1,116 @@
+# Apex: ideias e melhorias, do mais fácil ao mais difícil
+
+Lista consolidada de tudo que surgiu até agora, ordenada pelo custo de implementar. Esforço é uma estimativa de trabalho de código + teste + calibração (P = horas, M = alguns dias, G = semanas).
+Itens já registrados como dívida no README estão marcados com (README).
+
+## Nível 1: muito fácil (só UI, texto ou dados)
+
+| # | Item | Esforço | Notas |
+|---|---|---|---|
+| 1.1 | Mostrar skill, potencial e estilo do jogador na tela | P | A engine já tem os valores; falta decidir se o potencial fica escondido ou visível. |
+| 1.2 | Tutorial curto e glossário (status p1/p2, scouting, confiança, academia) | P | Só texto e uma tela de ajuda. |
+| 1.3 | Revisar e reescrever os textos dos eventos | P | A spec pede revisão sua antes de divulgar. Tudo em `data/events.js`. |
+| 1.4 | Resumo curto depois de cada corrida (o que decidiu o resultado) | P | Usa dados que já existem (evento, largada, DNF). |
+| 1.5 | Revisar nomes e vínculos reais das equipes de base e academias | P | Hoje são aproximações de jogo (Prema-Ferrari, DAMS-Alpine). |
+| 1.6 | Cartão de oferta com mais dados (histórico recente, vantagens e riscos) | P | Dados de equipe já existem; falta exibir. |
+| 1.7 | Ajustes de mobile e acessibilidade | P | CSS e foco de teclado. |
+| 1.8 | Mais eventos narrativos (patrocínio, família, mídia, engenheiro de pista) | P por evento | Só linhas novas na tabela, sem código novo. |
+
+## Nível 2: fácil (pouca lógica nova na engine)
+
+| # | Item | Esforço | Notas |
+|---|---|---|---|
+| 2.1 | Estatísticas de carreira completas (por equipe, recordes, comparação com o companheiro) | P-M | A engine guarda `seasons`; falta agregar e exibir. |
+| 2.2 | Gráfico de evolução do jogador ano a ano | P-M | Guardar um ponto por temporada no estado. |
+| 2.3 | Companheiros de base visíveis (quem correu ao seu lado) | M | Hoje o grid de base é descartável; guardar o companheiro de equipe por temporada. |
+| 2.4 | Pedir uma equipe específica numa oferta | M | Regra nova: aceita ou recusa pela nota. |
+| 2.5 | Ranking local e botão de "copiar carreira" mais completo | P | Já existe o resumo copiável; ampliar com linha do tempo. |
+| 2.6 | Telemetria anônima para calibrar com jogo real | M | Exige um destino para os dados (ver 4.1). |
+| 2.7 | Salvar carreira de verdade (export e import de arquivo) | M | Estado já é serializável; falta versão e migração de formato. |
+| 2.8 | Som e animação leve | M | Só front-end. |
+
+## Nível 3: médio (sistemas novos, mas isolados)
+
+| # | Item | Esforço | Notas |
+|---|---|---|---|
+| 3.1 | Rival persistente do kart até a F1 (evento `rival_reencontro`) | M | Mantê-lo no estado e inseri-lo no mundo da F1. Hoje o "rival do ano" é só o piloto de skill mais próxima. |
+| 3.2 | Rivalidades na história (quem te venceu, duelos marcantes) | M | Depende de 3.1. |
+| 3.3 | Equipes-satélite e cláusula de renovação na entrada da F1 | M | Descrito em `spec-sistemas`. |
+| 3.4 | Academias de verdade (benefícios e cobranças) | M | Vincula convite de academia a equipes da F1. |
+| 3.5 | Moral e confiança da equipe como força invisível (README) | M | Modulador sobre ofertas e desenvolvimento. |
+| 3.6 | Orçamento de equipe seguindo o sucesso, com piso (README) | M | Mexe no desenvolvimento do carro; recalibrar o `npm run balance`. |
+| 3.7 | Contratos mais ricos (cláusula de performance, rescisão) | M | Estende o `contract_terms`. |
+| 3.8 | Mercado de transferências com notícias e rumores | M | Texto gerado a partir do mercado que já existe. |
+| 3.9 | Atributos separados do piloto (classificação, corrida, chuva, largada, pneus) | M-G | Afeta o motor de corrida e toda a calibração. |
+| 3.10 | Modo fictício (arquivo de substituição de nomes) (README) | M | Dados já estão em arquivos; falta um seletor e geração de nomes. |
+| 3.11 | Rotas alternativas (Super Fórmula, IndyCar, Fórmula E) como tabela leve que regenera o scouting (README) | M-G | Hoje a rota alternativa é tela terminal. Inclui legado e `altRouteTitles`. |
+| 3.12 | Salvar e recarregar em nuvem | M | Depende de 4.1. |
+
+## Nível 4: difícil (infraestrutura ou mudança grande de escopo)
+
+| # | Item | Esforço | Notas |
+|---|---|---|---|
+| 4.1 | Backend de ranking e compartilhamento (FastAPI + Postgres) | G | Especificado em `spec-backend`: nota recalculada no servidor, plausibilidade, rate limit. |
+| 4.2 | Página de compartilhamento com card da carreira | M-G | Depende de 4.1. |
+| 4.3 | Anti-fraude forte por replay determinístico no servidor | G | A arquitetura já permite (engine isomórfica + seed + decisões); falta o executor. |
+| 4.4 | Mundo vivo mais rico (fusões, saída de marcas, equipes novas) | G | Reescreve partes do mercado e do orçamento. |
+| 4.5 | Pilotos de base com carreiras próprias (sobem e caem) | G | O grid deixa de ser descartável; custo de simulação aumenta. |
+| 4.6 | Fornecedor de motor e mudança de regulamento por fábrica | G | Substitui o `regulation` atual; recalibrar dinastias. |
+| 4.7 | Confiabilidade por componente, troca e punição de grid | G | Exige estado de componentes por carro. |
+
+## Nível 5: muito difícil (o caminho do "100% real")
+
+Cada item muda decisões já fechadas (base resumida, sem economia, resultado por ordem de chegada). Fazer em ordem, porque um depende do outro.
+
+| # | Item | Esforço | Notas |
+|---|---|---|---|
+| 5.1 | Calendário e pistas reais com características diferentes | G | Dados por pista (alta velocidade, rua, chuva) e efeito no motor. |
+| 5.2 | Fim de semana completo (treinos livres, Q1/Q2/Q3, sprint, corrida) | G | Muda o ritmo e o número de decisões por corrida. |
+| 5.3 | Meteorologia dinâmica durante a corrida | G | Hoje a chuva é sorteada uma vez por corrida. |
+| 5.4 | Regras da FIA (limites de pista, punições, bandeira vermelha, safety car) | G | O invariante do README vale: aplicar antes da premiação. |
+| 5.5 | Modelo de tempo de volta (degradação de pneu, combustível, tráfego) | G+ | Substitui o `simWeekend`; é a maior reescrita da engine. |
+| 5.6 | Pit stops e estratégia de pneus de verdade | G+ | Depende de 5.5. |
+| 5.7 | Duelo roda a roda, DRS e incidentes com consequência | G+ | Depende de 5.5 e 5.6. |
+| 5.8 | Desenvolvimento com teto de custos e túnel de vento limitado | G | Depende de 4.6. |
+| 5.9 | Base simulada corrida a corrida (e não uma temporada resumida) | G+ | Contradiz a decisão atual de 3 a 5 minutos até a F1; precisa de nova decisão de produto. |
+
+## Funcional: o que faz o jogo funcionar de verdade (transversal)
+
+Itens que não são "recurso de jogo", mas decidem se dá para jogar sem perder progresso e testar com amigos. Ordenados do mais fácil ao mais difícil. Vários valem mais que itens dos níveis 3 a 5; a coluna Nível indica onde caberiam na tabela principal.
+
+| # | Item | Esforço | Nível | Notas |
+|---|---|---|---|---|
+| F.1 | Transformar o projeto em repositório git | P | 1 | Hoje não há histórico nem como desfazer mudança ruim. Primeira coisa a resolver. |
+| F.2 | Mostrar a seed na tela durante o jogo | P | 1 | O campo existe na criação; falta exibir, para dois amigos jogarem a mesma carreira e compararem. |
+| F.3 | Explicar o porquê (nota de scouting, status, oferta) em uma linha | P | 1 | Ensina as regras sem tutorial longo. |
+| F.4 | Tela de erro útil com "copiar relatório" (estado, seed, últimas decisões) | P | 1 | Hoje o erro aparece só como faixa vermelha. |
+| F.5 | `engineVersion` no snapshot e aviso de save antigo | P | 1 | Evita erro estranho depois de mudar a engine. |
+| F.6 | Desfazer a última decisão | P-M | 2 | O estado já é imutável: guardar uma pilha de estados é quase de graça. |
+| F.7 | Salvar na máquina (`localStorage`), com alguns slots e exportar arquivo | M | 2 | Hoje o progresso fica em `sessionStorage` e some ao fechar a aba. |
+| F.8 | Controle de velocidade (simular 5 corridas, até o próximo evento, pular eventos sem escolha) | M | 2 | Hoje são 24 cliques por temporada; já existe "simular o resto da temporada". |
+| F.9 | Formulário de feedback com resumo da carreira, seed e texto | M | 2 | Hoje só existe "copiar resumo" no fim da carreira. |
+| F.10 | Seletor de dificuldade ou modo assistido | M | 2 | Ajusta potencial e frequência de eventos; exige recalibrar cada nível. |
+| F.11 | Hospedagem fora do Artifact (Cloudflare Pages ou GitHub Pages) | M | 2 | Dá link público e estável com `dist/apex.html`. Hoje o link é privado e depende do menu Compartilhar. |
+| F.12 | Desafio diário (uma seed por dia) e ranking local dos amigos | M | 3 | Funciona sem backend, com o resumo copiado. |
+| F.13 | Teste automático da interface no `npm test` | M | 3 | O percurso completo clicando foi feito à mão; automatizar pega quebras na UI antes de publicar. |
+| F.14 | Pipeline único de publicação (`npm run release`) | M | 3 | Roda testes e balanceamento, constrói e publica; evita publicar versão quebrada. |
+| F.15 | PWA e modo offline | M | 3 | O jogo todo já roda no cliente. |
+| F.16 | Conquistas e hall da fama local | M | 3 | Dá objetivo a quem já ganhou um título. |
+| F.17 | Teste de desempenho em carreira longa e celular fraco | M | 3 | Cada transição clona o estado inteiro; medir antes de o mundo crescer. |
+| F.18 | Tradução (i18n): separar os textos do código | M-G | 4 | Mais barato fazer antes de o volume de texto crescer. |
+
+## Pendências de qualidade (transversais)
+
+- Calibrar com jogo real, não com política passiva: taxa de título (hoje 24% passivo), crescimento do jogador na base, frequência de eventos, frequência de `fia_polemica_titulo` e `contrato_vazado` (nunca dispararam em simulação passiva).
+- Mais testes de regressão para as fórmulas e ferramentas de balanceamento para a carreira do jogador.
+- Jogar uma carreira inteira numa tela real de celular.
+- Decidir se `story_event` entra formalmente na spec-loop-jogador (hoje é um tipo novo, fora da lista de tipos).
+
+## Sugestão de ordem
+
+0. Funcional barato primeiro: F.1 a F.7 e F.11. São baratos e dão segurança (git, desfazer, salvar, link público) para o resto.
+1. Nível 1 inteiro, junto com 2.1 a 2.3: deixa o jogo mais rico rápido e dá material para os amigos testarem. Depois, F.8 e F.9 (ritmo e feedback), que os amigos mais vão sentir.
+2. 3.1 e 3.2 (rival persistente): é o que dá alma à narrativa.
+3. 3.3, 3.4 e 3.11 (satélites, academias, rotas alternativas): fecham os becos sem saída da carreira.
+4. 4.1 e 4.2 (ranking e compartilhamento): quando o jogo já agradar.
+5. Nível 5 só depois de decidir qual camada de realismo importa mais.
