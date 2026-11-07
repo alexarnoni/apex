@@ -144,6 +144,8 @@ Endereço escolhido: **https://bandeirada.alexarnoni.com** (o domínio `alexarno
 4. **Análise de uso (GoatCounter, sem cookies):** crie o site em goatcounter.com, escolha o código (a parte antes de `.goatcounter.com`) e rode `gh variable set BANDEIRADA_GOATCOUNTER --body <codigo>` e o `gh workflow run` acima. Sem a variável, nenhuma análise é carregada. Marcos enviados: `carreira-iniciada`, `chegou-na-f1`, `carreira-terminada-*`, `fim-da-linha-na-base`, `ajuda-aberta`, `feedback-aberto`, `save-exportado`. Nunca vão nome, seed ou dados da carreira.
 5. Para testar localmente: `BANDEIRADA_SITE_URL=https://bandeirada.alexarnoni.com BANDEIRADA_GOATCOUNTER=codigo npm run build`.
 
+**Feedback por e-mail:** o botão flutuante "Feedback" e o cartão de fim de carreira enviam para um Worker da Cloudflare (`worker/`), que manda um e-mail para a caixa do autor sem exigir conta do jogador. Falta só o deploy, passo a passo em [worker/README.md](worker/README.md); o endereço do Worker entra como `BANDEIRADA_FEEDBACK_ENDPOINT`. Sem ele, o jogo só oferece "Copiar".
+
 **Licença:** todos os direitos reservados ([LICENSE](LICENSE)); o código é público para consulta. A Bandeirada é um projeto de fã, sem vínculo com a F1, a FIA ou as equipes; o jogo mostra esse aviso no rodapé e no painel "Sobre e privacidade". Antes de qualquer monetização, trocar os nomes reais (modo fictício, roadmap 3.10).
 ## Dívidas de design anotadas
 

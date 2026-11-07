@@ -7,16 +7,18 @@
 //   BANDEIRADA_SITE_URL       endereço público do site (padrão: o do GitHub Pages), usado em canonical e og:url/og:image
 //   BANDEIRADA_FEEDBACK_URL   destino do botão "Enviar pelo GitHub" (ex.: https://github.com/dono/repo/issues/new)
 //   BANDEIRADA_GOATCOUNTER    código do site no GoatCounter; sem ele nenhuma análise é carregada
+//   BANDEIRADA_FEEDBACK_ENDPOINT  endereço do Worker de feedback (e-mail); sem ele o formulário só copia o relatório
 
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { buildHead, normalizeGoatCounter, normalizeSiteUrl, TITLE } from './site-head.js';
+import { buildHead, normalizeEndpoint, normalizeGoatCounter, normalizeSiteUrl, TITLE } from './site-head.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const siteUrl = normalizeSiteUrl(process.env.BANDEIRADA_SITE_URL);
 const goatcounter = normalizeGoatCounter(process.env.BANDEIRADA_GOATCOUNTER);
+const feedbackEndpoint = normalizeEndpoint(process.env.BANDEIRADA_FEEDBACK_ENDPOINT);
 
 const out = await build({
   entryPoints: [join(root, 'ui/app.js')],
@@ -29,6 +31,7 @@ const out = await build({
   define: {
     __FEEDBACK_URL__: JSON.stringify(process.env.BANDEIRADA_FEEDBACK_URL ?? ''),
     __ANALYTICS__: JSON.stringify(!!goatcounter),
+    __FEEDBACK_ENDPOINT__: JSON.stringify(feedbackEndpoint),
   },
 });
 

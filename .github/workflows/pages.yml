@@ -39,6 +39,8 @@ jobs:
           BANDEIRADA_SITE_URL: ${{ vars.BANDEIRADA_SITE_URL }}
           # BANDEIRADA_GOATCOUNTER: código do site no GoatCounter. Sem ele, nenhuma análise é carregada.
           BANDEIRADA_GOATCOUNTER: ${{ vars.BANDEIRADA_GOATCOUNTER }}
+          # BANDEIRADA_FEEDBACK_ENDPOINT: endereço do Worker de feedback (worker/README.md). Sem ele o formulário só copia.
+          BANDEIRADA_FEEDBACK_ENDPOINT: ${{ vars.BANDEIRADA_FEEDBACK_ENDPOINT }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

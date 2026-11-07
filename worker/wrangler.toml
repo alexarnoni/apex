@@ -1,0 +1,15 @@
+# Worker de feedback da Bandeirada: recebe o POST do jogo e envia um e-mail pelo Email Routing.
+# Passo a passo em worker/README.md.
+name = "bandeirada-feedback"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# Binding de envio de e-mail. O destino NÃO fica aqui: vem do secret FEEDBACK_TO, para o seu
+# endereço não ficar num repositório público.
+send_email = [{ name = "EMAIL" }]
+
+[vars]
+# Só estes endereços do jogo podem chamar o Worker (o navegador manda o Origin).
+ALLOWED_ORIGINS = "https://bandeirada.alexarnoni.com,https://alexarnoni.github.io"
+# Remetente: precisa ser um endereço do seu domínio com Email Routing ativo.
+FEEDBACK_FROM = "feedback@alexarnoni.com"

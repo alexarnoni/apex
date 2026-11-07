@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildFeedback, careerSnapshot, sendUrl, FEEDBACK_KINDS } from '../ui/feedback.js';
+import { buildFeedback, careerSnapshot, sendUrl, feedbackPayload, sendFeedback, FEEDBACK_KINDS } from '../ui/feedback.js';
 import { createCareer, applyDecision } from '../engine/game.js';
 
 const career = () => applyDecision(createCareer({ surname: 'Teste', number: 7, style: 'con', seed: 99 }), { option: 'A' });
@@ -47,4 +47,33 @@ test('sendUrl: sem destino não há link; com destino codifica título e corta c
   assert.ok(big.length <= 6000, `url com ${big.length}`);
   assert.match(decodeURIComponent(big), /texto cortado/);
   assert.match(sendUrl('https://x.dev/new?a=1', { kind: 'k', text: 't', body: 'b' }), /new\?a=1&title=/);
+});
+
+test('feedbackPayload limpa espaços, mantém o campo-isca vazio e converte a versão em texto', () => {
+  const p = feedbackPayload({ kind: 'bug', text: '  travou  ', rating: 3, contact: ' a@b.com ', report: 'r', version: 1 });
+  assert.deepEqual(p, { kind: 'bug', text: 'travou', rating: 3, contact: 'a@b.com', report: 'r', version: '1', website: '' });
+  assert.equal(feedbackPayload({}).kind, 'other');
+});
+
+test('sendFeedback: sucesso envia JSON por POST e devolve ok', async () => {
+  let seen;
+  const fake = async (url, init) => { seen = { url, init }; return { ok: true, status: 200 }; };
+  const r = await sendFeedback('https://fb.example/', { text: 'oi' }, fake);
+  assert.deepEqual(r, { ok: true });
+  assert.equal(seen.url, 'https://fb.example/');
+  assert.equal(seen.init.method, 'POST');
+  assert.equal(seen.init.headers['content-type'], 'application/json');
+  assert.deepEqual(JSON.parse(seen.init.body), { text: 'oi' });
+});
+
+test('sendFeedback: limite, erro com mensagem, erro sem corpo e rede fora viram motivos legíveis', async () => {
+  const r429 = await sendFeedback('x', {}, async () => ({ ok: false, status: 429 }));
+  assert.match(r429.reason, /Muitos envios/);
+  const rMsg = await sendFeedback('x', {}, async () => ({ ok: false, status: 400, json: async () => ({ error: 'Escreva uma mensagem ou dê uma nota.' }) }));
+  assert.equal(rMsg.reason, 'Escreva uma mensagem ou dê uma nota.');
+  const rVazio = await sendFeedback('x', {}, async () => ({ ok: false, status: 502, json: async () => { throw new Error('sem json'); } }));
+  assert.match(rVazio.reason, /O envio falhou/);
+  const rRede = await sendFeedback('x', {}, async () => { throw new TypeError('Failed to fetch'); });
+  assert.equal(rRede.ok, false);
+  assert.match(rRede.reason, /Sem conexão/);
 });

@@ -9,6 +9,9 @@ export const FEEDBACK_KINDS = {
   other: 'Outro',
 };
 
+// Títulos para o relatório: os tipos do formulário e o do fim de carreira (que não aparece na lista).
+const KIND_TITLES = { ...FEEDBACK_KINDS, career: 'Fim de carreira' };
+
 const GITHUB_URL_LIMIT = 6000; // o GitHub recusa URLs de "nova issue" muito longas
 
 // Resumo da carreira para o relatório. `state` é o estado cru do jogo (só leitura).
@@ -27,9 +30,10 @@ export function careerSnapshot(state, { fullHistory = false } = {}) {
   return lines.join('\n');
 }
 
-export function buildFeedback({ kind = 'other', text = '', state = null, includeCareer = true, fullHistory = false, userAgent = '' }) {
+export function buildFeedback({ kind = 'other', text = '', rating = null, state = null, includeCareer = true, fullHistory = false, userAgent = '' }) {
   const parts = [
-    `BANDEIRADA · feedback · ${FEEDBACK_KINDS[kind] ?? FEEDBACK_KINDS.other}`,
+    `BANDEIRADA · feedback · ${KIND_TITLES[kind] ?? FEEDBACK_KINDS.other}`,
+    ...(rating ? [`Nota: ${rating}/5`] : []),
     '',
     text.trim() || '(sem texto)',
   ];
@@ -52,4 +56,25 @@ export function sendUrl(base, { kind, text, body }) {
     url = make(b);
   }
   return url;
+}
+
+// --- envio para o Worker de feedback (e-mail) ----------------------------------------------------
+
+// Corpo que o Worker espera (ver worker/feedback-core.js). `website` é o campo-isca contra robôs: fica vazio.
+export function feedbackPayload({ kind = 'other', text = '', rating = null, contact = '', report = '', version = '', website = '' }) {
+  return { kind, text: text.trim(), rating, contact: contact.trim(), report, version: String(version), website };
+}
+
+// Envia por POST e devolve { ok: true } ou { ok: false, reason } com um motivo pronto para mostrar ao jogador.
+export async function sendFeedback(endpoint, payload, fetchImpl = globalThis.fetch) {
+  try {
+    const res = await fetchImpl(endpoint, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+    if (res.ok) return { ok: true };
+    if (res.status === 429) return { ok: false, reason: 'Muitos envios seguidos. Tente de novo em alguns minutos.' };
+    let msg = '';
+    try { msg = (await res.json()).error ?? ''; } catch { /* resposta sem JSON */ }
+    return { ok: false, reason: msg || 'O envio falhou. Use "Copiar" e mande pela conversa.' };
+  } catch {
+    return { ok: false, reason: 'Sem conexão com o servidor de feedback. Use "Copiar" e mande pela conversa.' };
+  }
 }

@@ -5,12 +5,15 @@ import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '.
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { TEAMS_F1 } from '../data/world2026.js';
 import { createSaves } from './saves.js';
-import { buildFeedback, sendUrl, FEEDBACK_KINDS } from './feedback.js';
+import { buildFeedback, careerSnapshot, sendUrl, feedbackPayload, sendFeedback, FEEDBACK_KINDS } from './feedback.js';
 
 // Destino opcional do feedback (ex.: página "nova issue" de um repositório), definido no build
 // com BANDEIRADA_FEEDBACK_URL. Sem ele o formulário só copia o relatório.
 // eslint-disable-next-line no-undef
 const FEEDBACK_URL = typeof __FEEDBACK_URL__ !== 'undefined' ? __FEEDBACK_URL__ : '';
+// Endereço do Worker que recebe o feedback e o envia por e-mail (definido no build).
+// eslint-disable-next-line no-undef
+const FEEDBACK_ENDPOINT = typeof __FEEDBACK_ENDPOINT__ !== 'undefined' ? __FEEDBACK_ENDPOINT__ : '';
 // Análise de uso (GoatCounter) só existe se o build recebeu BANDEIRADA_GOATCOUNTER.
 // eslint-disable-next-line no-undef
 const ANALYTICS = typeof __ANALYTICS__ !== 'undefined' ? __ANALYTICS__ : false;
@@ -50,7 +53,7 @@ let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
-let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '', contact: '', status: '' }, end: { rating: null, text: '', include: true, status: '', msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -165,7 +168,7 @@ const HELP = [
 ];
 
 function helpPanel() {
-  return `<section class="card focus" id="help-panel"><div class="row" style="justify-content:space-between"><h2>Como funciona</h2><button class="btn ghost small" data-act="help-close">Fechar</button></div>
+  return `<section class="card focus" id="help-panel"><div class="row" style="justify-content:space-between"><h2>Como funciona</h2><button class="btn ghost small" data-act="modal-close">Fechar</button></div>
     ${HELP.map(([t, d]) => `<details><summary>${esc(t)}</summary><p style="margin-top:6px">${esc(d)}</p></details>`).join('')}</section>`;
 }
 
@@ -175,21 +178,51 @@ function aboutPanel() {
   const stats = ANALYTICS
     ? 'O site conta visitas e etapas da carreira (como "chegou à F1") com o GoatCounter, sem cookies e sem dados pessoais. O nome do piloto, a seed e o conteúdo da carreira não são enviados.'
     : 'O site não coleta estatísticas de uso.';
-  return `<section class="card focus" id="about-panel"><div class="row" style="justify-content:space-between"><h2>Sobre e privacidade</h2><button class="btn ghost small" data-act="about-close">Fechar</button></div>
+  const feedback = FEEDBACK_ENDPOINT
+    ? 'O feedback só sai quando você clica em Enviar. O texto que você escrever, o contato (se preencher) e, se marcar, a seed e as últimas decisões da carreira chegam por e-mail ao autor do jogo. Nada mais é coletado.'
+    : 'O feedback só sai se você copiar ou enviar. Se marcar a opção, o relatório leva a seed e as últimas decisões da carreira.';
+  return `<section class="card focus" id="about-panel"><div class="row" style="justify-content:space-between"><h2>Sobre e privacidade</h2><button class="btn ghost small" data-act="modal-close">Fechar</button></div>
     <details open><summary>Sobre a Bandeirada</summary><p style="margin-top:6px">A Bandeirada é um projeto de fã, independente, sem vínculo com a Fórmula 1, a FIA, as equipes ou os pilotos citados. Nomes, marcas e logotipos pertencem aos seus donos e aparecem só para ambientar o jogo. Os resultados são simulados e não retratam pessoas reais.</p></details>
     <details open><summary>Privacidade</summary>
-      <p style="margin-top:6px">Sua carreira fica salva só no seu navegador. Nada dela é enviado a nenhum servidor.</p>
+      <p style="margin-top:6px">Sua carreira fica salva só no seu navegador. Ela só sai daqui se você mandar um feedback com o resumo da carreira marcado.</p>
       <p style="margin-top:6px">${esc(stats)}</p>
       <p style="margin-top:6px">As fontes do texto vêm do Google Fonts, então o Google vê o endereço IP de quem abre o site.</p>
-      <p style="margin-top:6px">O feedback só sai se você copiar ou enviar. Se marcar a opção, o relatório leva a seed e as últimas decisões da carreira.</p></details>
+      <p style="margin-top:6px">${esc(feedback)}</p></details>
     <details open><summary>Código e licença</summary><p style="margin-top:6px">O código está visível em <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">${REPO_URL.replace('https://', '')}</a>, com todos os direitos reservados.</p></details></section>`;
 }
 
+const anyModal = () => ui.aboutOpen || ui.helpOpen || ui.fb.open;
+
 function footer() {
-  return `<footer class="foot">Projeto de fã independente, sem vínculo com a F1, a FIA ou as equipes. <button class="linkbtn" data-act="about-open">Sobre e privacidade</button></footer>`;
+  const fab = anyModal() ? '' : `<button class="fab" data-act="fb-open" aria-label="Enviar feedback"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h16v12H8l-4 4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>Feedback</button>`;
+  return `<footer class="foot">Projeto de fã independente, sem vínculo com a F1, a FIA ou as equipes. <button class="linkbtn" data-act="about-open">Sobre e privacidade</button> · Achou algo estranho? <button class="linkbtn" data-act="fb-open">Conte</button></footer>${fab}`;
 }
 
-const panels = () => (ui.aboutOpen ? aboutPanel() : '') + (ui.helpOpen ? helpPanel() : '') + (ui.fb.open ? feedbackPanel() : '');
+// Painéis (ajuda, sobre, feedback) abrem numa janela por cima da tela, com fundo escurecido.
+function modal(label, inner) {
+  return `<div class="modal-backdrop" data-act="modal-close"><div class="modal" role="dialog" aria-modal="true" aria-label="${esc(label)}">${inner}</div></div>`;
+}
+
+const panels = () => {
+  if (ui.aboutOpen) return modal('Sobre e privacidade', aboutPanel());
+  if (ui.helpOpen) return modal('Como funciona', helpPanel());
+  if (ui.fb.open) return modal('Enviar feedback', feedbackPanel());
+  return '';
+};
+
+function closeModals() {
+  ui.aboutOpen = false;
+  ui.helpOpen = false;
+  ui.fb.open = false;
+}
+
+// Leva o foco para dentro da janela aberta (teclado e leitor de tela).
+function focusModal(selector = '.modal h2') {
+  const el = document.querySelector(`.modal ${selector === '.modal h2' ? 'h2' : selector}`);
+  if (!el) return;
+  if (el.tagName === 'H2') el.setAttribute('tabindex', '-1');
+  el.focus();
+}
 
 // --- feedback (F.9) ---------------------------------------------------------
 
@@ -198,19 +231,55 @@ function currentFeedback() {
   return buildFeedback({ kind: f.kind, text: f.text, state, includeCareer: f.include && !!state, fullHistory: f.full, userAgent: navigator.userAgent });
 }
 
+// Relatório que acompanha o envio por e-mail: resumo da carreira (se o jogador deixou marcado) e navegador.
+function reportFor(includeCareer, full) {
+  const parts = [];
+  if (includeCareer && state) parts.push(careerSnapshot(state, { fullHistory: full }));
+  parts.push(`navegador: ${navigator.userAgent}`);
+  return parts.join('\n');
+}
+
 function feedbackPanel() {
   const f = ui.fb;
-  const url = FEEDBACK_URL ? sendUrl(FEEDBACK_URL, { kind: f.kind, text: f.text, body: currentFeedback() }) : null;
-  return `<section class="card focus" id="fb-panel"><div class="row" style="justify-content:space-between"><h2>Enviar feedback</h2><button class="btn ghost small" data-act="fb-close">Fechar</button></div>
-    <p class="mute" style="font-size:14px">Conte o que aconteceu, o que achou fácil ou difícil, ou o que faltou. O relatório leva a seed e as últimas decisões para eu conseguir repetir a sua carreira.</p>
+  const busy = f.status === 'sending';
+  const url = !FEEDBACK_ENDPOINT && FEEDBACK_URL ? sendUrl(FEEDBACK_URL, { kind: f.kind, text: f.text, body: currentFeedback() }) : null;
+  return `<section class="card focus" id="fb-panel"><div class="row" style="justify-content:space-between"><h2>Enviar feedback</h2><button class="btn ghost small" data-act="modal-close">Fechar</button></div>
+    <p class="mute" style="font-size:14px">Conte o que aconteceu, o que achou fácil ou difícil, ou o que faltou. ${FEEDBACK_ENDPOINT ? 'A mensagem chega direto ao criador do jogo, sem precisar de conta.' : 'Copie o relatório e mande para quem te passou o jogo.'}</p>
     <label class="field">Tipo<select id="fb-kind">${Object.entries(FEEDBACK_KINDS).map(([k, v]) => `<option value="${k}" ${f.kind === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
     <label class="field">O que aconteceu?<textarea id="fb-text" rows="5" maxlength="2000" style="font:inherit;font-size:16px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:10px;width:100%">${esc(f.text)}</textarea></label>
+    ${FEEDBACK_ENDPOINT ? `<label class="field">Como te responder? (opcional: e-mail ou WhatsApp)<input type="text" id="fb-contact" maxlength="120" value="${esc(f.contact)}" autocomplete="off"></label>` : ''}
     <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="fb-include" ${f.include && state ? 'checked' : ''} ${state ? '' : 'disabled'}> Incluir o resumo da carreira (seed, versão, últimas decisões)</label>
     <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="fb-full" ${f.full ? 'checked' : ''} ${state ? '' : 'disabled'}> Incluir todas as decisões (maior, mas permite repetir o problema)</label>
-    <div class="row"><button class="btn" data-act="fb-copy">Copiar feedback</button>
+    <input class="hp" type="text" id="fb-website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <div class="row">${FEEDBACK_ENDPOINT ? `<button class="btn" data-act="fb-submit" ${busy || f.status === 'sent' ? 'disabled' : ''}>${busy ? 'Enviando…' : 'Enviar'}</button>` : ''}
+      <button class="btn ${FEEDBACK_ENDPOINT ? 'ghost' : ''}" data-act="fb-copy">Copiar feedback</button>
       ${url ? `<a class="btn ghost" id="fb-send" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-act="fb-send">Enviar pelo GitHub</a>` : ''}
-      <span class="mute" id="fb-msg">${esc(f.msg)}</span></div>
+      <span class="mute" id="fb-msg" role="status">${esc(f.msg)}</span></div>
     ${f.fallback ? `<textarea id="fb-fallback" readonly rows="6" style="font:12px var(--f-mono);color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:8px;width:100%">${esc(f.fallback)}</textarea>` : ''}</section>`;
+}
+
+async function submitFeedback() {
+  const f = ui.fb;
+  if (!FEEDBACK_ENDPOINT || f.status === 'sending') return;
+  if (!f.text.trim()) { f.msg = 'Escreva o que aconteceu antes de enviar.'; const m = document.getElementById('fb-msg'); if (m) m.textContent = f.msg; return; }
+  f.status = 'sending';
+  f.msg = '';
+  render();
+  const payload = feedbackPayload({
+    kind: f.kind, text: f.text, contact: f.contact, version: state?.engineVersion ?? ENGINE_VERSION,
+    report: reportFor(f.include, f.full), website: document.getElementById('fb-website')?.value ?? '',
+  });
+  const r = await sendFeedback(FEEDBACK_ENDPOINT, payload);
+  if (r.ok) {
+    f.status = 'sent';
+    f.msg = 'Enviado! Obrigado, isso ajuda muito.';
+    f.text = '';
+    track('feedback-enviado');
+  } else {
+    f.status = '';
+    f.msg = r.reason;
+  }
+  render();
 }
 
 function copyFeedback() {
@@ -233,6 +302,52 @@ function refreshSendLink() {
   const a = document.getElementById('fb-send');
   if (a && FEEDBACK_URL) a.href = sendUrl(FEEDBACK_URL, { kind: ui.fb.kind, text: ui.fb.text, body: currentFeedback() });
 }
+
+// --- fim de carreira: "Como foi essa carreira?" (nota de 1 a 5 e comentário opcional) ---------------
+
+const freshEnd = () => ({ rating: null, text: '', include: true, status: '', msg: '' });
+
+function careerFeedbackCard() {
+  const e = ui.end;
+  if (e.status === 'sent') return '<section class="card"><h3>Obrigado!</h3><p>Sua opinião chegou. Ela ajuda a ajustar o jogo.</p></section>';
+  const busy = e.status === 'sending';
+  const rates = [1, 2, 3, 4, 5].map((n) => `<button class="rate ${e.rating === n ? 'on' : ''}" data-act="rate" data-id="${n}" aria-pressed="${e.rating === n}" aria-label="Nota ${n}">${n}</button>`).join('');
+  return `<section class="card" id="end-fb"><h3>Como foi essa carreira?</h3>
+    <div class="rates" role="group" aria-label="Nota de 1 a 5">${rates}</div>
+    <div class="row small mute" style="justify-content:space-between"><span>1 · fraca</span><span>5 · ótima</span></div>
+    <label class="field">Quer contar mais? (opcional)<textarea id="end-text" rows="3" maxlength="1000" style="font:inherit;font-size:16px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:10px;width:100%">${esc(e.text)}</textarea></label>
+    <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="end-include" ${e.include ? 'checked' : ''}> Enviar junto o resumo da carreira (seed e decisões)</label>
+    <div class="row">${FEEDBACK_ENDPOINT
+    ? `<button class="btn" data-act="end-send" ${e.rating && !busy ? '' : 'disabled'}>${busy ? 'Enviando…' : 'Enviar'}</button>`
+    : `<button class="btn" data-act="end-copy" ${e.rating ? '' : 'disabled'}>Copiar</button>`}
+      <span class="mute" id="end-msg" role="status">${esc(e.msg)}</span></div></section>`;
+}
+
+async function submitCareerFeedback() {
+  const e = ui.end;
+  if (!FEEDBACK_ENDPOINT || !e.rating || e.status === 'sending') return;
+  e.status = 'sending';
+  e.msg = '';
+  render();
+  const view = getView(state);
+  const report = [view.legacy ? summaryText(view) : '', reportFor(e.include, false)].filter(Boolean).join('\n\n');
+  const r = await sendFeedback(FEEDBACK_ENDPOINT, feedbackPayload({
+    kind: 'career', text: e.text, rating: e.rating, version: state.engineVersion ?? ENGINE_VERSION, report,
+  }));
+  if (r.ok) { e.status = 'sent'; e.msg = ''; track('feedback-fim-de-carreira'); } else { e.status = ''; e.msg = r.reason; }
+  render();
+}
+
+function copyCareerFeedback() {
+  const e = ui.end;
+  const view = getView(state);
+  const text = buildFeedback({ kind: 'career', text: e.text, rating: e.rating, state, includeCareer: e.include, userAgent: navigator.userAgent });
+  const extra = view.legacy ? `\n\n${summaryText(view)}` : '';
+  const done = (t) => { e.msg = t; const m = document.getElementById('end-msg'); if (m) m.textContent = t; };
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text + extra).then(() => done('Copiado. Cole na conversa com quem te passou o jogo.'), () => done('Não deu para copiar sozinho.'));
+  else done('Não deu para copiar sozinho.');
+}
+
 // Evento sem escolha de verdade (uma única opção): com o modo automático ligado, resolve sozinho.
 function isNoChoice(pd) {
   return !!pd && (pd.type === 'story_event' || pd.type === 'race_event') && pd.payload.options.length === 1;
@@ -292,7 +407,6 @@ function header(view) {
     <button class="btn ghost small" data-act="undo" ${undoStack.length ? '' : 'disabled'}>Desfazer</button>
     <button class="btn ghost small" data-act="export-current">Salvar em arquivo</button>
     <button class="btn ghost small" data-act="help-open">Ajuda</button>
-    <button class="btn ghost small" data-act="fb-open">Feedback</button>
     <button class="btn ghost small" data-act="newgame">${saves.available ? 'Menu' : 'Sair'}</button>
   </header>${ui.confirmNew ? `<div class="note">Sem salvamento neste navegador: sair perde a carreira (use "Salvar em arquivo" antes). <button class="btn small" data-act="newgame-yes">Sair mesmo assim</button> <button class="btn ghost small" data-act="newgame-no">Cancelar</button></div>` : ''}
   ${ui.saveWarn ? `<div class="note err">O navegador recusou gravar a carreira. Ela continua nesta aba, mas use "Salvar em arquivo" para não perder.</div>` : ''}`;
@@ -435,7 +549,7 @@ function screenCreate() {
     : free.length === 0 ? ''
       : `<label class="field">Salvar no slot<select id="f-slot">${free.map((s) => `<option value="${s.slot}" ${String(s.slot) === String(d.slot) ? 'selected' : ''}>Slot ${s.slot}</option>`).join('')}</select></label>`;
   const noSlots = saves.available && free.length === 0;
-  return `<header class="bar">${LOGO}<span class="chip">protótipo</span><button class="btn ghost small" data-act="help-open">Ajuda</button><button class="btn ghost small" data-act="fb-open">Feedback</button></header>
+  return `<header class="bar">${LOGO}<span class="chip">protótipo</span><button class="btn ghost small" data-act="help-open">Ajuda</button></header>
   <section class="card">
     <h1>Da largada à bandeirada</h1>
     <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
@@ -449,8 +563,8 @@ function screenCreate() {
   <form class="card" id="create" autocomplete="off">
     <h2>Novo piloto</h2>
     <div class="grid2">
-      <label class="field">Sobrenome<input type="text" id="f-surname" maxlength="18" value="${esc(d.surname)}" placeholder="Ex.: Fittipaldi"></label>
-      <label class="field">Dorsal (1-99)<input type="number" id="f-number" min="1" max="99" value="${esc(d.number)}" placeholder="Ex.: 33"></label>
+      <label class="field">Sobrenome<input type="text" id="f-surname" maxlength="18" value="${esc(d.surname)}" placeholder="Ex.: Senna"></label>
+      <label class="field">Número do carro (1-99)<input type="number" id="f-number" min="1" max="99" value="${esc(d.number)}" placeholder="Ex.: 12"></label>
       <label class="field">Bandeira<select id="f-flag">${FLAGS.map((f) => `<option ${f === d.flag ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
       <label class="field">Seed (opcional, repete uma carreira)<input type="text" id="f-seed" inputmode="numeric" value="${esc(d.seed)}" placeholder="vazio = aleatória"></label>
       ${slotField}
@@ -628,7 +742,7 @@ function screenLegacy(view) {
       <div class="stats">${stat('Títulos F1', l.titlesF1)}${stat('Vice', l.vice)}${stat('Vitórias', l.wins)}${stat('Pódios', l.podiums)}${stat('Poles', l.poles)}${stat('Pontos', l.points)}${stat('Temporadas', l.seasons)}${stat('Títulos na base', l.baseTitles)}</div>
       <div class="row"><button class="btn" data-act="copy">Copiar resumo</button><button class="btn ghost" data-act="newgame-yes">Nova carreira</button></div>
       <p class="mute" style="font-size:14px" id="copy-msg">Cole o resumo no chat de quem está testando, junto com o que achou da carreira.</p>
-      <textarea id="summary" readonly rows="4" style="font:12px var(--f-mono);width:100%;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:8px">${esc(summaryText(view))}</textarea></section>`;
+      <textarea id="summary" readonly rows="4" style="font:12px var(--f-mono);width:100%;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:8px">${esc(summaryText(view))}</textarea></section>${careerFeedbackCard()}`;
   const timeline = `<section class="card"><h3>Linha do tempo</h3><div class="scroll-x"><table class="tower"><tbody>
       ${view.f1.seasons.map((s) => `<tr><td class="pos">${esc(s.year)}</td><td class="car"><i style="background:${esc(TEAM_COLOR[s.team] ?? 'var(--line)')}"></i></td><td class="name">${esc(s.teamName)}</td><td class="pts">${ord(s.position)} · ${esc(s.points)} pts${s.position === 1 ? ' ★' : ''}</td></tr>`).join('')}
     </tbody></table></div></section>`;
@@ -639,7 +753,7 @@ function screenAlt(view) {
   const main = `<section class="card focus"><h2>Fim da linha</h2>
       <p>Os olheiros pararam de ligar e a carreira não chegou à Fórmula 1. As rotas alternativas (Super Fórmula, IndyCar, Fórmula E) ainda não existem neste protótipo.</p>
       <div class="row"><button class="btn" data-act="newgame-yes">Nova carreira</button></div></section>
-    ${view.base ? seasonResultCard(view) : ''}`;
+    ${view.base ? seasonResultCard(view) : ''}${careerFeedbackCard()}`;
   return layout(view, main, view.base?.rivals?.length
     ? `<section class="card"><h3>Seus rivais</h3><ul class="log">${view.base.rivals.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></section>` : '');
 }
@@ -658,7 +772,7 @@ function focusHeading(root) {
 function render() {
   const el = $app();
   el.className = state ? 'wrap wide' : 'wrap';
-  if (!state) { el.innerHTML = panels() + screenCreate() + footer(); return; }
+  if (!state) { el.innerHTML = panels() + screenCreate() + footer(); document.body.classList.toggle('modal-open', !!anyModal()); return; }
   const view = getView(state);
   let html;
   switch (view.screen) {
@@ -675,6 +789,7 @@ function render() {
   if (ui.notice) html = `<div class="note" role="status">${esc(ui.notice)}</div>${html}`;
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
   el.innerHTML = panels() + html + footer();
+  document.body.classList.toggle('modal-open', !!anyModal());
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
   if (key !== lastKey) { lastKey = key; window.scrollTo(0, 0); focusHeading(el); }
 }
@@ -701,19 +816,21 @@ function startCareer() {
     activeSlot = slot;
     undoStack = [];
     track('carreira-iniciada');
+    ui.end = freshEnd();
     ui.error = null;
     ui.notice = null;
     ui.baseOpt = null;
     ui.saveWarn = false;
     save();
   } catch (e) {
-    ui.error = e.message.includes('surname') ? 'Informe um sobrenome.' : e.message.includes('number') ? 'O dorsal deve ser um número de 1 a 99.' : e.message;
+    ui.error = e.message.includes('surname') ? 'Informe um sobrenome.' : e.message.includes('number') ? 'O número do carro deve ser de 1 a 99.' : e.message;
   }
   render();
 }
 
 // Volta ao menu sem apagar nada: a carreira já está gravada no slot.
 function toMenu() {
+  ui.end = freshEnd();
   state = null; activeSlot = null; undoStack = []; ui.confirmNew = false; ui.confirmDel = null; ui.baseOpt = null; ui.error = null; ui.saveWarn = false; lastKey = '';
   render();
 }
@@ -735,6 +852,8 @@ function importFile(file) {
 }
 
 document.addEventListener('input', (e) => {
+  if (e.target.id === 'fb-contact') ui.fb.contact = e.target.value;
+  if (e.target.id === 'end-text') ui.end.text = e.target.value;
   if (e.target.id === 'fb-text') { ui.fb.text = e.target.value; ui.fb.msg = ''; ui.fb.fallback = ''; document.getElementById('fb-fallback')?.remove(); refreshSendLink(); }
 });
 
@@ -746,10 +865,15 @@ document.addEventListener('change', (e) => {
   else if (t.name === 't-clause') ui.terms.clause = t.value;
   else if (t.id === 't-exit') ui.terms.exit = t.checked;
   else if (t.id === 'f-import' && t.files?.[0]) importFile(t.files[0]);
+  else if (t.id === 'end-include') ui.end.include = t.checked;
   else if (t.id === 'fb-kind') { ui.fb.kind = t.value; refreshSendLink(); }
   else if (t.id === 'fb-include') { ui.fb.include = t.checked; refreshSendLink(); }
   else if (t.id === 'fb-full') { ui.fb.full = t.checked; refreshSendLink(); }
   else if (t.id === 't-auto') { ui.autoSingle = t.checked; run((s) => settle(s)); }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && anyModal()) { closeModals(); render(); }
 });
 
 document.addEventListener('click', (e) => {
@@ -795,13 +919,19 @@ document.addEventListener('click', (e) => {
     case 'copy': return copySummary();
     case 'undo': return undo();
     case 'copy-error': return copyErrorReport();
-    case 'about-open': ui.aboutOpen = true; ui.helpOpen = false; ui.fb.open = false; render(); document.getElementById('about-panel')?.scrollIntoView?.({ block: 'start' }); return undefined;
-    case 'about-close': ui.aboutOpen = false; return render();
-    case 'help-open': track('ajuda-aberta'); ui.aboutOpen = false; ui.helpOpen = true; ui.fb.open = false; render(); document.getElementById('help-panel')?.scrollIntoView?.({ block: 'start' }); return undefined;
-    case 'help-close': ui.helpOpen = false; return render();
-    case 'fb-open': track('feedback-aberto'); ui.aboutOpen = false; ui.helpOpen = false; ui.fb.open = true; ui.fb.msg = ''; if (ui.error && !ui.fb.text) ui.fb.text = `Erro: ${ui.error}\n`; render(); document.getElementById('fb-text')?.focus(); return undefined;
-    case 'fb-close': ui.fb.open = false; return render();
+    case 'about-open': ui.aboutOpen = true; ui.helpOpen = false; ui.fb.open = false; render(); focusModal(); return undefined;
+    case 'help-open': track('ajuda-aberta'); ui.aboutOpen = false; ui.helpOpen = true; ui.fb.open = false; render(); focusModal(); return undefined;
+    case 'fb-open':
+      track('feedback-aberto'); ui.aboutOpen = false; ui.helpOpen = false; ui.fb.open = true; ui.fb.msg = '';
+      if (ui.fb.status === 'sent') ui.fb.status = '';
+      if (ui.error && !ui.fb.text) ui.fb.text = `Erro: ${ui.error}\n`;
+      render(); focusModal('textarea'); return undefined;
+    case 'modal-close': if (e.target !== el) return undefined; closeModals(); return render();
+    case 'fb-submit': return submitFeedback();
     case 'fb-copy': return copyFeedback();
+    case 'rate': ui.end.rating = Number(id); ui.end.msg = ''; return render();
+    case 'end-send': return submitCareerFeedback();
+    case 'end-copy': return copyCareerFeedback();
     case 'fb-send': if (!ui.fb.text.trim()) { e.preventDefault(); ui.fb.msg = 'Escreva o que aconteceu antes de enviar.'; const m = document.getElementById('fb-msg'); if (m) m.textContent = ui.fb.msg; } return undefined;
     default:
   }

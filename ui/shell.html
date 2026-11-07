@@ -38,7 +38,7 @@
 body {
   background: var(--bg); color: var(--fg);
   font-family: var(--f-body); font-size: 16px; line-height: 1.45;
-  padding-block: 0 48px;
+  padding-block: 0 96px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
 }
@@ -101,7 +101,20 @@ h1:focus, h2:focus { outline: none; }
 .d.up { color: var(--good); }
 .d.down { color: var(--bad); }
 .racelist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; max-height: 520px; overflow-y: auto; }
-.racelist li { border-top: 1px solid var(--line); padding-top: 8px; }.foot { color: var(--mute); font-size: 13px; padding-top: 8px; border-top: 1px solid var(--line); }
+.racelist li { border-top: 1px solid var(--line); padding-top: 8px; }body.modal-open { overflow: hidden; }
+.modal-backdrop { position: fixed; inset: 0; z-index: 50; background: rgba(10, 8, 20, .62); display: flex; align-items: flex-start; justify-content: center; overflow-y: auto;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.modal { width: 100%; max-width: 640px; margin: auto; }
+.fab { position: fixed; z-index: 40; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  display: inline-flex; align-items: center; gap: 8px; font-family: var(--f-display); font-weight: 700; font-size: 18px; letter-spacing: .06em; text-transform: uppercase;
+  background: var(--signal); color: var(--signal-ink); border: 0; border-radius: 999px; padding: 12px 18px; min-height: 48px; cursor: pointer; box-shadow: 0 6px 18px rgba(20, 10, 50, .35); }
+.fab:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+.fab svg { width: 20px; height: 20px; }
+.rates { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.rate { font-family: var(--f-mono); font-size: 20px; padding: 12px 0; border-radius: 6px; border: 1px solid var(--line); background: var(--panel2); color: var(--fg); cursor: pointer; min-height: 48px; }
+.rate.on { background: var(--signal); color: var(--signal-ink); border-color: var(--signal); }
+.rate:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }.foot { color: var(--mute); font-size: 13px; padding-top: 8px; border-top: 1px solid var(--line); }
 .linkbtn { font: inherit; color: var(--fg); background: none; border: 0; padding: 4px 0; text-decoration: underline; cursor: pointer; min-height: 32px; }
 .linkbtn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 a { color: var(--signal-text); }

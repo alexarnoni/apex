@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildHead, normalizeSiteUrl, normalizeGoatCounter, DEFAULT_SITE_URL, DESCRIPTION } from '../tools/site-head.js';
+import { buildHead, normalizeSiteUrl, normalizeGoatCounter, normalizeEndpoint, DEFAULT_SITE_URL, DESCRIPTION } from '../tools/site-head.js';
 
 test('endereço do site: padrão, barra final e validação', () => {
   assert.equal(normalizeSiteUrl(undefined), DEFAULT_SITE_URL);
@@ -48,4 +48,15 @@ test('análise: sem código nada é carregado; com código entra o script do Goa
 test('valores vindos do ambiente são escapados no HTML', () => {
   const h = buildHead({ siteUrl: 'https://exemplo.dev/a&b' });
   assert.match(h, /href="https:\/\/exemplo\.dev\/a&amp;b\/"/);
+});
+
+test('endereço do Worker de feedback: vazio desliga, https obrigatório', () => {
+  assert.equal(normalizeEndpoint(''), '');
+  assert.equal(normalizeEndpoint(undefined), '');
+  assert.equal(normalizeEndpoint(' https://bandeirada-feedback.exemplo.workers.dev/ '), 'https://bandeirada-feedback.exemplo.workers.dev/');
+  assert.throws(() => normalizeEndpoint('http://fb.exemplo.dev'), /BANDEIRADA_FEEDBACK_ENDPOINT inválido/);
+  assert.equal(normalizeEndpoint('http://127.0.0.1:5055/feedback'), 'http://127.0.0.1:5055/feedback', 'localhost vale para teste local');
+  assert.throws(() => normalizeEndpoint('http://127.0.0.1.evil.com/x'), /inválido/);
+  assert.throws(() => normalizeEndpoint('fb.exemplo.dev'), /BANDEIRADA_FEEDBACK_ENDPOINT inválido/);
+  assert.throws(() => normalizeEndpoint('https://a b.dev'), /BANDEIRADA_FEEDBACK_ENDPOINT inválido/);
 });

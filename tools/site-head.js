@@ -26,6 +26,15 @@ export function normalizeGoatCounter(raw) {
   return c;
 }
 
+// Endereço do Worker de feedback (https). Vazio desliga o envio e deixa só "Copiar".
+export function normalizeEndpoint(raw) {
+  const u = String(raw ?? '').trim();
+  if (!u) return '';
+  // https em produção; http só para localhost (teste local do formulário).
+  const ok = /^https:\/\/[a-z0-9.-]+(:\d+)?(\/[^\s]*)?$/i.test(u) || /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/[^\s]*)?$/i.test(u);
+  if (!ok) throw new Error(`BANDEIRADA_FEEDBACK_ENDPOINT inválido (use https://endereco-do-worker): ${u}`);
+  return u;
+}
 export function buildHead({ siteUrl, goatcounter, hasOgImage = true } = {}) {
   const site = normalizeSiteUrl(siteUrl);
   const gc = normalizeGoatCounter(goatcounter);
