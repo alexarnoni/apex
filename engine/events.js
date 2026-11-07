@@ -53,6 +53,11 @@ export function applyEffects(ctx, effects, rng) {
   }
 }
 
+// O texto de um resultado pode ser uma string ou uma função (ctx) => string (para citar rival, piloto, equipe).
+export function outcomeText(outcome, ctx) {
+  return typeof outcome.text === 'function' ? outcome.text(ctx) : outcome.text;
+}
+
 // Sorteia um resultado de uma opção (outcomes[].p soma 1).
 export function rollOutcome(option, rng) {
   let r = rng.next();

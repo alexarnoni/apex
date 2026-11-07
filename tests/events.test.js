@@ -154,3 +154,30 @@ test('rollOutcome respeita as faixas de probabilidade', () => {
 test('pickRaceEvent: sem sorteio de tentativa, a corrida fica quieta', () => {
   assert.equal(pickRaceEvent(RACE_EVENTS, ctxWith(), { chance: () => false, next: () => 0.5 }), null);
 });
+
+test('todo texto de evento vira uma frase: título, texto e resultados (inclusive os que citam nomes)', async () => {
+  const { outcomeText } = await import('../engine/events.js');
+  const sample = { teamName: 'McLaren', rival: { name: 'Gasly' }, player: { name: 'Teste' } };
+  for (const ev of [...NARRATIVE_EVENTS, ...RACE_EVENTS]) {
+    assert.ok(ev.title.length > 3, `${ev.id}: título`);
+    assert.ok(ev.text(sample).length > 15, `${ev.id}: texto`);
+    for (const o of ev.options) {
+      assert.ok(o.label.length > 2, `${ev.id}/${o.id}: rótulo`);
+      for (const out of o.outcomes) {
+        const t = outcomeText(out, sample);
+        assert.ok(typeof t === 'string' && t.length > 8, `${ev.id}/${o.id}: resultado`);
+        assert.doesNotMatch(t, /undefined|\[object/, `${ev.id}/${o.id}: ${t}`);
+      }
+    }
+  }
+});
+
+test('rádio chama o piloto pelo sobrenome e duelos citam o rival pelo nome', async () => {
+  const { outcomeText } = await import('../engine/events.js');
+  const sample = { teamName: 'McLaren', rival: { name: 'Gasly' }, player: { name: 'Teste' } };
+  const garoa = RACE_EVENTS.find((e) => e.id === 'garoa_pit');
+  assert.match(garoa.text(sample), /Teste, começou a garoar/);
+  const duelo = RACE_EVENTS.find((e) => e.id === 'duelo_rival');
+  const textos = duelo.options.flatMap((o) => o.outcomes.map((x) => outcomeText(x, sample)));
+  assert.ok(textos.every((t) => t.includes('Gasly')));
+});

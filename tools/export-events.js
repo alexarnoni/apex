@@ -6,17 +6,18 @@ import { writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { NARRATIVE_EVENTS, RACE_EVENTS } from '../data/events.js';
+import { outcomeText } from '../engine/events.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 // text(ctx) usa nomes do contexto; aqui entra um contexto de exemplo para o texto sair legível.
-const sample = { teamName: 'Equipe', rival: { name: 'Rival' }, player: { name: 'Você' } };
+const sample = { teamName: 'McLaren', rival: { name: 'Gasly' }, player: { name: 'Teste' } };
 
 function block(ev) {
   const lines = [`### ${ev.title}  \`${ev.id}\``, '', `Quando: ${ev.phase}${ev.chance ? ` (chance ${Math.round(ev.chance * 100)}% por corrida)` : ''} · peso ${ev.weight}`, '', `> ${ev.text(sample)}`, ''];
   for (const o of ev.options) {
     lines.push(`- **${o.label}**${o.description ? `: ${o.description}` : ''}`);
-    for (const out of o.outcomes) lines.push(`  - ${out.p < 1 ? `(${Math.round(out.p * 100)}%) ` : ''}${out.text}`);
+    for (const out of o.outcomes) lines.push(`  - ${out.p < 1 ? `(${Math.round(out.p * 100)}%) ` : ''}${outcomeText(out, sample)}`);
   }
   lines.push('');
   return lines.join('\n');

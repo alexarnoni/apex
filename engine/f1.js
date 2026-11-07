@@ -14,7 +14,7 @@ import { createWorld, beginYear, endYear } from './world.js';
 import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeason } from './season.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
 import { marketScore } from './market.js';
-import { applyEffects, rollOutcome, pickNarrative, pickRaceEvent } from './events.js';
+import { applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
 import { CATEGORIES } from '../data/categories.js';
 import { SURNAMES } from '../data/names.js';
 import { TEAMS_F1, DRIVERS_F1 } from '../data/world2026.js';
@@ -156,7 +156,7 @@ export function resolveStoryEvent(s, rng, answer) {
   const ctx = buildCtx(s);
   const outcome = rollOutcome(opt, rng);
   applyEffects(ctx, outcome.effects, rng);
-  recordEvent(s, ev, outcome.text);
+  recordEvent(s, ev, outcomeText(outcome, ctx));
   s.pendingDecision = null;
   if (phase === 'season_start') return beginSeason(s, rng);
   if (phase === 'mid_season') { s.pendingDecision = weekendDecision(s); return undefined; }
@@ -303,7 +303,7 @@ export function resolveRaceEvent(s, rng, answer) {
   const ctx = raceCtx(s, w);
   const outcome = rollOutcome(opt, rng);
   applyEffects(ctx, outcome.effects, rng);
-  recordEvent(s, ev, outcome.text);
+  recordEvent(s, ev, outcomeText(outcome, ctx));
   season.cur.event = ev.title;
   season.lastEventRace = season.raceIndex + 1;
   season.pendingRace = null;

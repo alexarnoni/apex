@@ -5,74 +5,74 @@ Tom pedido na spec: segunda pessoa, rádio de equipe e manchete, curto e concret
 
 ## Narrativos (19)
 
-### Lesão no treino  `lesao_treino`
+### Distensão na academia  `lesao_treino`
 
 Quando: season_start · peso 2
 
-> Uma sessão pesada de academia deu errado: distensão na coxa. O médico só libera você depois de duas corridas.
+> Último treino de força antes do campeonato. A coxa estala no leg press e o médico fecha a conversa com duas corridas de molho.
 
-- **Entendido**
-  - Você perde as 2 primeiras corridas e começa o ano com -1 de skill.
+- **Ficar de molho**
+  - Você assiste às duas primeiras corridas do box e começa o ano com um ponto a menos de skill.
 
 ### Engenheiro estrela  `mecanico_genial`
 
 Quando: season_start · peso 2
 
-> A Equipe contratou o engenheiro de aerodinâmica que metade do paddock queria. Dizem que ele enxerga ar.
+> A McLaren tirou de um rival o engenheiro de aerodinâmica que todo mundo queria. No paddock dizem que ele enxerga o ar.
 
-- **Entendido**
-  - O desenvolvimento do carro tem mais chance de acertar neste ano.
+- **Seguir**
+  - O pacote de desenvolvimento deste ano tem mais chance de acertar.
 
-### Cláusula vazada  `contrato_vazado`
+### Cláusula na manchete  `contrato_vazado`
 
 Quando: season_start · peso 2
 
-> A imprensa descobriu sua cláusula de saída. O chefe da Equipe pediu uma conversa e não sorriu.
+> Sua cláusula de saída vazou. O chefe da McLaren pediu uma conversa rápida e não ofereceu café.
 
-- **Entendido**
-  - -5 de confiança, +1 de fama: todo mundo quer saber quem vai te contratar.
+- **Encarar a conversa**
+  - A equipe esfriou com você, e metade do paddock quer saber quem vai te contratar.
 
-### Dores depois do acidente  `lesao_acidente`
+### Dor depois da batida  `lesao_acidente`
 
 Quando: mid_season · peso 3
 
-> A pancada da última corrida cobrou a conta. Pescoço travado, costas em chamas. A equipe deixa a decisão com você.
+> O pescoço travou durante a madrugada e o fisioterapeuta quer você parado. A equipe deixa a decisão com você.
 
 - **Correr no sacrifício**: -2 de performance nas próximas 3 corridas.
-  - Você segue, mas vai sentir cada curva.
+  - Você aperta os dentes e sente cada curva.
 - **Pular uma corrida**: Zero ponto na próxima corrida.
-  - Você descansa e volta inteiro depois.
+  - Você descansa e volta inteiro.
 
-### Assoalho flexível  `fia_punicao`
+### Assoalho fora do limite  `fia_punicao`
 
 Quando: mid_season · peso 3
 
-> Depois do pódio, a FIA mediu o assoalho da Equipe: flexão fora do limite. O pessoal já fala em "plank-gate".
+> Depois do pódio, os fiscais da FIA mediram o assoalho da McLaren e acharam flexão acima do permitido.
 
-- **Entendido**
-  - -10 pontos no campeonato, +1 de fama: o público te vê como injustiçado.
+- **Aceitar a punição**
+  - Dez pontos a menos no campeonato. O público acha que te roubaram, e a sua fama sobe.
 
 ### Provocação  `rival_provocacao`
 
 Quando: mid_season · peso 4
 
-> Rival disse na imprensa que você só está bem por causa do carro. A frase virou manchete.
+> Gasly disse na coletiva que você só anda por causa do carro. A frase está em todas as manchetes.
 
 - **Responder na pista**: +2 de performance nas próximas 3 corridas e +1 de fama.
-  - Você vai usar a raiva a seu favor.
+  - Você guarda a raiva para a pista e promete uma resposta a Gasly.
 - **Ignorar**: +5 de confiança da equipe.
   - A equipe gostou da maturidade.
 
-### A imprensa pede sua cabeça  `midia_critica`
+### Pedem a sua cabeça  `midia_critica`
 
 Quando: mid_season · peso 3
 
-> Três corridas sem pontuar. Os jornais já escolhem seu substituto.
+> Três corridas sem pontuar. Um jornal já escolheu o seu substituto, e a manchete é o seu nome com ponto de interrogação.
 
 - **Coletiva explosiva**: +2 de fama, -10 de confiança.
-  - A frase viralizou. A equipe ficou pálida.
+  - A frase viralizou e o assessor de imprensa ficou pálido.
 - **Cabeça baixa**: +5 de confiança.
-  - Você não respondeu e voltou a trabalhar.
+  - Você não respondeu e voltou ao trabalho.
 
 ### Você está voando  `chuva_forma`
 
@@ -80,18 +80,18 @@ Quando: mid_season · peso 2
 
 > Duas vitórias seguidas. O carro responde antes de você pensar.
 
-- **Entendido**
-  - Forma em alta (+4 de performance) nas próximas 2 corridas.
+- **Aproveitar a fase**
+  - Você está em fase de ouro, com muito mais ritmo nas próximas duas corridas.
 
 ### Decisão polêmica da FIA  `fia_polemica_titulo`
 
 Quando: season_end · peso 1
 
-> A FIA reviu uma decisão da última corrida. O mundial inteiro depende de uma canetada.
+> A FIA reabriu uma decisão da última corrida. O campeonato inteiro depende de uma canetada.
 
 - **Aguardar o veredito**: Meio a meio: o título vai para você ou para o líder.
   - (50%) A decisão sai a seu favor. O título é seu!
-  - (50%) A decisão vai contra você. O título fica com o líder, e todo mundo fala de você.
+  - (50%) A decisão vai contra você. O título fica com o líder, e o caso rende assunto por semanas.
 
 ### Teste secreto  `teste_rival`
 
@@ -101,29 +101,29 @@ Quando: season_end · peso 2
 
 - **Aceitar**: +2 na nota das ofertas. 30% de chance de vazar (-15 de confiança).
   - (70%) O teste foi discreto e a conversa rendeu.
-  - (30%) O teste vazou. Sua equipe não gostou nada.
+  - (30%) O teste vazou e a sua equipe ficou furiosa.
 - **Recusar**: +5 de confiança.
-  - Você disse não. A equipe soube e agradeceu.
+  - Você disse não, a equipe soube e agradeceu.
 
 ### Gala da FIA  `convite_gala`
 
 Quando: season_end · peso 2
 
-> Campeão! A gala da FIA quer você no palco e a mídia quer você em todos os lugares.
+> Campeão! A FIA quer você no palco da gala e a imprensa quer você em todo lugar.
 
 - **Circuito completo de mídia**: +2 de fama.
   - Você deu entrevista até sonhar com microfone.
 - **Férias**: +1 de skill: o descanso vira treino.
-  - Você sumiu do mapa e voltou mais descansado.
+  - Você sumiu do mapa e voltou descansado.
 
 ### Proposta de patrocínio  `patrocinador_novo`
 
 Quando: season_start · peso 2
 
-> Uma marca grande quer o seu capacete e a sua cara em outdoor. O contrato exige agenda de mídia pesada.
+> Uma marca grande quer o seu capacete e a sua cara num outdoor. O contrato traz uma agenda de mídia pesada.
 
 - **Fechar com a marca**: +2 de fama, -3 de confiança (a equipe fica de olho no seu foco).
-  - Seu rosto está em todo lugar. A equipe cobra foco.
+  - Seu rosto aparece em todo lugar, e a equipe começa a cobrar foco.
 - **Recusar e focar nas pistas**: +3 de confiança.
   - A equipe gostou de ver o foco na pista.
 
@@ -131,19 +131,19 @@ Quando: season_start · peso 2
 
 Quando: season_start · peso 2
 
-> A Equipe trocou o seu engenheiro de pista. O novo é meticuloso e fala pouco, mas os ajustes dele costumam ser certeiros.
+> A McLaren trocou o seu engenheiro de pista. O novo é meticuloso e fala pouco, mas os ajustes dele costumam acertar.
 
-- **Entendido**
-  - +1 de performance nas próximas 6 corridas, enquanto vocês se entendem.
+- **Conhecer o engenheiro**
+  - Você ganha um pouco mais de ritmo nas próximas seis corridas, enquanto os dois se entendem.
 
 ### Horas extras no simulador  `simulador_extra`
 
 Quando: season_start · peso 2
 
-> A Equipe liberou horários extras no simulador antes do campeonato.
+> A McLaren liberou horários extras no simulador antes do campeonato.
 
 - **Treinar até cansar**: +1 de skill.
-  - Você chega para a primeira corrida mais afiado.
+  - Você chega à primeira corrida mais afiado.
 - **Manter a rotina**: +2 de confiança (a equipe valoriza o equilíbrio).
   - Você preservou o corpo e a cabeça.
 
@@ -151,7 +151,7 @@ Quando: season_start · peso 2
 
 Quando: season_start · peso 2
 
-> Seu pai quer opinar na sua temporada, como sempre fez desde o kart. Ele ainda enxerga detalhes que você não vê.
+> Seu pai quer opinar na sua temporada, como faz desde o kart. Ele ainda enxerga detalhes que você não vê.
 
 - **Ouvir com atenção**: +0.5 de skill.
   - Duas ou três dicas dele valem o ano.
@@ -162,21 +162,21 @@ Quando: season_start · peso 2
 
 Quando: mid_season · peso 3
 
-> A Equipe está sem rumo: carro fraco, culpa trocando de mão e o clima ficou pesado.
+> A McLaren está sem rumo. O carro é fraco, a culpa troca de mão a cada reunião e a garagem ficou pesada.
 
 - **Apoiar a equipe**: +5 de confiança.
-  - Você segurou o grupo e a equipe lembrou.
+  - Você segura o grupo e a equipe não esquece.
 - **Criticar em público**: +1 de fama, -10 de confiança.
-  - Você disse o que todo mundo pensava. A diretoria não gostou.
+  - Você disse o que todo mundo pensava, e a diretoria não gostou.
 
 ### Entrevista que viralizou  `entrevista_viral`
 
 Quando: mid_season · peso 2
 
-> Um trecho da sua entrevista depois da corrida circula em todos os perfis de F1.
+> Um trecho da sua entrevista pós-corrida circula em todos os perfis de F1.
 
 - **Entrar na brincadeira**: +1 de fama.
-  - Você virou assunto, e o clima ficou leve.
+  - Você vira assunto e o clima fica leve.
 - **Manter a seriedade**: +3 de confiança.
   - A equipe agradeceu a discrição.
 
@@ -186,19 +186,19 @@ Quando: season_end · peso 2
 
 > A imprensa especializada elegeu você a revelação da temporada.
 
-- **Entendido**
-  - +2 de fama: o paddock inteiro sabe seu nome.
+- **Subir ao palco**
+  - O paddock inteiro agora sabe o seu nome.
 
 ### O fã-clube chegou  `fa_clube`
 
 Quando: season_end · peso 1
 
-> Um fã-clube organizado quer receber você para um encontro na volta para casa.
+> Um fã-clube organizado quer te receber na volta para casa.
 
 - **Ir ao encontro**: +1 de fama.
-  - Uma noite longa, muita foto, uma torcida a mais.
+  - Noite longa, muita foto e uma torcida a mais.
 - **Preservar a privacidade**: +2 de confiança.
-  - Você descansou e a equipe agradeceu a discrição.
+  - Você descansou, e a equipe agradeceu a discrição.
 
 ## Corrida (9)
 
@@ -206,37 +206,37 @@ Quando: season_end · peso 1
 
 Quando: race (chance 10% por corrida) · peso 4
 
-> Rádio: "Começou a garoar na curva 3. Boxes agora ou ficamos na pista?"
+> Rádio: "Teste, começou a garoar na curva 3. Boxes agora ou fica na pista?"
 
 - **Pit agora**: 60% de ganhar 3 posições, 40% de perder 2.
-  - (60%) A troca de pneus foi perfeita. Você pula três carros.
-  - (40%) A garoa parou e você perdeu tempo no box. Dois carros passam.
+  - (60%) A troca de pneus sai perfeita e você pula três carros.
+  - (40%) A garoa parou, você perdeu tempo no box e dois carros passam.
 - **Ficar na pista**: 40% de ganhar 3 posições, 60% de perder 2.
   - (40%) Os rivais pararam e você assume a frente deles.
-  - (60%) A pista ficou escorregadia e dois carros passam com pneus certos.
+  - (60%) A pista escorrega e dois carros passam com os pneus certos.
 
 ### Relargada  `safety_restart`
 
 Quando: race · peso 3
 
-> Safety car saindo. Pneus quentes, todo mundo colado. O que fazer na relargada?
+> Safety car entrando. Pneus quentes, todo mundo colado na sua traseira. Como você sai na relargada?
 
 - **Ataque total**: 50% de ganhar 1 posição, 20% de abandonar.
   - (50%) Você mergulha por dentro e ganha a posição.
   - (20%) Toque na primeira curva. Corrida encerrada.
-  - (30%) Sem espaço: você mantém a posição.
+  - (30%) Não havia espaço, e você segura a posição.
 - **Segurar**: Mantém a posição.
-  - Relargada limpa. Nada muda.
+  - Relargada limpa, sem mudança.
 
 ### Aposta de pneu  `pneu_aposta`
 
 Quando: race · peso 3
 
-> Rádio: "Estamos fora dos pontos. Tem um pneu diferente do resto do grid, e é arriscado."
+> Rádio: "Teste, estamos fora dos pontos. Tem um pneu diferente do resto do grid, mas é arriscado."
 
 - **Arriscar**: 40% de ganhar 4 posições, 60% de perder 1.
   - (40%) A aposta funciona e você sobe no pelotão.
-  - (60%) O pneu não durou. Você perde uma posição.
+  - (60%) O pneu não aguenta e você perde uma posição.
 - **Manter**: Nada muda.
   - Você segue o plano.
 
@@ -244,77 +244,77 @@ Quando: race · peso 3
 
 Quando: race · peso 4
 
-> Rival está logo à sua frente, de novo. A torcida já levantou.
+> Gasly está logo à sua frente, de novo. A arquibancada levanta.
 
 - **Mergulho**: 55% de ultrapassar (+1 de fama), 15% de os dois abandonarem.
-  - (55%) Você fecha a porta e passa o rival na entrada da curva.
-  - (15%) Toque. Os dois ficam parados na brita.
-  - (30%) Ele fecha a porta primeiro. Nada muda.
+  - (55%) Você fecha a porta de Gasly e passa na entrada da curva.
+  - (15%) Toque. Você e Gasly terminam na brita.
+  - (30%) Gasly fecha a porta primeiro.
 - **Pressionar**: 25% de ultrapassar.
-  - (25%) Ele erra sob pressão e você passa.
-  - (75%) Ele aguenta a pressão. Nada muda.
+  - (25%) Gasly erra sob pressão e você passa.
+  - (75%) Gasly aguenta a pressão.
 
 ### Motor perdendo pressão  `problema_motor`
 
 Quando: race (chance 8% por corrida) · peso 3
 
-> Rádio: "Pressão de óleo caindo. Poupar ou forçar?"
+> Rádio: "Teste, a pressão de óleo está caindo. Poupa ou força?"
 
 - **Poupar**: Perde uma posição no resto da corrida.
   - Você levanta o pé e perde uma posição.
 - **Forçar**: 50% de nada acontecer, 50% de abandonar.
-  - (50%) O motor aguenta. Respiro.
+  - (50%) O motor aguenta, por enquanto.
   - (50%) Fumaça branca na reta. O motor quebrou.
 
 ### Estratégia no muro  `chamada_estrategia`
 
 Quando: race · peso 2
 
-> Rádio: "Estratégia alternativa. Confia na gente ou quer fazer do seu jeito?"
+> Rádio: "Teste, temos uma estratégia alternativa. Confia na gente ou vai do seu jeito?"
 
 - **Confiar na equipe**: +5 de confiança, resultado neutro.
   - Você obedece e a equipe agradece.
 - **Fazer do seu jeito**: 50% de +2 posições, 50% de -2; -5 de confiança nos dois casos.
-  - (50%) Seu instinto acerta, mas o muro não gostou.
+  - (50%) Seu instinto acerta, mas o muro não gostou da desobediência.
   - (50%) Deu errado, e o muro lembra de quem decidiu.
 
 ### Pressão nas últimas voltas  `defesa_agressiva`
 
 Quando: race · peso 3
 
-> Pneu acabando e um carro mais rápido colado na sua traseira, com o pódio em jogo.
+> Pneu no fim e um carro mais rápido colado na sua traseira, com o pódio em jogo.
 
 - **Fechar a porta**: 60% de segurar; 40% de perder uma posição (inclui punição).
   - (60%) Você fecha a porta e segura a posição.
-  - (40%) Manobra irregular ou ataque bem-sucedido: você perde uma posição.
+  - (40%) A manobra foi irregular, ou o ataque foi bom demais. Você perde uma posição.
 - **Defender limpo**: 45% de segurar.
-  - (45%) Defesa limpa. Você segura.
+  - (45%) Defesa limpa e posição mantida.
   - (55%) Ele passa com facilidade.
 
 ### Largada confusa  `largada_confusa`
 
 Quando: race · peso 3
 
-> Luzes se apagam e o pelotão se espreme na primeira curva. Há espaço por dentro, mas é pouco.
+> As luzes se apagam e o pelotão se espreme na primeira curva. Tem espaço por dentro, mas é pouco.
 
 - **Atacar na primeira curva**: 35% de ganhar 2 posições, 15% de perder 2, 10% de abandonar.
   - (35%) Você mergulha por dentro e passa dois carros antes da curva 2.
   - (15%) Você é espremido e perde duas posições.
-  - (10%) Toque na primeira curva: pneu furado e corrida encerrada.
-  - (40%) Sem espaço: você mantém a posição.
+  - (10%) Toque na primeira curva. Pneu furado e corrida encerrada.
+  - (40%) Não havia espaço, e você mantém a posição.
 - **Esperar a poeira baixar**: 20% de ganhar 1 posição.
   - (20%) Dois carros se tocam à sua frente e você herda uma posição.
-  - (80%) Largada limpa. Nada muda.
+  - (80%) Largada limpa, sem mudança.
 
 ### Bandeira amarela  `bandeira_amarela`
 
 Quando: race · peso 3
 
-> Bandeira amarela no setor 2. Levantar o pé como mandam as regras ou manter o ritmo e torcer para os comissários não notarem?
+> Bandeira amarela no setor 2. Você levanta o pé como mandam as regras ou mantém o ritmo e torce para os comissários não notarem?
 
 - **Levantar o pé**: Seguro: nada muda.
-  - Você obedece e perde um décimo. Nada muda.
+  - Você obedece e perde um décimo. Segue tudo igual.
 - **Manter o ritmo**: 25% de ganhar 1 posição, 15% de punição (-2 posições).
   - (25%) O rival levantou o pé e você aproveitou para passar.
-  - (15%) Os comissários notaram: punição de tempo e duas posições a menos.
-  - (60%) Ninguém reparou. Nada muda.
+  - (15%) Os comissários notaram. Punição de tempo e duas posições a menos.
+  - (60%) Ninguém reparou.
