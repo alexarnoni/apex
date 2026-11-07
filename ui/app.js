@@ -5,6 +5,12 @@ import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '.
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { TEAMS_F1 } from '../data/world2026.js';
 import { createSaves } from './saves.js';
+import { buildFeedback, sendUrl, FEEDBACK_KINDS } from './feedback.js';
+
+// Destino opcional do feedback (ex.: página "nova issue" de um repositório), definido no build
+// com APEX_FEEDBACK_URL. Sem ele o formulário só copia o relatório.
+// eslint-disable-next-line no-undef
+const FEEDBACK_URL = typeof __FEEDBACK_URL__ !== 'undefined' ? __FEEDBACK_URL__ : '';
 
 const FLAGS = ['BR', 'AR', 'PT', 'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'FI', 'JP', 'US', 'MX', 'AU'];
 const STYLES = {
@@ -24,7 +30,7 @@ let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
-let ui = { autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let ui = { fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -116,13 +122,50 @@ function undo() {
 }
 
 function errorReport() {
-  const s = state;
-  return [
-    `APEX · erro: ${ui.error}`,
-    s ? `seed ${s.seed} · v${s.engineVersion} · fase ${s.phase} · ${s.year}` : 'sem carreira ativa',
-    s ? `últimas decisões: ${JSON.stringify((s.history ?? []).slice(-15))}` : '',
-    `navegador: ${navigator.userAgent}`,
-  ].filter(Boolean).join('\n');
+  return buildFeedback({ kind: 'bug', text: `Erro: ${ui.error}`, state, includeCareer: true, userAgent: navigator.userAgent });
+}
+
+// --- feedback (F.9) ---------------------------------------------------------
+
+function currentFeedback() {
+  const f = ui.fb;
+  return buildFeedback({ kind: f.kind, text: f.text, state, includeCareer: f.include && !!state, fullHistory: f.full, userAgent: navigator.userAgent });
+}
+
+function feedbackPanel() {
+  const f = ui.fb;
+  const url = FEEDBACK_URL ? sendUrl(FEEDBACK_URL, { kind: f.kind, text: f.text, body: currentFeedback() }) : null;
+  return `<section class="card focus" id="fb-panel"><div class="row" style="justify-content:space-between"><h2>Enviar feedback</h2><button class="btn ghost small" data-act="fb-close">Fechar</button></div>
+    <p class="mute" style="font-size:14px">Conte o que aconteceu, o que achou fácil ou difícil, ou o que faltou. O relatório leva a seed e as últimas decisões para eu conseguir repetir a sua carreira.</p>
+    <label class="field">Tipo<select id="fb-kind">${Object.entries(FEEDBACK_KINDS).map(([k, v]) => `<option value="${k}" ${f.kind === k ? 'selected' : ''}>${esc(v)}</option>`).join('')}</select></label>
+    <label class="field">O que aconteceu?<textarea id="fb-text" rows="5" maxlength="2000" style="font:inherit;font-size:16px;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:10px;width:100%">${esc(f.text)}</textarea></label>
+    <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="fb-include" ${f.include && state ? 'checked' : ''} ${state ? '' : 'disabled'}> Incluir o resumo da carreira (seed, versão, últimas decisões)</label>
+    <label class="row" style="gap:6px;font-size:14px"><input type="checkbox" id="fb-full" ${f.full ? 'checked' : ''} ${state ? '' : 'disabled'}> Incluir todas as decisões (maior, mas permite repetir o problema)</label>
+    <div class="row"><button class="btn" data-act="fb-copy">Copiar feedback</button>
+      ${url ? `<a class="btn ghost" id="fb-send" href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-act="fb-send">Enviar pelo GitHub</a>` : ''}
+      <span class="mute" id="fb-msg">${esc(f.msg)}</span></div>
+    ${f.fallback ? `<textarea id="fb-fallback" readonly rows="6" style="font:12px var(--f-mono);color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:3px;padding:8px;width:100%">${esc(f.fallback)}</textarea>` : ''}</section>`;
+}
+
+function copyFeedback() {
+  const f = ui.fb;
+  const say = (t) => { f.msg = t; const el = document.getElementById('fb-msg'); if (el) el.textContent = t; };
+  if (!f.text.trim()) { say('Escreva o que aconteceu antes de copiar.'); return; }
+  const text = currentFeedback();
+  const manual = () => {
+    f.msg = 'Não deu para copiar sozinho: o relatório está selecionado abaixo, copie com Ctrl+C.';
+    f.fallback = text;
+    render();
+    document.getElementById('fb-fallback')?.select();
+  };
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(() => { f.fallback = ''; say('Feedback copiado. Cole na conversa com quem te passou o jogo.'); }, manual);
+  } else manual();
+}
+
+function refreshSendLink() {
+  const a = document.getElementById('fb-send');
+  if (a && FEEDBACK_URL) a.href = sendUrl(FEEDBACK_URL, { kind: ui.fb.kind, text: ui.fb.text, body: currentFeedback() });
 }
 // Evento sem escolha de verdade (uma única opção): com o modo automático ligado, resolve sozinho.
 function isNoChoice(pd) {
@@ -182,6 +225,7 @@ function header(view) {
     <span class="chip" title="Use esta seed na criação para repetir a carreira">seed ${esc(view.seed)}</span>
     <button class="btn ghost small" data-act="undo" ${undoStack.length ? '' : 'disabled'}>Desfazer</button>
     <button class="btn ghost small" data-act="export-current">Salvar em arquivo</button>
+    <button class="btn ghost small" data-act="fb-open">Feedback</button>
     <button class="btn ghost small" data-act="newgame">${saves.available ? 'Menu' : 'Sair'}</button>
   </header>${ui.confirmNew ? `<div class="note">Sem salvamento neste navegador: sair perde a carreira (use "Salvar em arquivo" antes). <button class="btn small" data-act="newgame-yes">Sair mesmo assim</button> <button class="btn ghost small" data-act="newgame-no">Cancelar</button></div>` : ''}
   ${ui.saveWarn ? `<div class="note err">O navegador recusou gravar a carreira. Ela continua nesta aba, mas use "Salvar em arquivo" para não perder.</div>` : ''}`;
@@ -260,7 +304,7 @@ function screenCreate() {
     : free.length === 0 ? ''
       : `<label class="field">Salvar no slot<select id="f-slot">${free.map((s) => `<option value="${s.slot}" ${String(s.slot) === String(d.slot) ? 'selected' : ''}>Slot ${s.slot}</option>`).join('')}</select></label>`;
   const noSlots = saves.available && free.length === 0;
-  return `<header class="bar"><div class="logo">Ap<b>e</b>x</div><span class="chip">protótipo</span></header>
+  return `<header class="bar"><div class="logo">Ap<b>e</b>x</div><span class="chip">protótipo</span><button class="btn ghost small" data-act="fb-open">Feedback</button></header>
   <section class="card">
     <h1>Do kart à glória</h1>
     <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
@@ -481,7 +525,7 @@ function screenAlt(view) {
 
 function render() {
   const el = $app();
-  if (!state) { el.innerHTML = screenCreate(); return; }
+  if (!state) { el.innerHTML = (ui.fb.open ? feedbackPanel() : '') + screenCreate(); return; }
   const view = getView(state);
   let html;
   switch (view.screen) {
@@ -497,7 +541,7 @@ function render() {
   }
   if (ui.notice) html = `<div class="note">${esc(ui.notice)}</div>${html}`;
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
-  el.innerHTML = html;
+  el.innerHTML = (ui.fb.open ? feedbackPanel() : '') + html;
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
   if (key !== lastKey) { lastKey = key; window.scrollTo(0, 0); }
 }
@@ -556,6 +600,10 @@ function importFile(file) {
   reader.readAsText(file);
 }
 
+document.addEventListener('input', (e) => {
+  if (e.target.id === 'fb-text') { ui.fb.text = e.target.value; ui.fb.msg = ''; ui.fb.fallback = ''; document.getElementById('fb-fallback')?.remove(); refreshSendLink(); }
+});
+
 document.addEventListener('submit', (e) => { if (e.target.id === 'create') { e.preventDefault(); startCareer(); } });
 
 document.addEventListener('change', (e) => {
@@ -564,6 +612,9 @@ document.addEventListener('change', (e) => {
   else if (t.name === 't-clause') ui.terms.clause = t.value;
   else if (t.id === 't-exit') ui.terms.exit = t.checked;
   else if (t.id === 'f-import' && t.files?.[0]) importFile(t.files[0]);
+  else if (t.id === 'fb-kind') { ui.fb.kind = t.value; refreshSendLink(); }
+  else if (t.id === 'fb-include') { ui.fb.include = t.checked; refreshSendLink(); }
+  else if (t.id === 'fb-full') { ui.fb.full = t.checked; refreshSendLink(); }
   else if (t.id === 't-auto') { ui.autoSingle = t.checked; run((s) => settle(s)); }
 });
 
@@ -608,6 +659,10 @@ document.addEventListener('click', (e) => {
     case 'copy': return copySummary();
     case 'undo': return undo();
     case 'copy-error': return copyErrorReport();
+    case 'fb-open': ui.fb.open = true; ui.fb.msg = ''; if (ui.error && !ui.fb.text) ui.fb.text = `Erro: ${ui.error}\n`; render(); document.getElementById('fb-text')?.focus(); return undefined;
+    case 'fb-close': ui.fb.open = false; return render();
+    case 'fb-copy': return copyFeedback();
+    case 'fb-send': if (!ui.fb.text.trim()) { e.preventDefault(); ui.fb.msg = 'Escreva o que aconteceu antes de enviar.'; const m = document.getElementById('fb-msg'); if (m) m.textContent = ui.fb.msg; } return undefined;
     default:
   }
 });

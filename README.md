@@ -110,6 +110,19 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
 - Desvios da spec: `rival_reencontro` ficou de fora (não há rival persistente na F1); o "rival do ano" é o piloto de skill mais próxima fora a equipe; efeitos de corrida reordenam o resultado depois da simulação (determinístico, mas não é ajuste de performance antes da ordenação); `story_event` não está na lista de tipos da spec-loop-jogador.
 - Medido em 100 carreiras (política passiva): 63% das corridas quietas (alvo ~60%; `raceEventChance` 0.54 + intervalo de 4 corridas por evento, porque sem ele `pneu_aposta` e `chamada_estrategia` dominavam). Todos os efeitos têm teste unitário; todo evento tem condição provadamente satisfazível em teste. Em simulação, `contrato_vazado` e `fia_polemica_titulo` não dispararam (política passiva não assina cláusula de saída nem chega perto do título); o critério "<3% das temporadas" da fia_polemica passa com folga mas foi medido em 0%, então vale revisar com jogo real.
 
+## Publicar o jogo (GitHub Pages)
+
+`npm run build` gera `dist/index.html` (o jogo inteiro em um arquivo). O workflow [.github/workflows/pages.yml](.github/workflows/pages.yml) roda os testes, constrói e publica a cada push na `main`.
+
+1. Criar o repositório e enviar o código (Pages gratuito exige repositório **público**, então o código fica visível):
+   ```bash
+   gh repo create apex --public --source . --push
+   ```
+2. No GitHub: Settings > Pages > Source: **GitHub Actions** (só na primeira vez).
+3. O jogo fica em `https://<usuario>.github.io/apex/`. O botão "Enviar pelo GitHub" do formulário de feedback abre uma issue nesse repositório (o workflow define `APEX_FEEDBACK_URL`).
+
+Alternativa: Cloudflare Pages com build `npm run build` e pasta de saída `dist`. Para testar o botão de envio localmente: `APEX_FEEDBACK_URL=https://github.com/usuario/apex/issues/new npm run build`.
+
 ## Dívidas de design anotadas
 
 - Piloto 1 / piloto 2 e ordens de equipe
