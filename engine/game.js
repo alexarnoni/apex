@@ -233,6 +233,7 @@ function openOffers(s, rng) {
     why: tier === 'top'
       ? 'Sua nota de scouting foi alta: equipes de ponta querem você.'
       : 'Sua nota de scouting só convenceu equipes do fundo do grid.',
+    ...upNotes(s, team, rank, n, nextId),
   }));
   s.pendingDecision = {
     type: 'offer_pick',
@@ -241,7 +242,9 @@ function openOffers(s, rng) {
       tier,
       options: [
         ...ups,
-        { id: 'stay', kind: 'stay', category: bc.category, teamId: bc.teamId, teamName: curTeam.name, label: `Ficar na ${curTeam.name}`, consequence: `Mais um ano em ${curName}.`, why: 'Ficar dá mais um ano para melhorar a nota de scouting.' },
+        { id: 'stay', kind: 'stay', category: bc.category, teamId: bc.teamId, teamName: curTeam.name, label: `Ficar na ${curTeam.name}`, consequence: `Mais um ano em ${curName}.`, why: 'Ficar dá mais um ano para melhorar a nota de scouting.',
+          pros: ['Você já conhece a equipe e o carro.'],
+          cons: ['Cada ano a mais na categoria aumenta a pressão de idade na nota de scouting.'] },
       ],
     },
   };
@@ -254,6 +257,18 @@ function shuffled(arr, rng) {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// Vantagens e riscos de uma oferta de subida, em frases curtas (a UI só lista).
+function upNotes(s, team, rank, n, nextId) {
+  const pros = [];
+  const cons = ['A categoria de cima tem adversários mais fortes.'];
+  if (rank <= 3) pros.push('Carro de ponta: dá para brigar por vitórias e chamar atenção.');
+  if (rank > n - 3) cons.push('Carro do fundo do grid: é difícil impressionar os olheiros.');
+  const ac = s.player.academy?.teamId;
+  if (ac && (nextId === 'f1' ? team.id === ac : team.academy === ac)) pros.push('Ligada à sua academia: bônus na nota de scouting.');
+  if (nextId === 'f1') pros.push('É a Fórmula 1: o objetivo da carreira de base.');
+  return { pros, cons };
 }
 
 function rankLabel(rank, n) {
@@ -330,6 +345,12 @@ function scoutingLine(summary) {
   return 'Ninguém ligou. Os olheiros não viram o suficiente.';
 }
 
+// O potencial exato fica escondido: a UI mostra só uma faixa de 10 pontos ("estimativa dos olheiros").
+export function potentialBand(potential) {
+  const lo = Math.round((potential - 5) / 5) * 5;
+  return [lo, lo + 10];
+}
+
 const num1 = (n) => (Math.round(n * 10) / 10).toLocaleString('pt-BR');
 const signed = (n) => `${n >= 0 ? '+' : '−'}${num1(Math.abs(n))}`;
 
@@ -362,7 +383,11 @@ export function getView(state) {
     seed: state.seed,
     engineVersion: state.engineVersion,
     year: state.year,
-    player: { name: p.name, number: p.number, flag: p.flag, style: p.style, age: p.age, fame: p.fame, academy: p.academy, stats: p.stats },
+    player: {
+      name: p.name, number: p.number, flag: p.flag, style: p.style, age: p.age, fame: p.fame, academy: p.academy, stats: p.stats,
+      skill: Math.round(p.skill * 10) / 10,
+      potentialBand: potentialBand(p.potential),
+    },
     decision: state.pendingDecision,
     log: state.careerLog.slice(-10),
   };

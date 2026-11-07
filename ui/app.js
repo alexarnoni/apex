@@ -30,7 +30,7 @@ let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
-let ui = { fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let ui = { helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -124,6 +124,31 @@ function undo() {
 function errorReport() {
   return buildFeedback({ kind: 'bug', text: `Erro: ${ui.error}`, state, includeCareer: true, userAgent: navigator.userAgent });
 }
+
+// --- ajuda e glossário (1.2) ---------------------------------------------------
+// Sem números de regra aqui: os valores vivem em engine/config.js e mudam com a calibração.
+
+const HELP = [
+  ['O objetivo', 'Você é um piloto jovem. Comece no kart, suba por F4, F3 e F2 até a Fórmula 1, dispute títulos e encerre a carreira com o maior legado que conseguir. Uma carreira dura uns 20 minutos.'],
+  ['Como se sobe na base', 'Cada temporada tem uma escolha de pré-temporada (presente ou futuro) e termina com uma nota de scouting. Nota alta: equipes de ponta da categoria de cima fazem oferta. Nota média: só equipes do fundo do grid. Nota baixa: você repete a categoria. Subir nunca é automático.'],
+  ['Nota de scouting', 'Soma o resultado no campeonato, um bônus por bater carros melhores que o seu, academia e fama, menos uma pressão por idade acima do típico da categoria. A tela mostra cada parcela.'],
+  ['Academia', 'Convite de uma equipe de F1 para a sua formação. Aumenta a nota de scouting nas temporadas seguintes e abre ofertas ligadas a essa equipe.'],
+  ['Estilo de pilotagem', 'Agressivo: mais rápido na classificação, mas oscila e abandona mais. Técnico: vai bem na chuva e ajuda a equipe a desenvolver o carro. Consistente: raramente abandona e pontua sempre, com menos picos.'],
+  ['Nível e teto estimado', 'Nível é a sua habilidade hoje. Ela cresce com a idade, o treino e as escolhas, até um teto que você só vê como estimativa dos olheiros.'],
+  ['Fama', 'Sobe com resultados e certos eventos. Ajuda nas ofertas e é uma das formas de conseguir cláusula de saída no contrato.'],
+  ['Status na equipe', 'Piloto 1 tem prioridade e um bônus de desempenho. Piloto 2 pode receber ordem de equipe para ceder posição. Igual significa sem prioridade. O status vem do desempenho em relação ao companheiro ou de uma cláusula do contrato.'],
+  ['Ordem de equipe e confiança', 'Quando você, como piloto 2, está na frente do piloto 1, a equipe pode mandar ceder a posição. Obedecer aumenta a confiança da equipe; desafiar reduz bastante. Confiança baixa pode custar o status e até a renovação.'],
+  ['Contrato', 'Você escolhe a duração, a cláusula de status (piloto 1 ou tratamento igual) e, se a equipe aceitar, a cláusula de saída. A equipe só dá piloto 1 se você for claramente melhor que o companheiro. Trocar de equipe zera a confiança acumulada.'],
+  ['Eventos', 'Notícias e decisões de corrida podem mexer em fama, confiança, performance e até na posição final. Algumas têm risco: leia as opções antes de escolher.'],
+  ['Simular, desfazer e salvar', 'Dá para simular várias corridas de uma vez; a simulação para quando há uma decisão sua. "Desfazer" volta um passo. O jogo salva sozinho em slots neste navegador, e "Salvar em arquivo" gera um .json que pode ser importado depois.'],
+];
+
+function helpPanel() {
+  return `<section class="card focus" id="help-panel"><div class="row" style="justify-content:space-between"><h2>Como funciona</h2><button class="btn ghost small" data-act="help-close">Fechar</button></div>
+    ${HELP.map(([t, d]) => `<details><summary>${esc(t)}</summary><p style="margin-top:6px">${esc(d)}</p></details>`).join('')}</section>`;
+}
+
+const panels = () => (ui.helpOpen ? helpPanel() : '') + (ui.fb.open ? feedbackPanel() : '');
 
 // --- feedback (F.9) ---------------------------------------------------------
 
@@ -225,6 +250,7 @@ function header(view) {
     <span class="chip" title="Use esta seed na criação para repetir a carreira">seed ${esc(view.seed)}</span>
     <button class="btn ghost small" data-act="undo" ${undoStack.length ? '' : 'disabled'}>Desfazer</button>
     <button class="btn ghost small" data-act="export-current">Salvar em arquivo</button>
+    <button class="btn ghost small" data-act="help-open">Ajuda</button>
     <button class="btn ghost small" data-act="fb-open">Feedback</button>
     <button class="btn ghost small" data-act="newgame">${saves.available ? 'Menu' : 'Sair'}</button>
   </header>${ui.confirmNew ? `<div class="note">Sem salvamento neste navegador: sair perde a carreira (use "Salvar em arquivo" antes). <button class="btn small" data-act="newgame-yes">Sair mesmo assim</button> <button class="btn ghost small" data-act="newgame-no">Cancelar</button></div>` : ''}
@@ -237,12 +263,16 @@ function playerStats(view) {
   const p = view.player;
   const st = p.stats;
   return `<div class="stats">
+    ${stat('Estilo', STYLES[p.style]?.name ?? p.style)}
+    ${stat('Nível', p.skill)}
+    ${stat('Teto estimado', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}
     ${stat('Fama', Math.round(p.fame * 10) / 10)}
     ${stat('Vitórias', st.wins)}
     ${stat('Pódios', st.podiums)}
     ${stat('Títulos', st.titles)}
     ${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}
-  </div>`;
+  </div>
+  <p class="mute" style="font-size:13px">Nível é a sua habilidade hoje (0 a 100). Teto estimado é o palpite dos olheiros de até onde você chega.</p>`;
 }
 
 function towerRows(rows, limit = 10) {
@@ -304,7 +334,7 @@ function screenCreate() {
     : free.length === 0 ? ''
       : `<label class="field">Salvar no slot<select id="f-slot">${free.map((s) => `<option value="${s.slot}" ${String(s.slot) === String(d.slot) ? 'selected' : ''}>Slot ${s.slot}</option>`).join('')}</select></label>`;
   const noSlots = saves.available && free.length === 0;
-  return `<header class="bar"><div class="logo">Ap<b>e</b>x</div><span class="chip">protótipo</span><button class="btn ghost small" data-act="fb-open">Feedback</button></header>
+  return `<header class="bar"><div class="logo">Ap<b>e</b>x</div><span class="chip">protótipo</span><button class="btn ghost small" data-act="help-open">Ajuda</button><button class="btn ghost small" data-act="fb-open">Feedback</button></header>
   <section class="card">
     <h1>Do kart à glória</h1>
     <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
@@ -365,7 +395,7 @@ function screenBase(view) {
         : o.consequence;
       const color = o.category === 'f1' && o.kind === 'up' ? TEAM_COLOR[o.teamId] : null;
       const label = color ? `<span class="team"><i style="background:${esc(color)}"></i>${esc(o.label)}</span>` : esc(o.label);
-      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${label}</strong><span>${esc(sub)}</span>${o.why ? `<span>${esc(o.why)}</span>` : ''}</button>`;
+      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${label}</strong><span>${esc(sub)}</span>${o.why ? `<span>${esc(o.why)}</span>` : ''}${proscons(o)}</button>`;
     }).join('');
     body = `<section class="card focus"><h2>Ofertas</h2><div class="grid2">${cards}</div></section>`;
   }
@@ -378,8 +408,17 @@ function screenBase(view) {
 
 function raceLine(r) {
   if (!r) return '';
-  const mine = r.playerPos ? `Você terminou em <b>P${r.playerPos}</b>.` : `<b class="pill bad">Abandono</b>`;
-  return `<p>Corrida ${r.n}${r.wet ? ' · <span class="pill">chuva</span>' : ''}: ${mine} <span class="mute">Vitória: ${esc(r.winner ?? '—')} · Pole: ${esc(r.pole)}</span></p>`;
+  const mine = r.summary ? esc(r.summary) : (r.playerPos ? `Você terminou em <b>P${r.playerPos}</b>.` : '<b class="pill bad">Abandono</b>');
+  return `<p><b>Corrida ${r.n}</b>${r.wet ? ' · <span class="pill">chuva</span>' : ''}: ${mine}</p>
+    <p class="mute" style="font-size:14px">Vitória: ${esc(r.winner ?? '—')} · Pole: ${esc(r.pole)}</p>`;
+}
+
+// Vantagens (+) e riscos (−) de uma oferta, em lista curta.
+function proscons(o) {
+  // <span> e não <ul>: o cartão inteiro é um <button>, que só aceita conteúdo inline.
+  const line = (sign, t, cls) => `<span class="${cls}"><b aria-hidden="true">${sign}</b> <span class="sr-only">${cls === 'pro' ? 'Vantagem:' : 'Risco:'}</span> ${esc(t)}</span>`;
+  const items = [...(o.pros ?? []).map((t) => line('+', t, 'pro')), ...(o.cons ?? []).map((t) => line('−', t, 'con'))];
+  return items.length ? `<span class="pc">${items.join('')}</span>` : '';
 }
 
 function f1Strip(view) {
@@ -470,7 +509,7 @@ function screenOffers(view) {
   } else if (pd.type === 'offer_pick') {
     body = `<section class="card focus"><h2>Mercado de pilotos</h2><div class="grid2">${pd.payload.options.map((o) => {
       const verb = o.kind === 'renew' ? 'Renovar com' : o.kind === 'keep' ? 'Cumprir contrato com' : 'Assinar com';
-      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${verb} ${esc(o.teamName)}</strong><span>Carro: ${esc(o.carLabel)} (#${esc(o.carRank)})</span>${o.why ? `<span>${esc(o.why)}</span>` : ''}</button>`;
+      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${verb} ${esc(o.teamName)}</strong><span>Carro: ${esc(o.carLabel)} (#${esc(o.carRank)})${o.mate ? ` · Companheiro: ${esc(o.mate)}` : ''}</span>${o.why ? `<span>${esc(o.why)}</span>` : ''}${proscons(o)}</button>`;
     }).join('')}</div></section>`;
   } else if (pd.type === 'contract_terms') {
     const o = pd.payload.options;
@@ -523,9 +562,18 @@ function screenAlt(view) {
 
 // --- render ----------------------------------------------------------------
 
+// Troca de tela: leva o foco ao título principal, para leitor de tela e teclado começarem do topo.
+// (O #app não é aria-live: ele é redesenhado a cada clique e leria a tela inteira de novo.)
+function focusHeading(root) {
+  const h = [...root.querySelectorAll('h1, h2')].find((x) => !x.closest('#help-panel, #fb-panel'));
+  if (!h) return;
+  h.setAttribute('tabindex', '-1');
+  h.focus({ preventScroll: true });
+}
+
 function render() {
   const el = $app();
-  if (!state) { el.innerHTML = (ui.fb.open ? feedbackPanel() : '') + screenCreate(); return; }
+  if (!state) { el.innerHTML = panels() + screenCreate(); return; }
   const view = getView(state);
   let html;
   switch (view.screen) {
@@ -539,11 +587,11 @@ function render() {
     case 'ROTA_ALTERNATIVA': html = screenAlt(view); break;
     default: html = `<div class="note err">Tela desconhecida: ${esc(view.screen)}</div>`;
   }
-  if (ui.notice) html = `<div class="note">${esc(ui.notice)}</div>${html}`;
+  if (ui.notice) html = `<div class="note" role="status">${esc(ui.notice)}</div>${html}`;
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
-  el.innerHTML = (ui.fb.open ? feedbackPanel() : '') + html;
+  el.innerHTML = panels() + html;
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
-  if (key !== lastKey) { lastKey = key; window.scrollTo(0, 0); }
+  if (key !== lastKey) { lastKey = key; window.scrollTo(0, 0); focusHeading(el); }
 }
 
 // --- eventos -----------------------------------------------------------------
@@ -659,7 +707,9 @@ document.addEventListener('click', (e) => {
     case 'copy': return copySummary();
     case 'undo': return undo();
     case 'copy-error': return copyErrorReport();
-    case 'fb-open': ui.fb.open = true; ui.fb.msg = ''; if (ui.error && !ui.fb.text) ui.fb.text = `Erro: ${ui.error}\n`; render(); document.getElementById('fb-text')?.focus(); return undefined;
+    case 'help-open': ui.helpOpen = true; ui.fb.open = false; render(); document.getElementById('help-panel')?.scrollIntoView?.({ block: 'start' }); return undefined;
+    case 'help-close': ui.helpOpen = false; return render();
+    case 'fb-open': ui.helpOpen = false; ui.fb.open = true; ui.fb.msg = ''; if (ui.error && !ui.fb.text) ui.fb.text = `Erro: ${ui.error}\n`; render(); document.getElementById('fb-text')?.focus(); return undefined;
     case 'fb-close': ui.fb.open = false; return render();
     case 'fb-copy': return copyFeedback();
     case 'fb-send': if (!ui.fb.text.trim()) { e.preventDefault(); ui.fb.msg = 'Escreva o que aconteceu antes de enviar.'; const m = document.getElementById('fb-msg'); if (m) m.textContent = ui.fb.msg; } return undefined;

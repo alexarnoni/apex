@@ -14,7 +14,7 @@
   --mute: #5a6172;
   --signal: #a87400;
   --signal-ink: #ffffff;
-  --good: #1d7a45;
+  --good: #17653a;
   --bad: #b3261e;
   --you: #fff3c4;
   --f-display: "Barlow Condensed", "Arial Narrow", sans-serif;
@@ -63,7 +63,15 @@ p { margin: 0; }
 }
 .btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
 .btn.small { font-size: 14px; padding: 6px 12px; min-height: 36px; }
-.btn:focus-visible, .opt:focus-visible, input:focus-visible, select:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+.btn:focus-visible, .opt:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+h1:focus, h2:focus { outline: none; }
+.sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.pc { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; font-size: 13px; }
+.pc .pro { color: var(--good); }
+.pc .con { color: var(--bad); }
+.pc b { font-family: var(--f-mono); }
+details { border-top: 1px solid var(--line); padding-top: 8px; }
+details summary { font-weight: 600; color: var(--fg); min-height: 32px; display: flex; align-items: center; }
 .btn[disabled] { opacity: .45; cursor: not-allowed; }
 .opt {
   text-align: left; font: inherit; color: inherit; background: var(--panel2); border: 1px solid var(--line); border-radius: 4px;
@@ -112,5 +120,5 @@ details summary { cursor: pointer; color: var(--mute); font-size: 14px; }
 @media (prefers-reduced-motion: no-preference) { .bar-meter i { transition: width .25s; } }
 @media (max-width: 480px) { h1 { font-size: 32px; } .big { font-size: 44px; } }
 </style>
-<div class="wrap" id="app" aria-live="polite"></div>
+<div class="wrap" id="app" role="main"></div>
 <script>{{BUNDLE}}</script>

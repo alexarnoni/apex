@@ -125,6 +125,82 @@ export const NARRATIVE_EVENTS = [
       { id: 'ferias', label: 'Férias', description: '+1 de skill: o descanso vira treino.', outcomes: [{ p: 1, effects: { skill: 1 }, text: 'Você sumiu do mapa e voltou mais descansado.' }] },
     ],
   },
+
+  // --- mais eventos (roadmap 1.8) -------------------------------------------
+  {
+    id: 'patrocinador_novo', phase: 'season_start', weight: 2,
+    cond: (c) => c.player.fame >= 3,
+    title: 'Proposta de patrocínio',
+    text: () => 'Uma marca grande quer o seu capacete e a sua cara em outdoor. O contrato exige agenda de mídia pesada.',
+    options: [
+      { id: 'fechar', label: 'Fechar com a marca', description: '+2 de fama, -3 de confiança (a equipe fica de olho no seu foco).', outcomes: [{ p: 1, effects: { fame: 2, trust: -3 }, text: 'Seu rosto está em todo lugar. A equipe cobra foco.' }] },
+      { id: 'recusar', label: 'Recusar e focar nas pistas', description: '+3 de confiança.', outcomes: [{ p: 1, effects: { trust: 3 }, text: 'A equipe gostou de ver o foco na pista.' }] },
+    ],
+  },
+  {
+    id: 'engenheiro_de_pista', phase: 'season_start', weight: 2,
+    cond: () => true,
+    title: 'Novo engenheiro de pista',
+    text: (c) => `A ${c.teamName} trocou o seu engenheiro de pista. O novo é meticuloso e fala pouco, mas os ajustes dele costumam ser certeiros.`,
+    options: ok([{ p: 1, effects: { perfBuff: { value: 1, races: 6 } }, text: '+1 de performance nas próximas 6 corridas, enquanto vocês se entendem.' }]),
+  },
+  {
+    id: 'simulador_extra', phase: 'season_start', weight: 2,
+    cond: (c) => c.teamRank <= 4,
+    title: 'Horas extras no simulador',
+    text: (c) => `A ${c.teamName} liberou horários extras no simulador antes do campeonato.`,
+    options: [
+      { id: 'treinar', label: 'Treinar até cansar', description: '+1 de skill.', outcomes: [{ p: 1, effects: { skill: 1 }, text: 'Você chega para a primeira corrida mais afiado.' }] },
+      { id: 'rotina', label: 'Manter a rotina', description: '+2 de confiança (a equipe valoriza o equilíbrio).', outcomes: [{ p: 1, effects: { trust: 2 }, text: 'Você preservou o corpo e a cabeça.' }] },
+    ],
+  },
+  {
+    id: 'conselho_de_familia', phase: 'season_start', weight: 2,
+    cond: (c) => c.player.age <= 21,
+    title: 'Conselho de família',
+    text: () => 'Seu pai quer opinar na sua temporada, como sempre fez desde o kart. Ele ainda enxerga detalhes que você não vê.',
+    options: [
+      { id: 'ouvir', label: 'Ouvir com atenção', description: '+0.5 de skill.', outcomes: [{ p: 1, effects: { skill: 0.5 }, text: 'Duas ou três dicas dele valem o ano.' }] },
+      { id: 'espaco', label: 'Pedir espaço', description: '+2 de confiança da equipe.', outcomes: [{ p: 1, effects: { trust: 2 }, text: 'A equipe vê um profissional dono das próprias decisões.' }] },
+    ],
+  },
+  {
+    id: 'crise_na_equipe', phase: 'mid_season', weight: 3,
+    cond: (c) => c.teamRank >= 8 && c.noPointsStreak >= 2,
+    title: 'Crise na garagem',
+    text: (c) => `A ${c.teamName} está sem rumo: carro fraco, culpa trocando de mão e o clima ficou pesado.`,
+    options: [
+      { id: 'apoiar', label: 'Apoiar a equipe', description: '+5 de confiança.', outcomes: [{ p: 1, effects: { trust: 5 }, text: 'Você segurou o grupo e a equipe lembrou.' }] },
+      { id: 'criticar', label: 'Criticar em público', description: '+1 de fama, -10 de confiança.', outcomes: [{ p: 1, effects: { fame: 1, trust: -10 }, text: 'Você disse o que todo mundo pensava. A diretoria não gostou.' }] },
+    ],
+  },
+  {
+    id: 'entrevista_viral', phase: 'mid_season', weight: 2,
+    cond: (c) => c.player.fame >= 4,
+    title: 'Entrevista que viralizou',
+    text: () => 'Um trecho da sua entrevista depois da corrida circula em todos os perfis de F1.',
+    options: [
+      { id: 'brincar', label: 'Entrar na brincadeira', description: '+1 de fama.', outcomes: [{ p: 1, effects: { fame: 1 }, text: 'Você virou assunto, e o clima ficou leve.' }] },
+      { id: 'serio', label: 'Manter a seriedade', description: '+3 de confiança.', outcomes: [{ p: 1, effects: { trust: 3 }, text: 'A equipe agradeceu a discrição.' }] },
+    ],
+  },
+  {
+    id: 'premio_revelacao', phase: 'season_end', weight: 2,
+    cond: (c) => c.seasonPos <= 5 && c.player.age <= 22,
+    title: 'Revelação do ano',
+    text: () => 'A imprensa especializada elegeu você a revelação da temporada.',
+    options: ok([{ p: 1, effects: { fame: 2 }, text: '+2 de fama: o paddock inteiro sabe seu nome.' }]),
+  },
+  {
+    id: 'fa_clube', phase: 'season_end', weight: 1,
+    cond: (c) => c.player.fame >= 6,
+    title: 'O fã-clube chegou',
+    text: () => 'Um fã-clube organizado quer receber você para um encontro na volta para casa.',
+    options: [
+      { id: 'encontro', label: 'Ir ao encontro', description: '+1 de fama.', outcomes: [{ p: 1, effects: { fame: 1 }, text: 'Uma noite longa, muita foto, uma torcida a mais.' }] },
+      { id: 'privacidade', label: 'Preservar a privacidade', description: '+2 de confiança.', outcomes: [{ p: 1, effects: { trust: 2 }, text: 'Você descansou e a equipe agradeceu a discrição.' }] },
+    ],
+  },
 ];
 
 export const RACE_EVENTS = [
@@ -227,6 +303,38 @@ export const RACE_EVENTS = [
       { id: 'limpo', label: 'Defender limpo', description: '45% de segurar.', outcomes: [
         { p: 0.45, effects: {}, text: 'Defesa limpa. Você segura.' },
         { p: 0.55, effects: { shift: -1 }, text: 'Ele passa com facilidade.' },
+      ] },
+    ],
+  },
+  {
+    id: 'largada_confusa', phase: 'race', weight: 3,
+    cond: (c) => c.pos !== null && c.pos >= 5 && c.pos <= 15,
+    title: 'Largada confusa',
+    text: () => 'Luzes se apagam e o pelotão se espreme na primeira curva. Há espaço por dentro, mas é pouco.',
+    options: [
+      { id: 'atacar', label: 'Atacar na primeira curva', description: '35% de ganhar 2 posições, 15% de perder 2, 10% de abandonar.', outcomes: [
+        { p: 0.35, effects: { shift: 2 }, text: 'Você mergulha por dentro e passa dois carros antes da curva 2.' },
+        { p: 0.15, effects: { shift: -2 }, text: 'Você é espremido e perde duas posições.' },
+        { p: 0.1, effects: { dnf: true }, text: 'Toque na primeira curva: pneu furado e corrida encerrada.' },
+        { p: 0.4, effects: {}, text: 'Sem espaço: você mantém a posição.' },
+      ] },
+      { id: 'esperar', label: 'Esperar a poeira baixar', description: '20% de ganhar 1 posição.', outcomes: [
+        { p: 0.2, effects: { shift: 1 }, text: 'Dois carros se tocam à sua frente e você herda uma posição.' },
+        { p: 0.8, effects: {}, text: 'Largada limpa. Nada muda.' },
+      ] },
+    ],
+  },
+  {
+    id: 'bandeira_amarela', phase: 'race', weight: 3,
+    cond: (c) => c.pos !== null && c.pos <= 8,
+    title: 'Bandeira amarela',
+    text: () => 'Bandeira amarela no setor 2. Levantar o pé como mandam as regras ou manter o ritmo e torcer para os comissários não notarem?',
+    options: [
+      { id: 'levantar', label: 'Levantar o pé', description: 'Seguro: nada muda.', outcomes: [{ p: 1, effects: {}, text: 'Você obedece e perde um décimo. Nada muda.' }] },
+      { id: 'manter', label: 'Manter o ritmo', description: '25% de ganhar 1 posição, 15% de punição (-2 posições).', outcomes: [
+        { p: 0.25, effects: { shift: 1 }, text: 'O rival levantou o pé e você aproveitou para passar.' },
+        { p: 0.15, effects: { shift: -2 }, text: 'Os comissários notaram: punição de tempo e duas posições a menos.' },
+        { p: 0.6, effects: {}, text: 'Ninguém reparou. Nada muda.' },
       ] },
     ],
   },

@@ -259,6 +259,8 @@ export function resolveWeekendApproach(s, rng, answer) {
   }
 
   const w = startRace(drivers, world.category, rng, teamsById(world));
+  // Dados da corrida em curso, para o resumo de fim de corrida (largada, abordagem, evento).
+  season.cur = { grid: out ? null : (w.quali.indexOf(p) + 1) || null, approach: out ? 'rest' : answer.id, event: null };
   if (!out) {
     const ctx = raceCtx(s, w);
     const ev = pickRaceEvent(RACE_EVENTS, ctx, rng);
@@ -302,6 +304,7 @@ export function resolveRaceEvent(s, rng, answer) {
   const outcome = rollOutcome(opt, rng);
   applyEffects(ctx, outcome.effects, rng);
   recordEvent(s, ev, outcome.text);
+  season.cur.event = ev.title;
   season.lastEventRace = season.raceIndex + 1;
   season.pendingRace = null;
   continueToOrders(s, rng, w, pr.absent, ev.id);
@@ -348,6 +351,32 @@ export function resolveTeamOrder(s, rng, answer) {
   finishRace(s, rng, w, false, pr.eventId);
 }
 
+// Uma frase sobre o que decidiu a corrida: largada x chegada, chuva, abordagem, evento e ordem de equipe.
+export function raceSummary(race, cur, order, playerName) {
+  if (race.missed) return 'Você ficou fora desta corrida.';
+  const bits = [];
+  const grid = race.grid;
+  if (race.playerPos === null) {
+    bits.push(grid ? `Largou em P${grid} e abandonou.` : 'Abandonou.');
+  } else if (grid) {
+    const d = grid - race.playerPos;
+    const delta = d > 0 ? ` (+${d})` : d < 0 ? ` (−${-d})` : '';
+    bits.push(`Largou em P${grid} e terminou em P${race.playerPos}${delta}.`);
+  } else {
+    bits.push(`Terminou em P${race.playerPos}.`);
+  }
+  if (race.wet) bits.push('Corrida na chuva.');
+  if (cur?.approach === 'risky') bits.push('Abordagem arriscada.');
+  if (cur?.approach === 'conservative') bits.push('Abordagem conservadora.');
+  if (cur?.event) bits.push(`Evento: ${cur.event}.`);
+  if (order) {
+    if (order.p2 === playerName) bits.push(order.defied ? 'Você desafiou a ordem de equipe.' : 'Você cedeu a posição por ordem de equipe.');
+    else bits.push('A equipe mandou o companheiro ceder a posição a você.');
+  }
+  if (race.playerPos === 1) bits.push('Vitória!');
+  return bits.join(' ');
+}
+
 function finishRace(s, rng, w, absent, eventId) {
   const { season } = s.f1;
   const p = s.player;
@@ -356,7 +385,11 @@ function finishRace(s, rng, w, absent, eventId) {
   const race = {
     n: season.raceIndex + 1, wet: a.wet, winner: a.winner, pole: a.pole,
     playerPos: absent ? null : (pos || null), missed: absent, event: eventId,
+    grid: season.cur?.grid ?? null,
   };
+  const order = season.ordersLog.find((o) => o.race === race.n && (o.p1 === p.name || o.p2 === p.name));
+  race.summary = raceSummary(race, season.cur, order, p.name);
+  season.cur = null;
   season.races.push(race);
   season.lastRace = race;
   p.perfBonus = 0;
@@ -516,11 +549,36 @@ function openOffers(s) {
         if (o.kind === 'renew') why = 'Seu contrato acabou e a equipe quer renovar.';
         else if (o.kind === 'keep') why = 'Sua cláusula de saída deixa você ficar ou sair; ficar mantém o contrato.';
         else why = `Você vale mais para o mercado que ${weakestMate(world, o.teamId)?.name ?? 'o piloto mais fraco'}, o piloto mais fraco dessa equipe.`;
-        return { ...o, teamName: teamName(world, o.teamId), carRank: rank, carLabel: carLabel(rank), why };
+        return { ...o, teamName: teamName(world, o.teamId), carRank: rank, carLabel: carLabel(rank), why, ...offerNotes(world, p, o, rank) };
       }),
     },
   };
   return undefined;
+}
+
+// Vantagens e riscos de uma oferta de F1, em frases curtas: carro, companheiro e confiança.
+export function offerNotes(world, p, o, rank) {
+  const pros = [];
+  const cons = [];
+  const T = F1().carTierRank;
+  if (rank <= T.top) pros.push('Carro de ponta: dá para brigar por pódios e vitórias.');
+  if (rank > T.mid) cons.push('Carro do fundo do grid: pontuar vai ser difícil.');
+
+  // Companheiro depois da troca: quem sobra na equipe (na troca o jogador toma o lugar do mais fraco).
+  let mate = world.drivers.find((d) => d.team === o.teamId && d !== p);
+  let mateName = mate?.name;
+  if (o.kind === 'move') {
+    const weak = weakestMate(world, o.teamId);
+    mate = world.drivers.find((d) => d.team === o.teamId && !d.isPlayer && d !== weak);
+    mateName = mate?.name;
+  }
+  if (mate) {
+    if (marketScore(p) >= marketScore(mate)) pros.push(`${mateName} é um companheiro mais fraco que você: boa chance de ser piloto 1.`);
+    else cons.push(`${mateName} é mais forte que você: ser piloto 1 vai ser difícil.`);
+  }
+  if (o.kind === 'move') cons.push(`Trocar de equipe zera a confiança acumulada (volta para ${CONFIG.trust.trustStart}).`);
+  else pros.push('Mantém a confiança acumulada com a equipe.');
+  return { pros, cons, mate: mateName ?? null };
 }
 
 function exitClauseAllowed(world, p) {
@@ -674,12 +732,12 @@ export function f1View(s) {
   const standings = [...world.drivers]
     .sort((a, b) => (b.seasonPoints ?? 0) - (a.seasonPoints ?? 0) || (b.seasonWins ?? 0) - (a.seasonWins ?? 0))
     .map((d, i) => ({ pos: i + 1, name: d.name, team: d.team, points: d.seasonPoints ?? 0, isPlayer: !!d.isPlayer }));
-  const isLast = (r) => r && { n: r.n, wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed };
+  const isLast = (r) => r && { n: r.n, wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
   return {
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
-    races: (season?.races ?? []).map((r) => ({ n: r.n, playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null })),
+    races: (season?.races ?? []).map((r) => ({ n: r.n, playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null })),
     trust: p.trust,
     contract: { years: p.contract, statusClause: p.statusClause, exitClause: p.exitClause },
     worldSeason: world.season,

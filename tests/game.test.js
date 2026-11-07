@@ -280,3 +280,62 @@ test('F1: status e ofertas vêm com motivo; a view expõe as corridas do ano', (
   const full = play(f1Start(), (x) => x.pendingDecision?.type === 'offer_pick' && x.pendingDecision.payload.scope === 'f1', { retireAt: 99 });
   if (full.s.pendingDecision) for (const o of full.s.pendingDecision.payload.options) assert.ok(o.why, `${o.id} sem motivo`);
 });
+
+// --- Nível 1: nível/potencial, resumo da corrida, prós e contras ------------------
+
+test('view mostra o nível do piloto e só uma faixa do potencial (nunca o valor exato)', async () => {
+  const { potentialBand } = await import('../engine/game.js');
+  for (const pot of [72, 84, 88.4, 92.6, 99.9]) {
+    const [lo, hi] = potentialBand(pot);
+    assert.ok(lo <= pot && pot <= hi, `${pot} fora de [${lo}, ${hi}]`);
+    assert.equal(hi - lo, 10);
+  }
+  const v = getView(career0());
+  assert.equal(typeof v.player.skill, 'number');
+  assert.equal(v.player.potentialBand.length, 2);
+  assert.equal(v.player.potential, undefined);
+});
+
+function career0() { return createCareer({ ...HERO, seed: 3 }); }
+
+test('raceSummary descreve largada x chegada, chuva, abordagem, evento e ordem de equipe', async () => {
+  const { raceSummary } = await import('../engine/f1.js');
+  assert.equal(raceSummary({ missed: true }, null, null, 'Eu'), 'Você ficou fora desta corrida.');
+  assert.match(raceSummary({ playerPos: null, grid: 6 }, {}, null, 'Eu'), /Largou em P6 e abandonou/);
+  assert.match(raceSummary({ playerPos: 3, grid: 8, wet: true }, { approach: 'risky', event: 'Relargada' }, null, 'Eu'),
+    /Largou em P8 e terminou em P3 \(\+5\)\. Corrida na chuva\. Abordagem arriscada\. Evento: Relargada\./);
+  assert.match(raceSummary({ playerPos: 9, grid: 4 }, { approach: 'conservative' }, null, 'Eu'), /\(−5\)\. Abordagem conservadora/);
+  assert.match(raceSummary({ playerPos: 5, grid: 5 }, {}, { p1: 'A', p2: 'Eu', defied: true }, 'Eu'), /desafiou a ordem/);
+  assert.match(raceSummary({ playerPos: 5, grid: 5 }, {}, { p1: 'A', p2: 'Eu', defied: false }, 'Eu'), /cedeu a posição/);
+  assert.match(raceSummary({ playerPos: 1, grid: 2 }, {}, { p1: 'Eu', p2: 'B' }, 'Eu'), /companheiro ceder.*Vitória/);
+});
+
+test('F1: toda corrida jogada tem resumo; ofertas de base e de F1 trazem vantagens e riscos', () => {
+  let s = applyDecision(f1Start(), { id: 'train' });
+  while (s.pendingDecision.type !== 'weekend_approach') s = applyDecision(s, answerFor(s));
+  for (let i = 0; i < 4; i++) {
+    s = applyDecision(s, answerFor(s));
+    while (s.pendingDecision && s.pendingDecision.type !== 'weekend_approach') s = applyDecision(s, answerFor(s));
+  }
+  const races = getView(s).f1.races.filter((r) => !r.missed);
+  assert.ok(races.length >= 1);
+  for (const r of races) assert.match(r.summary, /Largou em P\d+|Abandonou|Terminou em/);
+
+  for (let seed = 1; seed < 40; seed++) {
+    const b = applyDecision(createCareer({ ...HERO, seed }), { option: 'A' });
+    if (b.pendingDecision.type === 'offer_pick') {
+      for (const o of b.pendingDecision.payload.options) {
+        assert.ok(Array.isArray(o.pros) && Array.isArray(o.cons), `${o.id}`);
+        assert.ok(o.pros.length + o.cons.length >= 1);
+      }
+      break;
+    }
+  }
+  const full = play(f1Start(), (x) => x.pendingDecision?.type === 'offer_pick' && x.pendingDecision.payload.scope === 'f1', { retireAt: 99 });
+  if (full.s.pendingDecision) {
+    for (const o of full.s.pendingDecision.payload.options) {
+      assert.ok(Array.isArray(o.pros) && Array.isArray(o.cons));
+      assert.ok(o.pros.length + o.cons.length >= 1);
+    }
+  }
+});

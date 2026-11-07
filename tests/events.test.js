@@ -5,7 +5,7 @@ import { EFFECTS, applyEffects, rollOutcome, pickRaceEvent } from '../engine/eve
 import { createRng } from '../engine/rng.js';
 import { NARRATIVE_EVENTS, RACE_EVENTS } from '../data/events.js';
 
-const mk = (name, extra = {}) => ({ name, skill: 80, potential: 90, fame: 0, trust: 60, seasonPoints: 0, seasonDnfs: 0, ...extra });
+const mk = (name, extra = {}) => ({ name, skill: 80, potential: 90, fame: 0, trust: 60, age: 20, seasonPoints: 0, seasonDnfs: 0, ...extra });
 
 function ctxWith(over = {}) {
   const player = mk('Eu', { seasonPoints: 50, ...over.player });
