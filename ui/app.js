@@ -4,8 +4,8 @@
 import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '../engine/game.js';
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { TEAMS_F1 } from '../data/world2026.js';
+import { createSaves } from './saves.js';
 
-const SAVE_KEY = 'apex.save.v1';
 const FLAGS = ['BR', 'AR', 'PT', 'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'FI', 'JP', 'US', 'MX', 'AU'];
 const STYLES = {
   agg: { name: 'Agressivo', text: 'Mais rápido na classificação, mas oscila mais e abandona mais.' },
@@ -21,6 +21,7 @@ const CLAUSE_TEXT = { none: 'Sem cláusula de status', p1: 'Exigir status de pil
 const TEAM_COLOR = Object.fromEntries(TEAMS_F1.map((t) => [t.id, t.color]));
 
 let state = null;
+let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
 let ui = { notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
@@ -32,26 +33,63 @@ const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const $app = () => document.getElementById('app');
 const ord = (n) => `${n}º`;
 
-function save() {
-  try { sessionStorage.setItem(SAVE_KEY, JSON.stringify(state)); } catch { /* sem storage: segue sem snapshot */ }
-}
-function loadSave() {
+// --- salvamento (slots no localStorage) ---------------------------------------
+
+function pickStorage() {
   try {
-    const raw = sessionStorage.getItem(SAVE_KEY);
-    if (!raw) return null;
-    const s = JSON.parse(raw);
-    if (s.engineVersion !== ENGINE_VERSION) {
-      ui.notice = 'A carreira salva era de uma versão antiga do jogo e foi descartada.';
-      throw new Error('versão antiga');
-    }
-    getView(s); // valida: se corromper, descarta
+    const s = window.localStorage;
+    s.setItem('apex.probe', '1');
+    s.removeItem('apex.probe');
     return s;
   } catch {
-    try { sessionStorage.removeItem(SAVE_KEY); } catch { /* ignora */ }
-    return null;
+    return null; // bloqueado (modo privado, política do navegador)
   }
 }
-function clearSave() { try { sessionStorage.removeItem(SAVE_KEY); } catch { /* ignora */ } }
+
+function describeCareer(s) {
+  const v = getView(s);
+  const where = v.f1 ? `F1 · ${v.f1.team.name}` : `${v.base?.category ?? ''}${v.base?.team ? ` · ${v.base.team}` : ''}`;
+  return {
+    title: `${v.player.flag ?? ''} #${v.player.number} ${v.player.name}`.trim(),
+    detail: v.screen === 'LEGADO' ? `Carreira encerrada · legado ${v.legacy.score}` : `${where} · ${v.player.age} anos · ${v.year}`,
+    seed: v.seed,
+  };
+}
+
+const saves = createSaves({ storage: pickStorage(), version: ENGINE_VERSION, describe: describeCareer, validate: (s) => getView(s) });
+
+// Grava a carreira no slot ativo. Se o navegador recusar, avisa uma vez e segue jogando.
+function save() {
+  if (activeSlot == null || !state) return;
+  if (!saves.write(activeSlot, state)) {
+    ui.saveWarn = true;
+  }
+}
+
+function fmtDate(ms) {
+  try { return new Date(ms).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }); } catch { return ''; }
+}
+
+async function downloadFile(filename, text) {
+  try {
+    const claudeRt = window.claude;
+    const downloads = claudeRt?.use ? await claudeRt.use('downloads') : null;
+    if (downloads) {
+      await downloads.save({ filename, data: text });
+      ui.notice = 'Arquivo de save pronto. Guarde-o: dá para importar na tela inicial.';
+    } else {
+      const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      ui.notice = `Arquivo ${filename} gerado.`;
+    }
+  } catch (e) {
+    ui.notice = e?.code === 'declined' ? 'Download cancelado.' : 'Não foi possível gerar o arquivo neste navegador.';
+  }
+  render();
+}
 
 // --- transições ------------------------------------------------------------
 
@@ -117,8 +155,10 @@ function header(view) {
     <span class="chip">${esc(view.year)} · ${esc(p.age)} anos</span>
     <span class="chip" title="Use esta seed na criação para repetir a carreira">seed ${esc(view.seed)}</span>
     <button class="btn ghost small" data-act="undo" ${undoStack.length ? '' : 'disabled'}>Desfazer</button>
-    <button class="btn ghost small" data-act="newgame">${ui.confirmNew ? 'Apagar e recomeçar?' : 'Recomeçar'}</button>
-  </header>${ui.confirmNew ? `<div class="note">A carreira atual será perdida. <button class="btn small" data-act="newgame-yes">Sim, recomeçar</button> <button class="btn ghost small" data-act="newgame-no">Cancelar</button></div>` : ''}`;
+    <button class="btn ghost small" data-act="export-current">Salvar em arquivo</button>
+    <button class="btn ghost small" data-act="newgame">${saves.available ? 'Menu' : 'Sair'}</button>
+  </header>${ui.confirmNew ? `<div class="note">Sem salvamento neste navegador: sair perde a carreira (use "Salvar em arquivo" antes). <button class="btn small" data-act="newgame-yes">Sair mesmo assim</button> <button class="btn ghost small" data-act="newgame-no">Cancelar</button></div>` : ''}
+  ${ui.saveWarn ? `<div class="note err">O navegador recusou gravar a carreira. Ela continua nesta aba, mas use "Salvar em arquivo" para não perder.</div>` : ''}`;
 }
 
 function stat(label, value) { return `<div class="stat"><b>${esc(value)}</b><small>${esc(label)}</small></div>`; }
@@ -168,15 +208,43 @@ function teamTag(f1) {
 
 // --- telas ------------------------------------------------------------------
 
-function screenCreate(hasSave) {
+function slotRow(s) {
+  const asking = ui.confirmDel === s.slot;
+  let info;
+  if (s.status === 'empty') info = `<div><b>Slot ${s.slot}</b> <span class="mute">livre</span></div>`;
+  else if (s.status === 'ok') info = `<div style="min-width:0"><b>Slot ${s.slot} · ${esc(s.info.title)}</b><br><span class="mute">${esc(s.info.detail)} · seed ${esc(s.info.seed)} · salvo ${esc(fmtDate(s.savedAt))}</span></div>`;
+  else if (s.status === 'old') info = `<div><b>Slot ${s.slot}</b> <span class="mute">salvo numa versão antiga do jogo (v${esc(s.version)}). Não dá para continuar; apague para liberar o slot.</span></div>`;
+  else info = `<div><b>Slot ${s.slot}</b> <span class="mute">save corrompido. Apague para liberar o slot.</span></div>`;
+  let actions = '';
+  if (asking) {
+    actions = `<span class="mute">Apagar de vez?</span> <button class="btn small" data-act="slot-del-yes" data-slot="${s.slot}">Sim, apagar</button> <button class="btn ghost small" data-act="slot-del-no">Cancelar</button>`;
+  } else if (s.status === 'ok') {
+    actions = `<button class="btn small" data-act="continue" data-slot="${s.slot}">Continuar</button> <button class="btn ghost small" data-act="export-slot" data-slot="${s.slot}">Salvar em arquivo</button> <button class="btn ghost small" data-act="slot-del" data-slot="${s.slot}">Apagar</button>`;
+  } else if (s.status !== 'empty') {
+    actions = `<button class="btn ghost small" data-act="slot-del" data-slot="${s.slot}">Apagar</button>`;
+  }
+  return `<div class="row" style="justify-content:space-between;border-top:1px solid var(--line);padding-top:10px">${info}<div class="row" style="gap:8px">${actions}</div></div>`;
+}
+
+function screenCreate() {
   const d = ui.draft;
+  const list = saves.list();
+  const free = list.filter((s) => s.status === 'empty');
+  const slotField = !saves.available ? ''
+    : free.length === 0 ? ''
+      : `<label class="field">Salvar no slot<select id="f-slot">${free.map((s) => `<option value="${s.slot}" ${String(s.slot) === String(d.slot) ? 'selected' : ''}>Slot ${s.slot}</option>`).join('')}</select></label>`;
+  const noSlots = saves.available && free.length === 0;
   return `<header class="bar"><div class="logo">Ap<b>e</b>x</div><span class="chip">protótipo</span></header>
   <section class="card">
     <h1>Do kart à glória</h1>
     <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
   </section>
   ${ui.notice ? `<div class="note">${esc(ui.notice)}</div>` : ''}
-  ${hasSave ? `<section class="card focus"><h2>Carreira em andamento</h2><p class="mute">Você tem uma carreira salva nesta aba.</p><div class="row"><button class="btn" data-act="continue">Continuar carreira</button></div></section>` : ''}
+  ${saves.available ? `<section class="card focus"><h2>Suas carreiras</h2>
+    <p class="mute" style="font-size:14px">O jogo salva sozinho a cada decisão, neste navegador. Para levar a carreira a outro lugar, use "Salvar em arquivo" e importe aqui.</p>
+    ${list.map(slotRow).join('')}
+    <label class="field">Importar de arquivo (.json)<input type="file" id="f-import" accept=".json,application/json"></label></section>`
+    : `<div class="note err">Este navegador bloqueia o salvamento local. Dá para jogar, mas sair da página perde a carreira: use "Salvar em arquivo" durante o jogo.</div>`}
   <form class="card" id="create" autocomplete="off">
     <h2>Novo piloto</h2>
     <div class="grid2">
@@ -184,16 +252,17 @@ function screenCreate(hasSave) {
       <label class="field">Dorsal (1-99)<input type="number" id="f-number" min="1" max="99" value="${esc(d.number)}" placeholder="Ex.: 33"></label>
       <label class="field">Bandeira<select id="f-flag">${FLAGS.map((f) => `<option ${f === d.flag ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
       <label class="field">Seed (opcional, repete uma carreira)<input type="text" id="f-seed" inputmode="numeric" value="${esc(d.seed)}" placeholder="vazio = aleatória"></label>
+      ${slotField}
     </div>
     <h3>Estilo de pilotagem</h3>
     <div class="grid2">${Object.entries(STYLES).map(([id, s]) =>
       `<button type="button" class="opt ${d.style === id ? 'on' : ''}" data-act="style" data-id="${id}"><strong>${esc(s.name)}</strong><span>${esc(s.text)}</span></button>`).join('')}</div>
     <p class="mute" style="font-size:14px">Idade inicial sorteada entre 14 e 16 anos: mais novo começa menos pronto, mas tem teto de evolução maior.</p>
+    ${noSlots ? '<div class="note">Os 3 slots estão ocupados. Apague uma carreira acima para começar outra.</div>' : ''}
     ${ui.error ? `<div class="note err">${esc(ui.error)}</div>` : ''}
-    <div class="row"><button class="btn" type="submit" data-act="create">Começar carreira</button></div>
+    <div class="row"><button class="btn" type="submit" data-act="create" ${noSlots ? 'disabled' : ''}>Começar carreira</button></div>
   </form>`;
 }
-
 function seasonResultCard(view) {
   const ls = view.base?.lastSeason;
   if (!ls) return '';
@@ -384,7 +453,7 @@ function screenAlt(view) {
 
 function render() {
   const el = $app();
-  if (!state) { el.innerHTML = screenCreate(!!loadSaveCached()); return; }
+  if (!state) { el.innerHTML = screenCreate(); return; }
   const view = getView(state);
   let html;
   switch (view.screen) {
@@ -398,20 +467,18 @@ function render() {
     case 'ROTA_ALTERNATIVA': html = screenAlt(view); break;
     default: html = `<div class="note err">Tela desconhecida: ${esc(view.screen)}</div>`;
   }
+  if (ui.notice) html = `<div class="note">${esc(ui.notice)}</div>${html}`;
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
   el.innerHTML = html;
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
   if (key !== lastKey) { lastKey = key; window.scrollTo(0, 0); }
 }
 
-let saveCache; // evita ler sessionStorage a cada render da tela de criação
-function loadSaveCached() { if (saveCache === undefined) saveCache = loadSave(); return saveCache; }
-
 // --- eventos -----------------------------------------------------------------
 
 function readDraft() {
   const g = (id) => document.getElementById(id)?.value ?? '';
-  ui.draft = { ...ui.draft, surname: g('f-surname'), number: g('f-number'), flag: g('f-flag') || 'BR', seed: g('f-seed') };
+  ui.draft = { ...ui.draft, surname: g('f-surname'), number: g('f-number'), flag: g('f-flag') || 'BR', seed: g('f-seed'), slot: g('f-slot') || ui.draft.slot };
 }
 
 function startCareer() {
@@ -420,10 +487,18 @@ function startCareer() {
   try {
     const seed = d.seed.trim() === '' ? undefined : Number(d.seed);
     if (seed !== undefined && !Number.isFinite(seed)) throw new Error('Seed deve ser um número.');
+    let slot = null;
+    if (saves.available) {
+      slot = Number(d.slot) || saves.firstEmpty();
+      if (slot == null || saves.list()[slot - 1].status !== 'empty') throw new Error('Escolha um slot livre (apague uma carreira antes, se estiverem todos ocupados).');
+    }
     state = createCareer({ surname: d.surname.trim(), number: Number(d.number), flag: d.flag, style: d.style, seed });
+    activeSlot = slot;
+    undoStack = [];
     ui.error = null;
+    ui.notice = null;
     ui.baseOpt = null;
-    saveCache = undefined;
+    ui.saveWarn = false;
     save();
   } catch (e) {
     ui.error = e.message.includes('surname') ? 'Informe um sobrenome.' : e.message.includes('number') ? 'O dorsal deve ser um número de 1 a 99.' : e.message;
@@ -431,9 +506,26 @@ function startCareer() {
   render();
 }
 
-function resetToMenu() {
-  state = null; undoStack = []; ui.confirmNew = false; ui.baseOpt = null; ui.error = null; saveCache = null; clearSave(); lastKey = '';
+// Volta ao menu sem apagar nada: a carreira já está gravada no slot.
+function toMenu() {
+  state = null; activeSlot = null; undoStack = []; ui.confirmNew = false; ui.confirmDel = null; ui.baseOpt = null; ui.error = null; ui.saveWarn = false; lastKey = '';
   render();
+}
+
+function importFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const st = saves.parseImport(String(reader.result));
+      const slot = saves.firstEmpty();
+      if (slot == null) throw new Error('Sem slot livre: apague uma carreira antes de importar.');
+      if (!saves.write(slot, st)) throw new Error('O navegador recusou gravar o save importado.');
+      ui.notice = `Carreira importada no slot ${slot}.`;
+    } catch (e) { ui.notice = e.message; }
+    render();
+  };
+  reader.onerror = () => { ui.notice = 'Não foi possível ler o arquivo.'; render(); };
+  reader.readAsText(file);
 }
 
 document.addEventListener('submit', (e) => { if (e.target.id === 'create') { e.preventDefault(); startCareer(); } });
@@ -443,6 +535,7 @@ document.addEventListener('change', (e) => {
   if (t.name === 't-years') ui.terms.years = Number(t.value);
   else if (t.name === 't-clause') ui.terms.clause = t.value;
   else if (t.id === 't-exit') ui.terms.exit = t.checked;
+  else if (t.id === 'f-import' && t.files?.[0]) importFile(t.files[0]);
 });
 
 document.addEventListener('click', (e) => {
@@ -450,13 +543,25 @@ document.addEventListener('click', (e) => {
   if (!el) return;
   const act = el.dataset.act;
   const id = el.dataset.id;
+  const slot = Number(el.dataset.slot);
+  ui.notice = null;
   switch (act) {
     case 'create': return; // tratado pelo submit
     case 'style': readDraft(); ui.draft.style = id; return render();
-    case 'continue': state = loadSaveCached(); return render();
-    case 'newgame': ui.confirmNew = !ui.confirmNew; return render();
+    case 'continue': {
+      const st = saves.load(slot);
+      if (!st) { ui.notice = 'Não foi possível abrir esse save.'; return render(); }
+      state = st; activeSlot = slot; undoStack = []; ui.error = null; ui.saveWarn = false; lastKey = '';
+      return render();
+    }
+    case 'slot-del': ui.confirmDel = slot; return render();
+    case 'slot-del-no': ui.confirmDel = null; return render();
+    case 'slot-del-yes': saves.remove(slot); ui.confirmDel = null; ui.notice = `Slot ${slot} apagado.`; return render();
+    case 'export-current': { const { filename, text } = saves.exportFile(state); return downloadFile(filename, text); }
+    case 'export-slot': { const st = saves.load(slot); if (!st) { ui.notice = 'Não foi possível abrir esse save.'; return render(); } const { filename, text } = saves.exportFile(st); return downloadFile(filename, text); }
+    case 'newgame': if (saves.available) return toMenu(); ui.confirmNew = !ui.confirmNew; return render();
     case 'newgame-no': ui.confirmNew = false; return render();
-    case 'newgame-yes': return resetToMenu();
+    case 'newgame-yes': return toMenu();
     case 'grid': ui.fullGrid = !ui.fullGrid; return render();
     case 'pick-base': ui.baseOpt = id; return render();
     case 'run-base': { const o = ui.baseOpt; ui.baseOpt = null; return decide({ option: o }); }
