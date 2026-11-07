@@ -4,9 +4,9 @@
 //                      dist/og.jpg                         imagem do cartão de compartilhamento (de ui/assets/)
 //
 // Variáveis de ambiente (todas opcionais):
-//   APEX_SITE_URL       endereço público do site (padrão: o do GitHub Pages), usado em canonical e og:url/og:image
-//   APEX_FEEDBACK_URL   destino do botão "Enviar pelo GitHub" (ex.: https://github.com/dono/repo/issues/new)
-//   APEX_GOATCOUNTER    código do site no GoatCounter; sem ele nenhuma análise é carregada
+//   BANDEIRADA_SITE_URL       endereço público do site (padrão: o do GitHub Pages), usado em canonical e og:url/og:image
+//   BANDEIRADA_FEEDBACK_URL   destino do botão "Enviar pelo GitHub" (ex.: https://github.com/dono/repo/issues/new)
+//   BANDEIRADA_GOATCOUNTER    código do site no GoatCounter; sem ele nenhuma análise é carregada
 
 import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'node:fs';
@@ -15,8 +15,8 @@ import { dirname, join } from 'node:path';
 import { buildHead, normalizeGoatCounter, normalizeSiteUrl, TITLE } from './site-head.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const siteUrl = normalizeSiteUrl(process.env.APEX_SITE_URL);
-const goatcounter = normalizeGoatCounter(process.env.APEX_GOATCOUNTER);
+const siteUrl = normalizeSiteUrl(process.env.BANDEIRADA_SITE_URL);
+const goatcounter = normalizeGoatCounter(process.env.BANDEIRADA_GOATCOUNTER);
 
 const out = await build({
   entryPoints: [join(root, 'ui/app.js')],
@@ -27,7 +27,7 @@ const out = await build({
   write: false,
   legalComments: 'none',
   define: {
-    __FEEDBACK_URL__: JSON.stringify(process.env.APEX_FEEDBACK_URL ?? ''),
+    __FEEDBACK_URL__: JSON.stringify(process.env.BANDEIRADA_FEEDBACK_URL ?? ''),
     __ANALYTICS__: JSON.stringify(!!goatcounter),
   },
 });
@@ -47,7 +47,7 @@ writeFileSync(join(root, 'dist/apex.artifact.html'), `${headPart}${body}`);
 const ogSrc = join(root, 'ui/assets/og.jpg');
 const hasOgImage = existsSync(ogSrc);
 if (hasOgImage) copyFileSync(ogSrc, join(root, 'dist/og.jpg'));
-const head = headPart.replace('<title>Apex</title>', `<title>${TITLE}</title>`);
+const head = headPart.replace('<title>Bandeirada</title>', `<title>${TITLE}</title>`);
 const full = `<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 ${buildHead({ siteUrl, goatcounter, hasOgImage })}

@@ -1,6 +1,6 @@
 # Spec: Conteúdo (eventos narrativos e decisões de corrida)
 
-Projeto: Apex. Depende de: spec-loop-jogador (tipos de pendingDecision).
+Projeto: Bandeirada. Depende de: spec-loop-jogador (tipos de pendingDecision).
 Formato: tabelas de dados em `data/events.js`, motor genérico em `engine/events.js`. Adicionar evento novo = adicionar linha, nunca código.
 
 ## 1. Motor de eventos (engine/events.js)

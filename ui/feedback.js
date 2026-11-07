@@ -1,5 +1,5 @@
 // Feedback de quem está testando (roadmap F.9). Sem DOM: monta o texto do relatório e, se o build
-// definir um destino (APEX_FEEDBACK_URL, por exemplo a página "nova issue" de um repositório),
+// definir um destino (BANDEIRADA_FEEDBACK_URL, por exemplo a página "nova issue" de um repositório),
 // o link de envio com título e corpo preenchidos.
 
 export const FEEDBACK_KINDS = {
@@ -29,7 +29,7 @@ export function careerSnapshot(state, { fullHistory = false } = {}) {
 
 export function buildFeedback({ kind = 'other', text = '', state = null, includeCareer = true, fullHistory = false, userAgent = '' }) {
   const parts = [
-    `APEX · feedback · ${FEEDBACK_KINDS[kind] ?? FEEDBACK_KINDS.other}`,
+    `BANDEIRADA · feedback · ${FEEDBACK_KINDS[kind] ?? FEEDBACK_KINDS.other}`,
     '',
     text.trim() || '(sem texto)',
   ];

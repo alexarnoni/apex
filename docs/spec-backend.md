@@ -1,6 +1,6 @@
 # Spec: Ranking e Compartilhamento (backend)
 
-Projeto: Apex. Backend: FastAPI + PostgreSQL na Oracle VM (mesma infra de Astraea/Scout). Frontend: Cloudflare Pages.
+Projeto: Bandeirada. Backend: FastAPI + PostgreSQL na Oracle VM (mesma infra de Astraea/Scout). Frontend: Cloudflare Pages.
 Decisão de escopo: NÃO existe save persistente (carreira é uma sessão de minutos). O backend entra só no FIM da carreira: ranking e compartilhamento. O único estado local é um snapshot cru em sessionStorage (definido na spec-loop-jogador), sem versão nem migração.
 
 ## 1. Nota de legado (fórmula do ranking)

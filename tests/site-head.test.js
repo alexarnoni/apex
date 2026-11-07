@@ -6,28 +6,28 @@ import { buildHead, normalizeSiteUrl, normalizeGoatCounter, DEFAULT_SITE_URL, DE
 test('endereço do site: padrão, barra final e validação', () => {
   assert.equal(normalizeSiteUrl(undefined), DEFAULT_SITE_URL);
   assert.equal(normalizeSiteUrl(''), DEFAULT_SITE_URL);
-  assert.equal(normalizeSiteUrl('https://apex.alexarnoni.com'), 'https://apex.alexarnoni.com/');
-  assert.equal(normalizeSiteUrl('https://apex.alexarnoni.com/'), 'https://apex.alexarnoni.com/');
-  assert.throws(() => normalizeSiteUrl('http://apex.alexarnoni.com'), /APEX_SITE_URL inválida/);
-  assert.throws(() => normalizeSiteUrl('apex.alexarnoni.com'), /APEX_SITE_URL inválida/);
-  assert.throws(() => normalizeSiteUrl('https://x.com/a b'), /APEX_SITE_URL inválida/);
+  assert.equal(normalizeSiteUrl('https://bandeirada.alexarnoni.com'), 'https://bandeirada.alexarnoni.com/');
+  assert.equal(normalizeSiteUrl('https://bandeirada.alexarnoni.com/'), 'https://bandeirada.alexarnoni.com/');
+  assert.throws(() => normalizeSiteUrl('http://bandeirada.alexarnoni.com'), /BANDEIRADA_SITE_URL inválida/);
+  assert.throws(() => normalizeSiteUrl('bandeirada.alexarnoni.com'), /BANDEIRADA_SITE_URL inválida/);
+  assert.throws(() => normalizeSiteUrl('https://x.com/a b'), /BANDEIRADA_SITE_URL inválida/);
 });
 
 test('código do GoatCounter: vazio desliga; só letras, números e hífen', () => {
   assert.equal(normalizeGoatCounter(''), '');
   assert.equal(normalizeGoatCounter(undefined), '');
   assert.equal(normalizeGoatCounter(' meu-site '), 'meu-site');
-  assert.throws(() => normalizeGoatCounter('x"><script>'), /APEX_GOATCOUNTER inválido/);
-  assert.throws(() => normalizeGoatCounter('a.b'), /APEX_GOATCOUNTER inválido/);
+  assert.throws(() => normalizeGoatCounter('x"><script>'), /BANDEIRADA_GOATCOUNTER inválido/);
+  assert.throws(() => normalizeGoatCounter('a.b'), /BANDEIRADA_GOATCOUNTER inválido/);
 });
 
 test('cabeçalho traz descrição, ícone, canonical e cartão de compartilhamento com a URL certa', () => {
-  const h = buildHead({ siteUrl: 'https://apex.alexarnoni.com' });
+  const h = buildHead({ siteUrl: 'https://bandeirada.alexarnoni.com' });
   assert.match(h, /<meta name="description" content="Simulador de carreira/);
   assert.match(h, /<link rel="icon" type="image\/svg\+xml" href="data:image\/svg\+xml,/);
-  assert.match(h, /<link rel="canonical" href="https:\/\/apex\.alexarnoni\.com\/">/);
-  assert.match(h, /<meta property="og:url" content="https:\/\/apex\.alexarnoni\.com\/">/);
-  assert.match(h, /<meta property="og:image" content="https:\/\/apex\.alexarnoni\.com\/og\.jpg">/);
+  assert.match(h, /<link rel="canonical" href="https:\/\/bandeirada\.alexarnoni\.com\/">/);
+  assert.match(h, /<meta property="og:url" content="https:\/\/bandeirada\.alexarnoni\.com\/">/);
+  assert.match(h, /<meta property="og:image" content="https:\/\/bandeirada\.alexarnoni\.com\/og\.jpg">/);
   assert.match(h, /<meta name="twitter:card" content="summary_large_image">/);
   assert.ok(DESCRIPTION.length < 200, 'descrição curta o bastante para o cartão');
 });

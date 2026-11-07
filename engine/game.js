@@ -169,6 +169,7 @@ function resolveBaseChoice(s, rng, answer) {
   // Estatísticas, fama e rivais
   const st = p.stats;
   st.seasons += 1;
+  st.gp = (st.gp ?? 0) + category.races;
   st.wins += p.seasonWins;
   st.podiums += p.seasonPodiums;
   st.poles += p.seasonPoles;
@@ -345,6 +346,23 @@ function scoutingLine(summary) {
   return 'Ninguém ligou. Os olheiros não viram o suficiente.';
 }
 
+// Totais da carreira inteira (base + F1) para a ficha e a vitrine de troféus.
+export function careerTotals(state, p) {
+  const base = state.f1 ? (p.baseStats ?? {}) : (p.stats ?? {});
+  const f1 = state.f1 ? (p.stats ?? {}) : {};
+  const n = (o, k) => o[k] ?? 0;
+  return {
+    gp: n(base, 'gp') + n(f1, 'gp'),
+    wins: n(base, 'wins') + n(f1, 'wins'),
+    podiums: n(base, 'podiums') + n(f1, 'podiums'),
+    poles: n(base, 'poles') + n(f1, 'poles'),
+    titlesBase: n(base, 'titles'),
+    titlesF1: n(f1, 'titles'),
+    titles: n(base, 'titles') + n(f1, 'titles'),
+    vice: n(f1, 'vice'),
+  };
+}
+
 // O potencial exato fica escondido: a UI mostra só uma faixa de 10 pontos ("estimativa dos olheiros").
 export function potentialBand(potential) {
   const lo = Math.round((potential - 5) / 5) * 5;
@@ -387,6 +405,7 @@ export function getView(state) {
       name: p.name, number: p.number, flag: p.flag, style: p.style, age: p.age, fame: p.fame, academy: p.academy, stats: p.stats,
       skill: Math.round(p.skill * 10) / 10,
       potentialBand: potentialBand(p.potential),
+      career: careerTotals(state, p),
     },
     decision: state.pendingDecision,
     log: state.careerLog.slice(-10),

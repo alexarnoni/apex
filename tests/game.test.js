@@ -339,3 +339,43 @@ test('F1: toda corrida jogada tem resumo; ofertas de base e de F1 trazem vantage
     }
   }
 });
+
+// --- painel da temporada: construtores, variação de posição, corrida a corrida, totais ----------
+
+test('F1: view traz construtores consistentes, variação de posição e vencedor/pole de cada corrida', () => {
+  let s = applyDecision(f1Start(), { id: 'train' });
+  while (s.pendingDecision.type !== 'weekend_approach') s = applyDecision(s, answerFor(s));
+  const first = getView(s).f1;
+  assert.ok(first.standings.every((r) => r.delta === 0), 'sem corrida disputada, ninguém variou');
+
+  for (let i = 0; i < 4; i++) {
+    s = applyDecision(s, answerFor(s));
+    while (s.pendingDecision && s.pendingDecision.type !== 'weekend_approach') s = applyDecision(s, answerFor(s));
+  }
+  const f1 = getView(s).f1;
+  assert.equal(f1.constructors.length, 11);
+  const pts = f1.constructors.map((c) => c.points);
+  assert.deepEqual(pts, [...pts].sort((a, b) => b - a), 'construtores em ordem de pontos');
+  assert.equal(pts.reduce((a, b) => a + b, 0), f1.standings.reduce((a, r) => a + r.points, 0), 'pontos de equipes = pontos de pilotos');
+  assert.equal(f1.constructors.filter((c) => c.isYours).length, 1);
+  assert.ok(f1.standings.some((r) => r.delta !== 0), 'depois de corridas alguém mudou de posição');
+  assert.equal(f1.standings.reduce((a, r) => a + r.delta, 0), 0, 'quem sobe e quem desce se compensam');
+  for (const r of f1.races) { assert.ok('winner' in r && 'pole' in r); }
+});
+
+test('ficha: totais da carreira somam base e F1, e o GP só conta corridas disputadas', () => {
+  const base = playBase(1).s;
+  const startGp = getView(base).player.career.gp;
+  assert.ok(startGp > 0, 'a base já soma corridas');
+  let s = f1Start();
+  const gp0 = getView(s).player.career.gp;
+  s = applyDecision(s, { id: 'train' });
+  while (s.pendingDecision.type !== 'weekend_approach') s = applyDecision(s, answerFor(s));
+  for (let i = 0; i < 3; i++) {
+    s = applyDecision(s, answerFor(s));
+    while (s.pendingDecision && s.pendingDecision.type !== 'weekend_approach') s = applyDecision(s, answerFor(s));
+  }
+  const c = getView(s).player.career;
+  assert.ok(c.gp >= gp0 + 1 && c.gp <= gp0 + 3, `gp ${c.gp} (antes ${gp0})`);
+  assert.equal(c.titles, c.titlesBase + c.titlesF1);
+});

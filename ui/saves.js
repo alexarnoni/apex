@@ -3,6 +3,7 @@
 // duas funções da engine (describe/validate). Cada slot guarda { app, version, savedAt, info, state }.
 
 export const SLOT_COUNT = 3;
+// Ids internos antigos (do tempo em que o jogo se chamava Apex) ficam como estão: mudar apagaria saves existentes.
 const APP = 'apex';
 const key = (i) => `apex.slot.${i}`;
 
@@ -62,14 +63,14 @@ export function createSaves({ storage, version, describe, validate }) {
       const info = describe(state);
       const text = JSON.stringify({ app: APP, version, exportedAt: Date.now(), info, state });
       const safe = String(state.player?.name ?? 'piloto').replace(/[^\p{L}\p{N}]+/gu, '-').replace(/^-|-$/g, '') || 'piloto';
-      return { filename: `apex-${safe}-${state.year}-seed${state.seed}.json`, text };
+      return { filename: `bandeirada-${safe}-${state.year}-seed${state.seed}.json`, text };
     },
 
     // Lê o texto de um arquivo exportado. Lança Error com mensagem em português se não servir.
     parseImport(text) {
       let data;
-      try { data = JSON.parse(text); } catch { throw new Error('Este arquivo não é um save do Apex (não é JSON válido).'); }
-      if (!data || data.app !== APP || typeof data.state !== 'object') throw new Error('Este arquivo não é um save do Apex.');
+      try { data = JSON.parse(text); } catch { throw new Error('Este arquivo não é um save da Bandeirada (não é JSON válido).'); }
+      if (!data || data.app !== APP || typeof data.state !== 'object') throw new Error('Este arquivo não é um save da Bandeirada.');
       if (data.version !== version) throw new Error(`Este save é da versão ${data.version} do jogo e o jogo está na versão ${version}. Não dá para continuar essa carreira.`);
       try { validate(data.state); } catch { throw new Error('O save está corrompido e não pôde ser lido.'); }
       return data.state;

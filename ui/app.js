@@ -1,4 +1,4 @@
-// UI do Apex. Só apresenta e coleta decisões: toda regra vive em engine/.
+// UI da Bandeirada. Só apresenta e coleta decisões: toda regra vive em engine/.
 // Entrada única: createCareer / advance / applyDecision / getView (spec-loop-jogador).
 
 import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '../engine/game.js';
@@ -8,10 +8,10 @@ import { createSaves } from './saves.js';
 import { buildFeedback, sendUrl, FEEDBACK_KINDS } from './feedback.js';
 
 // Destino opcional do feedback (ex.: página "nova issue" de um repositório), definido no build
-// com APEX_FEEDBACK_URL. Sem ele o formulário só copia o relatório.
+// com BANDEIRADA_FEEDBACK_URL. Sem ele o formulário só copia o relatório.
 // eslint-disable-next-line no-undef
 const FEEDBACK_URL = typeof __FEEDBACK_URL__ !== 'undefined' ? __FEEDBACK_URL__ : '';
-// Análise de uso (GoatCounter) só existe se o build recebeu APEX_GOATCOUNTER.
+// Análise de uso (GoatCounter) só existe se o build recebeu BANDEIRADA_GOATCOUNTER.
 // eslint-disable-next-line no-undef
 const ANALYTICS = typeof __ANALYTICS__ !== 'undefined' ? __ANALYTICS__ : false;
 const REPO_URL = 'https://github.com/alexarnoni/apex';
@@ -42,13 +42,15 @@ const STATUS_TEXT = {
   equal: 'Tratamento igual: ninguém tem prioridade na equipe.',
 };
 const CLAUSE_TEXT = { none: 'Sem cláusula de status', p1: 'Exigir status de piloto 1', equal: 'Exigir tratamento igual' };
+// Marca: bandeira quadriculada (grade 4x3) em roxo, ao lado do nome.
+const LOGO = `<div class="logo"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#7b3fe4"/><g fill="#fff"><rect x="5" y="7,75" width="5.5" height="5.5"/><rect x="16" y="7,75" width="5.5" height="5.5"/><rect x="10,5" y="13,25" width="5.5" height="5.5"/><rect x="21,5" y="13,25" width="5.5" height="5.5"/><rect x="5" y="18,75" width="5.5" height="5.5"/><rect x="16" y="18,75" width="5.5" height="5.5"/></g><g fill="#4a1d9e"><rect x="10,5" y="7,75" width="5.5" height="5.5"/><rect x="21,5" y="7,75" width="5.5" height="5.5"/><rect x="5" y="13,25" width="5.5" height="5.5"/><rect x="16" y="13,25" width="5.5" height="5.5"/><rect x="10,5" y="18,75" width="5.5" height="5.5"/><rect x="21,5" y="18,75" width="5.5" height="5.5"/></g></svg><span>Bandeirada</span></div>`;
 const TEAM_COLOR = Object.fromEntries(TEAMS_F1.map((t) => [t.id, t.color]));
 
 let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
-let ui = { aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -174,7 +176,7 @@ function aboutPanel() {
     ? 'O site conta visitas e etapas da carreira (como "chegou à F1") com o GoatCounter, sem cookies e sem dados pessoais. O nome do piloto, a seed e o conteúdo da carreira não são enviados.'
     : 'O site não coleta estatísticas de uso.';
   return `<section class="card focus" id="about-panel"><div class="row" style="justify-content:space-between"><h2>Sobre e privacidade</h2><button class="btn ghost small" data-act="about-close">Fechar</button></div>
-    <details open><summary>Sobre o Apex</summary><p style="margin-top:6px">Apex é um projeto de fã, independente, sem vínculo com a Fórmula 1, a FIA, as equipes ou os pilotos citados. Nomes, marcas e logotipos pertencem aos seus donos e aparecem só para ambientar o jogo. Os resultados são simulados e não retratam pessoas reais.</p></details>
+    <details open><summary>Sobre a Bandeirada</summary><p style="margin-top:6px">A Bandeirada é um projeto de fã, independente, sem vínculo com a Fórmula 1, a FIA, as equipes ou os pilotos citados. Nomes, marcas e logotipos pertencem aos seus donos e aparecem só para ambientar o jogo. Os resultados são simulados e não retratam pessoas reais.</p></details>
     <details open><summary>Privacidade</summary>
       <p style="margin-top:6px">Sua carreira fica salva só no seu navegador. Nada dela é enviado a nenhum servidor.</p>
       <p style="margin-top:6px">${esc(stats)}</p>
@@ -283,7 +285,7 @@ function ladder(view) {
 function header(view) {
   const p = view.player;
   return `<header class="bar">
-    <div class="logo">Ap<b>e</b>x</div>
+    ${LOGO}
     <span class="chip">${esc(p.flag ?? '')} #${esc(p.number)} ${esc(p.name)}</span>
     <span class="chip">${esc(view.year)} · ${esc(p.age)} anos</span>
     <span class="chip" title="Use esta seed na criação para repetir a carreira">seed ${esc(view.seed)}</span>
@@ -298,43 +300,8 @@ function header(view) {
 
 function stat(label, value) { return `<div class="stat"><b>${esc(value)}</b><small>${esc(label)}</small></div>`; }
 
-function playerStats(view) {
-  const p = view.player;
-  const st = p.stats;
-  return `<div class="stats">
-    ${stat('Estilo', STYLES[p.style]?.name ?? p.style)}
-    ${stat('Nível', p.skill)}
-    ${stat('Teto estimado', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}
-    ${stat('Fama', Math.round(p.fame * 10) / 10)}
-    ${stat('Vitórias', st.wins)}
-    ${stat('Pódios', st.podiums)}
-    ${stat('Títulos', st.titles)}
-    ${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}
-  </div>
-  <p class="mute" style="font-size:13px">Nível é a sua habilidade hoje (0 a 100). Teto estimado é o palpite dos olheiros de até onde você chega.</p>`;
-}
 
-function towerRows(rows, limit = 10) {
-  const shown = ui.fullGrid ? rows : rows.filter((r) => r.pos <= limit || r.isPlayer);
-  let prev = 0;
-  const out = [];
-  for (const r of shown) {
-    if (r.pos - prev > 1) out.push(`<tr><td colspan="4" class="mute" style="text-align:center">···</td></tr>`);
-    prev = r.pos;
-    out.push(`<tr class="${r.isPlayer ? 'you' : ''}">
-      <td class="pos">${r.pos}</td>
-      <td class="car"><i style="background:${esc(TEAM_COLOR[r.team] ?? 'var(--line)')}"></i></td>
-      <td class="name">${esc(r.name)}</td>
-      <td class="pts">${esc(r.points)}</td></tr>`);
-  }
-  return out.join('');
-}
 
-function tower(rows, title) {
-  return `<section class="card"><h3>${esc(title)}</h3>
-    <div class="scroll-x"><table class="tower"><tbody>${towerRows(rows)}</tbody></table></div>
-    <button class="btn ghost small" data-act="grid" style="align-self:flex-start">${ui.fullGrid ? 'Mostrar só o top 10' : 'Ver grid completo'}</button></section>`;
-}
 
 function optionCards(options, act, selected = null) {
   return `<div class="grid2">${Object.entries(options).map(([id, o]) =>
@@ -343,6 +310,101 @@ function optionCards(options, act, selected = null) {
 
 function teamTag(f1) {
   return `<span class="team"><i style="background:${esc(TEAM_COLOR[f1.team.id] ?? 'var(--line)')}"></i><b>${esc(f1.team.name)}</b></span>`;
+}
+
+// --- layout em colunas: decisão no centro, ficha à esquerda, painel da temporada à direita ----
+// No DOM a decisão vem primeiro (no celular é o que aparece no topo); no desktop o CSS posiciona as colunas.
+
+function layout(view, main, aside = '') {
+  return `${header(view)}${ladder(view)}
+  <div class="layout">
+    <div class="col-main">${main}</div>
+    <div class="col-ficha">${ficha(view)}</div>
+    <div class="col-side">${aside}</div>
+  </div>`;
+}
+
+function ficha(view) {
+  const p = view.player;
+  const c = p.career;
+  const f1 = view.f1;
+  const trustPct = f1 ? Math.round(f1.trust) : 0;
+  const team = f1
+    ? `<div class="ficha-team">${teamTag(f1)}<span class="mute small">carro: ${esc(f1.team.carLabel)} (#${esc(f1.team.carRank)})</span></div>`
+    : `<div class="ficha-team"><b>${esc(view.base.team)}</b><span class="mute small">${esc(view.base.category)} · temporada ${esc(view.base.seasonInCategory)}</span></div>`;
+  const trophies = [];
+  if (c.titlesF1) trophies.push(`<span class="pill trophy">F1 ×${c.titlesF1}</span>`);
+  if (c.titlesBase) trophies.push(`<span class="pill trophy">Base ×${c.titlesBase}</span>`);
+  if (c.vice) trophies.push(`<span class="pill">Vice ×${c.vice}</span>`);
+  const f1Extra = f1 ? `
+    <div class="chips-row"><span class="chip">contrato: ${esc(f1.contract.years)} ${f1.contract.years === 1 ? 'ano' : 'anos'}${f1.contract.statusClause ? ` · ${esc(f1.contract.statusClause)}` : ''}${f1.contract.exitClause ? ' · saída livre' : ''}</span>
+      ${f1.rival ? `<span class="chip">rival: ${esc(f1.rival)}</span>` : ''}</div>
+    <p class="mute small">${esc(STATUS_TEXT[f1.status] ?? 'Seu status na equipe é definido no início da temporada.')}${f1.statusWhy ? ` <b>Por quê:</b> ${esc(f1.statusWhy)}` : ''}</p>
+    <div><div class="row" style="justify-content:space-between"><small class="mute">CONFIANÇA DA EQUIPE</small><span class="num">${trustPct}</span></div>
+      <div class="bar-meter"><i style="width:${trustPct}%"></i></div></div>` : '';
+  return `<section class="card ficha" aria-label="Ficha do piloto">
+    <div class="ficha-top">
+      <div class="ovr" title="Nível: a sua habilidade hoje (0 a 100)"><b>${esc(p.skill)}</b><small>nível</small></div>
+      <div class="ficha-id">
+        <div class="ficha-name">${esc(p.name)}</div>
+        <div class="chips-row"><span class="chip">#${esc(p.number)}</span><span class="chip">${esc(p.flag ?? '')}</span><span class="chip">${esc(STYLES[p.style]?.name ?? p.style)}</span></div>
+      </div>
+    </div>
+    <div class="stats">${stat('Idade', p.age)}${stat('Fama', Math.round(p.fame * 10) / 10)}${stat('Teto estimado', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
+    ${team}
+    <div class="counters">${stat('GP', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Poles', c.poles)}</div>
+    <div class="vitrine"><small class="mute">VITRINE</small> ${trophies.length ? trophies.join(' ') : '<span class="mute small">vazia por enquanto</span>'}</div>
+    ${f1Extra}
+    <p class="mute small">Teto estimado é o palpite dos olheiros de até onde você chega.</p>
+  </section>`;
+}
+
+const delta = (n) => (n > 0
+  ? `<span class="d up" aria-hidden="true">▲${n}</span><span class="sr-only">subiu ${n}</span>`
+  : n < 0 ? `<span class="d down" aria-hidden="true">▼${-n}</span><span class="sr-only">caiu ${-n}</span>`
+    : '<span class="d" aria-hidden="true">=</span>');
+
+function driversTable(f1) {
+  const shown = ui.fullGrid ? f1.standings : f1.standings.filter((r) => r.pos <= 10 || r.isPlayer);
+  let prev = 0;
+  const rows = [];
+  for (const r of shown) {
+    if (r.pos - prev > 1) rows.push('<tr><td colspan="5" class="mute" style="text-align:center">···</td></tr>');
+    prev = r.pos;
+    rows.push(`<tr class="${r.isPlayer ? 'you' : ''}"><td class="pos">${r.pos}</td>
+      <td class="car"><i style="background:${esc(TEAM_COLOR[r.team] ?? 'var(--line)')}"></i></td>
+      <td class="name">${esc(r.name)}</td><td class="dl">${delta(r.delta)}</td><td class="pts">${esc(r.points)}</td></tr>`);
+  }
+  return `<div class="scroll-x"><table class="tower" aria-label="Classificação de pilotos"><tbody>${rows.join('')}</tbody></table></div>
+    <button class="btn ghost small" data-act="grid" style="align-self:flex-start">${ui.fullGrid ? 'Mostrar só o top 10' : 'Ver grid completo'}</button>`;
+}
+
+function teamsTable(f1) {
+  const rows = f1.constructors.map((c) => `<tr class="${c.isYours ? 'you' : ''}"><td class="pos">${c.pos}</td>
+    <td class="car"><i style="background:${esc(TEAM_COLOR[c.id] ?? 'var(--line)')}"></i></td>
+    <td class="name">${esc(c.name)}</td><td class="dl">${delta(c.delta)}</td><td class="pts">${esc(c.points)}</td></tr>`).join('');
+  return `<div class="scroll-x"><table class="tower" aria-label="Classificação de construtores"><tbody>${rows}</tbody></table></div>`;
+}
+
+function racesList(f1) {
+  if (!f1.races.length) return '<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>';
+  const items = [...f1.races].reverse().map((r) => {
+    const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? 'trophy' : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
+    return `<li><div class="row" style="gap:8px"><b>C${r.n}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}</li>`;
+  }).join('');
+  return `<ul class="racelist">${items}</ul>`;
+}
+
+// Painel da temporada (coluna da direita): classificação de pilotos e construtores, ou corrida a corrida.
+function seasonPanel(view) {
+  const f1 = view.f1;
+  const title = view.screen === 'F1_PRE_TEMPORADA' ? 'Grid · classificação do ano anterior' : `Temporada ${f1.worldSeason}`;
+  const tabBtn = (act, id, label, cur) => `<button class="tab ${cur === id ? 'on' : ''}" role="tab" aria-selected="${cur === id}" data-act="${act}" data-id="${id}">${label}</button>`;
+  const body = ui.tab === 'races'
+    ? racesList(f1)
+    : `<div class="tabs sub" role="tablist">${tabBtn('sttab', 'drivers', 'Pilotos', ui.stTab)}${tabBtn('sttab', 'teams', 'Construtores', ui.stTab)}</div>${ui.stTab === 'teams' ? teamsTable(f1) : driversTable(f1)}`;
+  return `<section class="card"><h3>${esc(title)}</h3>
+    <div class="tabs" role="tablist">${tabBtn('tab', 'standings', 'Classificação', ui.tab)}${tabBtn('tab', 'races', 'Corrida a corrida', ui.tab)}</div>${body}</section>`;
 }
 
 // --- telas ------------------------------------------------------------------
@@ -373,9 +435,9 @@ function screenCreate() {
     : free.length === 0 ? ''
       : `<label class="field">Salvar no slot<select id="f-slot">${free.map((s) => `<option value="${s.slot}" ${String(s.slot) === String(d.slot) ? 'selected' : ''}>Slot ${s.slot}</option>`).join('')}</select></label>`;
   const noSlots = saves.available && free.length === 0;
-  return `<header class="bar"><div class="logo">Ap<b>e</b>x</div><span class="chip">protótipo</span><button class="btn ghost small" data-act="help-open">Ajuda</button><button class="btn ghost small" data-act="fb-open">Feedback</button></header>
+  return `<header class="bar">${LOGO}<span class="chip">protótipo</span><button class="btn ghost small" data-act="help-open">Ajuda</button><button class="btn ghost small" data-act="fb-open">Feedback</button></header>
   <section class="card">
-    <h1>Do kart à glória</h1>
+    <h1>Da largada à bandeirada</h1>
     <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
   </section>
   ${ui.notice ? `<div class="note">${esc(ui.notice)}</div>` : ''}
@@ -440,9 +502,8 @@ function screenBase(view) {
   }
   const rivals = view.base.rivals.length
     ? `<section class="card"><h3>Seus rivais</h3><ul class="log">${view.base.rivals.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></section>` : '';
-  return `${header(view)}${ladder(view)}
-    <section class="card"><div class="row"><h2>${esc(view.base.category)}</h2><span class="chip">${esc(view.base.team)}</span><span class="chip">temporada ${esc(view.base.seasonInCategory)} na categoria</span></div>${playerStats(view)}</section>
-    ${seasonResultCard(view)}${body}${rivals}`;
+  const head = `<section class="card"><div class="row"><h2>${esc(view.base.category)}</h2><span class="chip">${esc(view.base.team)}</span><span class="chip">temporada ${esc(view.base.seasonInCategory)} na categoria</span></div></section>`;
+  return layout(view, `${head}${seasonResultCard(view)}${body}`, rivals);
 }
 
 function raceLine(r) {
@@ -460,19 +521,6 @@ function proscons(o) {
   return items.length ? `<span class="pc">${items.join('')}</span>` : '';
 }
 
-function f1Strip(view) {
-  const f1 = view.f1;
-  const trustPct = Math.round(f1.trust);
-  const c = f1.contract;
-  return `<section class="card">
-    <div class="row">${teamTag(f1)}<span class="chip">carro: ${esc(f1.team.carLabel)} (#${esc(f1.team.carRank)})</span>
-      ${f1.rival ? `<span class="chip">rival do ano: ${esc(f1.rival)}</span>` : ''}
-      <span class="chip">contrato: ${esc(c.years)} ano(s)${c.statusClause ? ` · ${esc(c.statusClause)}` : ''}${c.exitClause ? ' · saída livre' : ''}</span></div>
-    <p class="mute" style="font-size:14px">${esc(STATUS_TEXT[f1.status] ?? 'Seu status na equipe é definido no início da temporada.')}${f1.statusWhy ? ` <b>Por quê:</b> ${esc(f1.statusWhy)}` : ''}</p>
-    <div><div class="row" style="justify-content:space-between"><small class="mute">CONFIANÇA DA EQUIPE</small><span class="num">${trustPct}</span></div>
-      <div class="bar-meter"><i style="width:${trustPct}%"></i></div></div>
-    ${playerStats(view)}</section>`;
-}
 
 function eventCard(pd) {
   const p = pd.payload;
@@ -517,25 +565,21 @@ function screenF1(view) {
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
   const last = f1.lastRace && view.screen === 'F1_FIM_DE_SEMANA' ? `<section class="card">${raceLine(f1.lastRace)}</section>` : '';
-  const standTitle = view.screen === 'F1_PRE_TEMPORADA' ? 'Grid (classificação do ano anterior)' : 'Campeonato de pilotos';
-  return `${header(view)}${ladder(view)}
-    <h2>${esc(title)}</h2>${f1Strip(view)}${lastEventCard(f1)}${body}${last}${dev}${tower(f1.standings, standTitle)}`;
+  return layout(view, `<h2>${esc(title)}</h2>${lastEventCard(f1)}${body}${last}${dev}`, seasonPanel(view));
 }
 
 function screenEndSeason(view) {
   const ls = view.f1.lastSeason;
   const champ = ls.position === 1;
   const orders = ls.ordersLog.filter((o) => o.p2 === view.player.name || o.p1 === view.player.name);
-  return `${header(view)}${ladder(view)}${lastEventCard(view.f1)}
+  const main = `${lastEventCard(view.f1)}
     <section class="card focus"><h3>Fim da temporada · ${esc(ls.teamName)}</h3>
       <div class="row" style="align-items:flex-end;gap:24px"><div class="big">${ord(ls.position)}</div>
         <div class="stats">${stat('Pontos', ls.points)}${stat('Vitórias', ls.wins)}${stat('Pódios', ls.podiums)}${stat('Poles', ls.poles)}${stat('Abandonos', ls.dnfs)}</div></div>
       ${champ ? `<p><span class="pill good">CAMPEÃO MUNDIAL</span></p>` : `<p class="mute">Campeão: ${esc(ls.champion)} · Sua equipe terminou em ${ord(ls.constructorPos)} no construtores.</p>`}
       ${orders.length ? `<p class="mute">Ordens de equipe com você: ${orders.map((o) => `corrida ${o.race}${o.defied ? ' (desafiou)' : ' (obedeceu)'}`).join(', ')}.</p>` : ''}
-      <div class="row"><button class="btn" data-act="next">Continuar</button></div></section>
-    <section class="card"><h3>Classificação final</h3><div class="scroll-x"><table class="tower"><tbody>
-      ${ls.standings.map((r) => `<tr class="${r.isPlayer ? 'you' : ''}"><td class="pos">${r.pos}</td><td class="car"><i style="background:${esc(TEAM_COLOR[r.team] ?? 'var(--line)')}"></i></td><td class="name">${esc(r.name)}</td><td class="pts">${esc(r.points)}</td></tr>`).join('')}
-    </tbody></table></div></section>`;
+      <div class="row"><button class="btn" data-act="next">Continuar</button></div></section>`;
+  return layout(view, main, seasonPanel(view));
 }
 
 function screenOffers(view) {
@@ -563,7 +607,7 @@ function screenOffers(view) {
       ${o.exitClauseAllowed ? '' : '<p class="mute" style="font-size:14px">Nenhuma equipe aceita isso ainda: precisa de fama 10+ ou estar entre os 6 pilotos mais valiosos do grid.</p>'}
       <div class="row"><button class="btn" data-act="terms">Assinar contrato</button></div></section>`;
   }
-  return `${header(view)}${ladder(view)}${f1Strip(view)}${body}`;
+  return layout(view, body, seasonPanel(view));
 }
 
 function summaryText(view) {
@@ -571,7 +615,7 @@ function summaryText(view) {
   const p = view.player;
   const seasons = view.f1.seasons.map((s) => `${s.year} ${s.teamName} ${s.position}º ${s.points}pts ${s.wins}v`).join('; ');
   return [
-    `APEX · ${p.name} #${p.number} (${p.flag}) · estilo ${STYLES[p.style].name} · seed ${state.seed}`,
+    `BANDEIRADA · ${p.name} #${p.number} (${p.flag}) · estilo ${STYLES[p.style].name} · seed ${state.seed}`,
     `Legado ${l.score} · ${l.seasons} temporadas · ${l.titlesF1} títulos · ${l.vice} vice · ${l.wins} vitórias · ${l.podiums} pódios · ${l.poles} poles · ${l.points} pts · base: ${l.baseTitles} títulos · parou aos ${l.retiredAge}`,
     seasons,
   ].join('\n');
@@ -579,24 +623,25 @@ function summaryText(view) {
 
 function screenLegacy(view) {
   const l = view.legacy;
-  return `${header(view)}${ladder(view)}
-    <section class="card focus"><h3>${l.how === 'voluntary' ? 'Carreira encerrada' : 'Sem lugar no grid'} · aos ${esc(l.retiredAge)} anos</h3>
+  const main = `<section class="card focus"><h2>${l.how === 'voluntary' ? 'Carreira encerrada' : 'Sem lugar no grid'} · aos ${esc(l.retiredAge)} anos</h2>
       <div class="row" style="align-items:flex-end;gap:24px"><div class="big">${esc(l.score)}</div><small class="mute">NOTA DE LEGADO</small></div>
       <div class="stats">${stat('Títulos F1', l.titlesF1)}${stat('Vice', l.vice)}${stat('Vitórias', l.wins)}${stat('Pódios', l.podiums)}${stat('Poles', l.poles)}${stat('Pontos', l.points)}${stat('Temporadas', l.seasons)}${stat('Títulos na base', l.baseTitles)}</div>
       <div class="row"><button class="btn" data-act="copy">Copiar resumo</button><button class="btn ghost" data-act="newgame-yes">Nova carreira</button></div>
       <p class="mute" style="font-size:14px" id="copy-msg">Cole o resumo no chat de quem está testando, junto com o que achou da carreira.</p>
-      <textarea id="summary" readonly rows="4" style="font:12px var(--f-mono);width:100%;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:8px">${esc(summaryText(view))}</textarea></section>
-    <section class="card"><h3>Linha do tempo</h3><div class="scroll-x"><table class="tower"><tbody>
+      <textarea id="summary" readonly rows="4" style="font:12px var(--f-mono);width:100%;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:8px">${esc(summaryText(view))}</textarea></section>`;
+  const timeline = `<section class="card"><h3>Linha do tempo</h3><div class="scroll-x"><table class="tower"><tbody>
       ${view.f1.seasons.map((s) => `<tr><td class="pos">${esc(s.year)}</td><td class="car"><i style="background:${esc(TEAM_COLOR[s.team] ?? 'var(--line)')}"></i></td><td class="name">${esc(s.teamName)}</td><td class="pts">${ord(s.position)} · ${esc(s.points)} pts${s.position === 1 ? ' ★' : ''}</td></tr>`).join('')}
     </tbody></table></div></section>`;
+  return layout(view, main, timeline);
 }
 
 function screenAlt(view) {
-  return `${header(view)}${ladder(view)}
-    <section class="card focus"><h2>Fim da linha</h2>
+  const main = `<section class="card focus"><h2>Fim da linha</h2>
       <p>Os olheiros pararam de ligar e a carreira não chegou à Fórmula 1. As rotas alternativas (Super Fórmula, IndyCar, Fórmula E) ainda não existem neste protótipo.</p>
       <div class="row"><button class="btn" data-act="newgame-yes">Nova carreira</button></div></section>
     ${view.base ? seasonResultCard(view) : ''}`;
+  return layout(view, main, view.base?.rivals?.length
+    ? `<section class="card"><h3>Seus rivais</h3><ul class="log">${view.base.rivals.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></section>` : '');
 }
 
 // --- render ----------------------------------------------------------------
@@ -612,6 +657,7 @@ function focusHeading(root) {
 
 function render() {
   const el = $app();
+  el.className = state ? 'wrap wide' : 'wrap';
   if (!state) { el.innerHTML = panels() + screenCreate() + footer(); return; }
   const view = getView(state);
   let html;
@@ -731,6 +777,8 @@ document.addEventListener('click', (e) => {
     case 'newgame-no': ui.confirmNew = false; return render();
     case 'newgame-yes': return toMenu();
     case 'grid': ui.fullGrid = !ui.fullGrid; return render();
+    case 'tab': ui.tab = id; return render();
+    case 'sttab': ui.stTab = id; return render();
     case 'pick-base': ui.baseOpt = id; return render();
     case 'run-base': { const o = ui.baseOpt; ui.baseOpt = null; return decide({ option: o }); }
     case 'academy': return decide({ accept: id === 'yes' });

@@ -79,14 +79,14 @@ test('exportar e importar fazem ida e volta; nome do arquivo é seguro', () => {
   const saves = make();
   const s = applyDecision(createCareer({ surname: 'Fitti Paldi', number: 9, style: 'agg', seed: 77 }), { option: 'B' });
   const { filename, text } = saves.exportFile(s);
-  assert.match(filename, /^apex-Fitti-Paldi-\d{4}-seed77\.json$/);
+  assert.match(filename, /^bandeirada-Fitti-Paldi-\d{4}-seed77\.json$/);
   assert.deepEqual(saves.parseImport(text), s);
 });
 
 test('importar rejeita arquivo que não é save, de outra versão ou corrompido', () => {
   const saves = make();
   assert.throws(() => saves.parseImport('isso não é json'), /não é JSON válido/);
-  assert.throws(() => saves.parseImport(JSON.stringify({ foo: 1 })), /não é um save do Apex/);
+  assert.throws(() => saves.parseImport(JSON.stringify({ foo: 1 })), /não é um save da Bandeirada/);
   const wrongVersion = JSON.stringify({ app: 'apex', version: ENGINE_VERSION + 5, state: career() });
   assert.throws(() => saves.parseImport(wrongVersion), /versão/);
   const bad = JSON.stringify({ app: 'apex', version: ENGINE_VERSION, state: { lixo: true } });

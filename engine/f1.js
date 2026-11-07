@@ -34,6 +34,21 @@ function carRank(world, teamId) {
   return [...world.teams].sort((a, b) => b.car - a.car).findIndex((t) => t.id === teamId) + 1;
 }
 
+// Classificações do campeonato (mesmo critério de desempate do resto do motor: pontos, depois vitórias).
+const byPoints = (a, b) => (b.seasonPoints ?? 0) - (a.seasonPoints ?? 0) || (b.seasonWins ?? 0) - (a.seasonWins ?? 0);
+const driverStandings = (world) => [...world.drivers].sort(byPoints);
+
+function constructorStandings(world) {
+  const pts = new Map(world.teams.map((t) => [t.id, 0]));
+  for (const d of world.drivers) if (pts.has(d.team)) pts.set(d.team, pts.get(d.team) + (d.seasonPoints ?? 0));
+  return world.teams
+    .map((t) => ({ id: t.id, name: t.name, points: pts.get(t.id) }))
+    .sort((a, b) => b.points - a.points);
+}
+
+const positionMap = (world) => Object.fromEntries(driverStandings(world).map((d, i) => [d.name, i + 1]));
+const constructorPositionMap = (world) => Object.fromEntries(constructorStandings(world).map((c, i) => [c.id, i + 1]));
+
 function carLabel(rank) {
   const T = F1().carTierRank;
   if (rank <= T.top) return 'equipe de ponta';
@@ -378,8 +393,12 @@ export function raceSummary(race, cur, order, playerName) {
 }
 
 function finishRace(s, rng, w, absent, eventId) {
-  const { season } = s.f1;
+  const { world, season } = s.f1;
   const p = s.player;
+  // Foto das classificações ANTES de premiar esta corrida, para mostrar quem subiu e quem caiu.
+  season.prevPos = positionMap(world);
+  season.prevConPos = constructorPositionMap(world);
+  if (!absent) p.stats.gp = (p.stats.gp ?? 0) + 1;
   const a = awardRace(w);
   const pos = a.classified.indexOf(p) + 1;
   const race = {
@@ -729,15 +748,23 @@ export function f1View(s) {
   const { world, season } = s.f1;
   const p = s.player;
   const rank = carRank(world, p.team);
-  const standings = [...world.drivers]
-    .sort((a, b) => (b.seasonPoints ?? 0) - (a.seasonPoints ?? 0) || (b.seasonWins ?? 0) - (a.seasonWins ?? 0))
-    .map((d, i) => ({ pos: i + 1, name: d.name, team: d.team, points: d.seasonPoints ?? 0, isPlayer: !!d.isPlayer }));
+  // Variação de posição (positivo = subiu) em relação à classificação antes da última corrida.
+  const hasDelta = !!season?.prevPos && season.raceIndex > 0;
+  const standings = driverStandings(world)
+    .map((d, i) => ({
+      pos: i + 1, name: d.name, team: d.team, points: d.seasonPoints ?? 0, isPlayer: !!d.isPlayer,
+      delta: hasDelta ? (season.prevPos[d.name] ?? i + 1) - (i + 1) : 0,
+    }));
+  const constructors = constructorStandings(world).map((c, i) => ({
+    pos: i + 1, id: c.id, name: c.name, points: c.points, isYours: c.id === p.team,
+    delta: hasDelta ? (season.prevConPos?.[c.id] ?? i + 1) - (i + 1) : 0,
+  }));
   const isLast = (r) => r && { n: r.n, wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
   return {
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
-    races: (season?.races ?? []).map((r) => ({ n: r.n, playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null })),
+    races: (season?.races ?? []).map((r) => ({ n: r.n, playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
     trust: p.trust,
     contract: { years: p.contract, statusClause: p.statusClause, exitClause: p.exitClause },
     worldSeason: world.season,
@@ -746,6 +773,7 @@ export function f1View(s) {
     rival: season?.rival ?? null,
     lastEvent: s.f1.lastEvent,
     standings,
+    constructors,
     ordersLog: season?.ordersLog ?? [],
     devNarrative: season ? devNarrative(world, season.devLog) : [],
     lastSeason: s.f1.lastSeason,

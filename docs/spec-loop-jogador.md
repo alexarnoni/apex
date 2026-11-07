@@ -1,6 +1,6 @@
 # Spec: Loop do Jogador (máquina de estados e contrato engine-UI)
 
-Projeto: Apex. Depende de: spec-piloto1-piloto2 (status, ordens, confiança).
+Projeto: Bandeirada. Depende de: spec-piloto1-piloto2 (status, ordens, confiança).
 Princípio: a engine é pura e não conhece telas. Cada tela é função do estado; cada ação do jogador é uma transição. A UI nunca calcula regra, só apresenta e coleta decisões.
 
 ## 1. Máquina de estados

@@ -1,6 +1,6 @@
-# Apex
+# Bandeirada
 
-Jogo de carreira de Fórmula 1 no navegador, inspirado no F1 Glory: do karting à glória, com um mundo fictício vivo a partir do grid 2026 real.
+Jogo de carreira de Fórmula 1 no navegador, inspirado no F1 Glory: da largada à bandeirada, com um mundo fictício vivo a partir do grid 2026 real.
 
 ## Decisões de design (fechadas)
 
@@ -121,30 +121,30 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
    gh repo create apex --public --source . --push
    ```
 2. No GitHub: Settings > Pages > Source: **GitHub Actions** (só na primeira vez).
-3. O jogo fica em `https://<usuario>.github.io/apex/`. O botão "Enviar pelo GitHub" do formulário de feedback abre uma issue nesse repositório (o workflow define `APEX_FEEDBACK_URL`).
+3. O jogo fica em `https://<usuario>.github.io/apex/`. O botão "Enviar pelo GitHub" do formulário de feedback abre uma issue nesse repositório (o workflow define `BANDEIRADA_FEEDBACK_URL`).
 
-Alternativa: Cloudflare Pages com build `npm run build` e pasta de saída `dist`. Para testar o botão de envio localmente: `APEX_FEEDBACK_URL=https://github.com/usuario/apex/issues/new npm run build`.
+Alternativa: Cloudflare Pages com build `npm run build` e pasta de saída `dist`. Para testar o botão de envio localmente: `BANDEIRADA_FEEDBACK_URL=https://github.com/usuario/apex/issues/new npm run build`.
 
 ### Endereço próprio e análise de uso (beta)
 
-Endereço escolhido: **https://apex.alexarnoni.com** (o domínio `alexarnoni.com` está na Cloudflare, e o site pessoal não roda no GitHub Pages, por isso um subdomínio e não `/apex`).
+Endereço escolhido: **https://bandeirada.alexarnoni.com** (o domínio `alexarnoni.com` está na Cloudflare, e o site pessoal não roda no GitHub Pages, por isso um subdomínio e não `/apex`).
 
-1. **DNS (você, na Cloudflare):** Dashboard > `alexarnoni.com` > DNS > Records > Add record: tipo `CNAME`, nome `apex`, destino `alexarnoni.github.io`, proxy **somente DNS** (nuvem cinza) até o GitHub emitir o HTTPS.
+1. **DNS (você, na Cloudflare):** Dashboard > `alexarnoni.com` > DNS > Records > Add record: tipo `CNAME`, nome `bandeirada`, destino `alexarnoni.github.io`, proxy **somente DNS** (nuvem cinza) até o GitHub emitir o HTTPS.
 2. **GitHub (comandos):**
    ```bash
-   gh api -X PUT repos/alexarnoni/apex/pages -f cname=apex.alexarnoni.com
-   gh variable set APEX_SITE_URL --body https://apex.alexarnoni.com
+   gh api -X PUT repos/alexarnoni/apex/pages -f cname=bandeirada.alexarnoni.com
+   gh variable set BANDEIRADA_SITE_URL --body https://bandeirada.alexarnoni.com
    ```
 3. Quando o certificado estiver emitido (minutos até cerca de 1 hora):
    ```bash
    gh api -X PUT repos/alexarnoni/apex/pages -F https_enforced=true
    gh workflow run "Publicar no GitHub Pages"
    ```
-   `APEX_SITE_URL` vira o `canonical` e o `og:url`/`og:image` do cartão de compartilhamento.
-4. **Análise de uso (GoatCounter, sem cookies):** crie o site em goatcounter.com, escolha o código (a parte antes de `.goatcounter.com`) e rode `gh variable set APEX_GOATCOUNTER --body <codigo>` e o `gh workflow run` acima. Sem a variável, nenhuma análise é carregada. Marcos enviados: `carreira-iniciada`, `chegou-na-f1`, `carreira-terminada-*`, `fim-da-linha-na-base`, `ajuda-aberta`, `feedback-aberto`, `save-exportado`. Nunca vão nome, seed ou dados da carreira.
-5. Para testar localmente: `APEX_SITE_URL=https://apex.alexarnoni.com APEX_GOATCOUNTER=codigo npm run build`.
+   `BANDEIRADA_SITE_URL` vira o `canonical` e o `og:url`/`og:image` do cartão de compartilhamento.
+4. **Análise de uso (GoatCounter, sem cookies):** crie o site em goatcounter.com, escolha o código (a parte antes de `.goatcounter.com`) e rode `gh variable set BANDEIRADA_GOATCOUNTER --body <codigo>` e o `gh workflow run` acima. Sem a variável, nenhuma análise é carregada. Marcos enviados: `carreira-iniciada`, `chegou-na-f1`, `carreira-terminada-*`, `fim-da-linha-na-base`, `ajuda-aberta`, `feedback-aberto`, `save-exportado`. Nunca vão nome, seed ou dados da carreira.
+5. Para testar localmente: `BANDEIRADA_SITE_URL=https://bandeirada.alexarnoni.com BANDEIRADA_GOATCOUNTER=codigo npm run build`.
 
-**Licença:** todos os direitos reservados ([LICENSE](LICENSE)); o código é público para consulta. Apex é um projeto de fã, sem vínculo com a F1, a FIA ou as equipes; o jogo mostra esse aviso no rodapé e no painel "Sobre e privacidade". Antes de qualquer monetização, trocar os nomes reais (modo fictício, roadmap 3.10).
+**Licença:** todos os direitos reservados ([LICENSE](LICENSE)); o código é público para consulta. A Bandeirada é um projeto de fã, sem vínculo com a F1, a FIA ou as equipes; o jogo mostra esse aviso no rodapé e no painel "Sobre e privacidade". Antes de qualquer monetização, trocar os nomes reais (modo fictício, roadmap 3.10).
 ## Dívidas de design anotadas
 
 - Piloto 1 / piloto 2 e ordens de equipe

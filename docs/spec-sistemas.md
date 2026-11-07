@@ -1,6 +1,6 @@
 # Spec: Sistemas de Suporte (rotas alternativas, academia, orçamento dinâmico, fama)
 
-Projeto: Apex. Depende de: spec-piloto1-piloto2, spec-loop-jogador.
+Projeto: Bandeirada. Depende de: spec-piloto1-piloto2, spec-loop-jogador.
 Todos os números novos entram em `engine/config.js` nos blocos indicados.
 
 ## 1. Rotas alternativas (Super Fórmula, IndyCar, Fórmula E)

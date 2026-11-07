@@ -1,6 +1,6 @@
 # Spec: Piloto 1 / Piloto 2, Ordens de Equipe e Confiança
 
-Projeto: Apex. Engine em `engine/`, constantes SEMPRE em `engine/config.js` (nenhum número mágico fora dele).
+Projeto: Bandeirada. Engine em `engine/`, constantes SEMPRE em `engine/config.js` (nenhum número mágico fora dele).
 Motivação: fechar a métrica "campeões distintos por era de 25 anos" (atual ~14, alvo 5-9). Ver "Diário de balanceamento" no README.
 
 ## 1. Requisitos
