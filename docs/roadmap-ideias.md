@@ -123,6 +123,22 @@ O que separa "amigos testando" de um beta público com cara profissional. O jogo
 | ~~B.16~~ | ~~Botão de feedback flutuante e janela de envio~~ | P | ✅ **Feito (2026-11-07).** Botão fixo no canto, em todas as telas; abre uma janela por cima (Esc e clique fora fecham, foco e leitor de tela tratados). O botão do cabeçalho foi removido. |
 | ~~B.17~~ | ~~Pedir nota e comentário no fim da carreira~~ | P | ✅ **Feito (2026-11-07).** Cartão com nota de 1 a 5 e comentário opcional na tela de legado e na de fim da linha; leva o resumo da carreira se o jogador deixar marcado. |
 
+## Segurança (2026-11-07)
+
+O jogo é um site estático, sem conta de usuário nem cookies; a superfície de ataque é pequena. Medido: `npm audit` com 0 vulnerabilidades, nenhuma dependência de produção, varredura de segredos e proteção contra push de segredo ativas.
+
+| # | Item | Estado |
+|---|---|---|
+| S.1 | Content-Security-Policy com hashes (script e estilo embutidos), sem `unsafe-inline` nem `unsafe-eval` em script | ✅ Feito. Gerada no build (`buildCsp`) e testada: os hashes batem com a página real. Conferido num navegador: carreira completa sem violações, e confirmado que bloqueia script injetado, script e imagem de fora, `fetch` externo e `eval`. |
+| S.2 | GitHub Actions fixadas por SHA de commit | ✅ Feito. Os 5 SHAs foram conferidos contra as tags. O Dependabot propõe as atualizações. |
+| S.3 | Dependabot (npm e Actions), alertas e correções automáticas, CI em pull requests | ✅ Feito. `dependabot.yml`, `ci.yml` (testa e constrói sem publicar). |
+| S.4 | `SECURITY.md`, `security.txt` (RFC 9116) e relato privado de vulnerabilidade | ✅ Feito. O contato é o relato privado do GitHub, sem expor e-mail. |
+| S.5 | Verificar o domínio no GitHub (evita sequestro do subdomínio) | Aberto, é com você: GitHub (conta) > Settings > Pages > Add a domain, e um registro TXT na Cloudflare. |
+| S.6 | Worker de feedback: regra de Rate Limiting da Cloudflare e, se houver spam, Turnstile | Aberto. O limite por IP em memória é só a primeira barreira, e a checagem de origem não é segurança de verdade (qualquer cliente fora do navegador forja o cabeçalho). |
+| S.7 | 2FA (de preferência passkey) no GitHub e na Cloudflare | Aberto, é com você. |
+| S.8 | Cabeçalhos HTTP (HSTS, `X-Content-Type-Options`, `frame-ancestors`, `Referrer-Policy`) | Aberto. O GitHub Pages não deixa configurar; exige pôr a Cloudflare na frente (proxy ligado, SSL Full strict). |
+| S.9 | E-mail pessoal nos commits públicos | Aberto, decisão sua. Passar a usar o e-mail "noreply" do GitHub nos próximos commits; o histórico só muda com reescrita e `force push`. |
+| S.10 | Proteção da branch `main` | Opcional: com uma pessoa só e deploy por push, exigir PR atrapalha mais do que protege. |
 ## Identidade e redesenho: Bandeirada (2026-11-07)
 
 O jogo se chamava Apex e usava preto com amarelo, que é a identidade da equipe fictícia do filme de F1. Passou a se chamar **Bandeirada** ("Da largada à bandeirada"), com uma identidade própria. O F1 Glory é só inspiração de estrutura de informação: layout, textos, ícones e logotipos de equipes não foram copiados.

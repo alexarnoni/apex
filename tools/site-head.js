@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+
 // Cabeçalho do site publicado: descrição, ícone, cartão de compartilhamento (WhatsApp, redes) e,
 // se configurado, o script de análise. Sem DOM nem arquivos: recebe valores e devolve texto.
 
@@ -12,6 +14,41 @@ const FAVICON = `data:image/svg+xml,${encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#7b3fe4"/><g fill="#fff"><rect x="5" y="7,75" width="5.5" height="5.5"/><rect x="16" y="7,75" width="5.5" height="5.5"/><rect x="10,5" y="13,25" width="5.5" height="5.5"/><rect x="21,5" y="13,25" width="5.5" height="5.5"/><rect x="5" y="18,75" width="5.5" height="5.5"/><rect x="16" y="18,75" width="5.5" height="5.5"/></g><g fill="#4a1d9e"><rect x="10,5" y="7,75" width="5.5" height="5.5"/><rect x="21,5" y="7,75" width="5.5" height="5.5"/><rect x="5" y="13,25" width="5.5" height="5.5"/><rect x="16" y="13,25" width="5.5" height="5.5"/><rect x="10,5" y="18,75" width="5.5" height="5.5"/><rect x="21,5" y="18,75" width="5.5" height="5.5"/></g></svg>',
 )}`;
 
+// --- Content-Security-Policy -------------------------------------------------------------------
+// O GitHub Pages não deixa configurar cabeçalhos, então a política vai por <meta>. O jogo embute o script
+// e o estilo na página, por isso a política autoriza esses dois blocos pelo hash SHA-256 (calculado no
+// build) em vez de 'unsafe-inline'. Atributos style="..." (gerados pela interface) continuam permitidos
+// só em style-src-attr. frame-ancestors não funciona em <meta>, então não está aqui.
+
+export const sha256 = (text) => `'sha256-${createHash('sha256').update(text, 'utf8').digest('base64')}'`;
+
+export function buildCsp({ scriptHashes = [], styleHashes = [], endpoint = '', goatcounter = '' } = {}) {
+  const script = [...scriptHashes];
+  const connect = ["'self'"];
+  const img = ["'self'", 'data:'];
+  if (endpoint) connect.push(new URL(endpoint).origin);
+  if (goatcounter) {
+    const host = `https://${goatcounter}.goatcounter.com`;
+    script.push('https://gc.zgo.at');
+    connect.push(host);
+    img.push(host);
+  }
+  const styleElem = [...styleHashes, 'https://fonts.googleapis.com'];
+  const directives = {
+    'default-src': ["'none'"],
+    'script-src': script,
+    'style-src': styleElem, // navegadores antigos, sem style-src-elem/attr
+    'style-src-elem': styleElem,
+    'style-src-attr': ["'unsafe-inline'"],
+    'font-src': ['https://fonts.gstatic.com'],
+    'img-src': img,
+    'connect-src': connect,
+    'base-uri': ["'none'"],
+    'form-action': ["'none'"],
+    'object-src': ["'none'"],
+  };
+  return Object.entries(directives).map(([k, v]) => `${k} ${v.join(' ')}`).join('; ');
+}
 // Garante https e barra final: "https://bandeirada.alexarnoni.com" -> "https://bandeirada.alexarnoni.com/".
 export function normalizeSiteUrl(raw) {
   const u = String(raw ?? '').trim() || DEFAULT_SITE_URL;
@@ -35,11 +72,12 @@ export function normalizeEndpoint(raw) {
   if (!ok) throw new Error(`BANDEIRADA_FEEDBACK_ENDPOINT inválido (use https://endereco-do-worker): ${u}`);
   return u;
 }
-export function buildHead({ siteUrl, goatcounter, hasOgImage = true } = {}) {
+export function buildHead({ siteUrl, goatcounter, hasOgImage = true, csp = '' } = {}) {
   const site = normalizeSiteUrl(siteUrl);
   const gc = normalizeGoatCounter(goatcounter);
   const image = `${site}og.jpg`;
   const lines = [
+    ...(csp ? [`<meta http-equiv="Content-Security-Policy" content="${esc(csp)}">`] : []),
     `<meta name="description" content="${esc(DESCRIPTION)}">`,
     '<meta name="theme-color" content="#0f1218">',
     `<link rel="icon" type="image/svg+xml" href="${esc(FAVICON)}">`,

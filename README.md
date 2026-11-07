@@ -148,6 +148,8 @@ Endereço escolhido: **https://bandeirada.alexarnoni.com** (o domínio `alexarno
 
 **Feedback por e-mail:** o botão flutuante "Feedback" e o cartão de fim de carreira enviam para um Worker da Cloudflare (`worker/`), que manda um e-mail para a caixa do autor sem exigir conta do jogador. Falta só o deploy, passo a passo em [worker/README.md](worker/README.md); o endereço do Worker entra como `BANDEIRADA_FEEDBACK_ENDPOINT`. Sem ele, o jogo só oferece "Copiar".
 
+**Segurança:** site estático com Content-Security-Policy por hash (`tools/site-head.js`), Actions fixadas por SHA, Dependabot e relato privado de vulnerabilidade ([SECURITY.md](SECURITY.md)). Pendências e decisões em [docs/roadmap-ideias.md](docs/roadmap-ideias.md), seção "Segurança".
+
 **Licença:** todos os direitos reservados ([LICENSE](LICENSE)); o código é público para consulta. A Bandeirada é um projeto de fã, sem vínculo com a F1, a FIA ou as equipes; o jogo mostra esse aviso no rodapé e no painel "Sobre e privacidade". Antes de qualquer monetização, trocar os nomes reais (modo fictício, roadmap 3.10).
 ## Dívidas de design anotadas
 

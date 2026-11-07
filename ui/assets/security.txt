@@ -1,0 +1,5 @@
+Contact: https://github.com/alexarnoni/apex/security/advisories/new
+Expires: 2027-11-07T00:00:00.000Z
+Preferred-Languages: pt, en
+Canonical: https://bandeirada.alexarnoni.com/.well-known/security.txt
+Policy: https://github.com/alexarnoni/apex/blob/main/SECURITY.md

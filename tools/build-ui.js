@@ -13,7 +13,7 @@ import { build } from 'esbuild';
 import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { buildHead, normalizeEndpoint, normalizeGoatCounter, normalizeSiteUrl, TITLE } from './site-head.js';
+import { buildCsp, buildHead, normalizeEndpoint, normalizeGoatCounter, normalizeSiteUrl, sha256, TITLE } from './site-head.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
 const siteUrl = normalizeSiteUrl(process.env.BANDEIRADA_SITE_URL);
@@ -51,12 +51,28 @@ const ogSrc = join(root, 'ui/assets/og.jpg');
 const hasOgImage = existsSync(ogSrc);
 if (hasOgImage) copyFileSync(ogSrc, join(root, 'dist/og.jpg'));
 const head = headPart.replace('<title>Bandeirada</title>', `<title>${TITLE}</title>`);
+
+// Política de segurança: os blocos <script> e <style> embutidos são autorizados pelo hash do conteúdo exato.
+const styleBlocks = [...head.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]);
+const csp = buildCsp({
+  scriptHashes: [sha256(js)],
+  styleHashes: styleBlocks.map(sha256),
+  endpoint: feedbackEndpoint,
+  goatcounter,
+});
 const full = `<!doctype html>
 <html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-${buildHead({ siteUrl, goatcounter, hasOgImage })}
+${buildHead({ siteUrl, goatcounter, hasOgImage, csp })}
 ${head}</head><body>${body}
 </body></html>
 `;
 writeFileSync(join(root, 'dist/apex.html'), full);
-writeFileSync(join(root, 'dist/index.html'), full); // raiz do site (GitHub Pages / Cloudflare Pages)
+writeFileSync(join(root, 'dist/index.html'), full);
+// Contato de segurança (RFC 9116): no caminho padrão e na raiz (algumas ferramentas só olham a raiz).
+const secSrc = join(root, 'ui/assets/security.txt');
+if (existsSync(secSrc)) {
+  mkdirSync(join(root, 'dist/.well-known'), { recursive: true });
+  copyFileSync(secSrc, join(root, 'dist/.well-known/security.txt'));
+  copyFileSync(secSrc, join(root, 'dist/security.txt'));
+} // raiz do site (GitHub Pages / Cloudflare Pages)
 console.log(`dist/index.html  ${(Buffer.byteLength(full) / 1024).toFixed(0)} KB  · site ${siteUrl}${goatcounter ? ` · goatcounter ${goatcounter}` : ''}`);
