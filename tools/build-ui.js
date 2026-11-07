@@ -4,7 +4,7 @@
 //                      dist/og.jpg                         imagem do cartão de compartilhamento (de ui/assets/)
 //
 // Variáveis de ambiente (todas opcionais):
-//   BANDEIRADA_SITE_URL       endereço público do site (padrão: o do GitHub Pages), usado em canonical e og:url/og:image
+//   BANDEIRADA_SITE_URL       endereço público do site (padrão: https://bandeirada.alexarnoni.com/), usado em canonical e og:url/og:image
 //   BANDEIRADA_FEEDBACK_URL   destino do botão "Enviar pelo GitHub" (ex.: https://github.com/dono/repo/issues/new)
 //   BANDEIRADA_GOATCOUNTER    código do site no GoatCounter; sem ele nenhuma análise é carregada
 //   BANDEIRADA_FEEDBACK_ENDPOINT  endereço do Worker de feedback (e-mail); sem ele o formulário só copia o relatório

@@ -112,7 +112,7 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
 
 ## Publicar o jogo (GitHub Pages)
 
-**No ar:** https://alexarnoni.github.io/apex/ (publica sozinho a cada push na `main`).
+**No ar:** https://bandeirada.alexarnoni.com (o endereço antigo `alexarnoni.github.io/apex` redireciona para ele; publica sozinho a cada push na `main`).
 
 `npm run build` gera `dist/index.html` (o jogo inteiro em um arquivo). O workflow [.github/workflows/pages.yml](.github/workflows/pages.yml) roda os testes, constrói e publica a cada push na `main`.
 
@@ -126,6 +126,8 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
 Alternativa: Cloudflare Pages com build `npm run build` e pasta de saída `dist`. Para testar o botão de envio localmente: `BANDEIRADA_FEEDBACK_URL=https://github.com/usuario/apex/issues/new npm run build`.
 
 ### Endereço próprio e análise de uso (beta)
+
+> **Feito em 2026-11-07:** CNAME criado, domínio ligado no GitHub Pages, certificado aprovado e HTTPS obrigatório. Os passos 1 a 3 abaixo ficam como registro de como foi feito; falta só a análise de uso (passo 4).
 
 Endereço escolhido: **https://bandeirada.alexarnoni.com** (o domínio `alexarnoni.com` está na Cloudflare, e o site pessoal não roda no GitHub Pages, por isso um subdomínio e não `/apex`).
 

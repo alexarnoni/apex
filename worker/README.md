@@ -12,7 +12,7 @@ O que chega no e-mail: tipo, nota (no fim da carreira), mensagem, contato opcion
 
 Pré-requisito: o Email Routing já está ativo em `alexarnoni.com` (os MX do domínio são da Cloudflare).
 
-1. **Destino verificado.** Cloudflare > Email > Email Routing > Destination addresses: o Worker só consegue enviar para um destino **verificado** aqui. Um endereço *criado* no Routing (como `alexandre@alexarnoni.com`, que só encaminha) não conta; use o endereço real da caixa para onde ele encaminha.
+1. **Destino verificado.** Cloudflare > Email > Email Routing > Destination addresses: o Worker só consegue enviar para um destino **verificado** aqui. Um endereço *criado* no Routing (um alias que só encaminha, como `contato@seudominio`) não conta; use o endereço real da caixa para onde o alias encaminha.
 2. **Entrar e publicar o Worker** (o `wrangler login` abre o navegador para você autorizar):
    ```bash
    cd worker

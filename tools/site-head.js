@@ -1,7 +1,7 @@
 // Cabeçalho do site publicado: descrição, ícone, cartão de compartilhamento (WhatsApp, redes) e,
 // se configurado, o script de análise. Sem DOM nem arquivos: recebe valores e devolve texto.
 
-export const DEFAULT_SITE_URL = 'https://alexarnoni.github.io/apex/';
+export const DEFAULT_SITE_URL = 'https://bandeirada.alexarnoni.com/';
 export const TITLE = 'Bandeirada · da largada à bandeirada';
 export const DESCRIPTION = 'Simulador de carreira de Fórmula 1 no navegador: comece no kart, suba por F4, F3 e F2 e dispute títulos na F1. Projeto de fã, sem vínculo com a F1.';
 
