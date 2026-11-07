@@ -178,7 +178,7 @@ const HELP = [
   ['Nota de scouting', 'Soma o resultado no campeonato, um bônus por bater carros melhores que o seu, academia e fama, menos uma pressão por idade acima do típico da categoria. A tela mostra cada parcela.'],
   ['Academia', 'Convite de uma equipe de F1 para a sua formação. Aumenta a nota de scouting nas temporadas seguintes e abre ofertas ligadas a essa equipe.'],
   ['Estilo de pilotagem', 'Agressivo: mais rápido na classificação, mas oscila e abandona mais. Técnico: vai bem na chuva e ajuda a equipe a desenvolver o carro. Consistente: raramente abandona e pontua sempre, com menos picos.'],
-  ['Nível e teto estimado', 'Nível é a sua habilidade hoje. Ela cresce com a idade, o treino e as escolhas, até um teto que você só vê como estimativa dos olheiros.'],
+  ['Habilidade e potencial', 'Habilidade é o quanto você é rápido hoje. Ela cresce com a idade, o treino e as escolhas, até um limite que você só vê como o potencial estimado pelos olheiros.'],
   ['Fama', 'Sobe com resultados e certos eventos. Ajuda nas ofertas e é uma das formas de conseguir cláusula de saída no contrato.'],
   ['Status na equipe', 'Piloto 1 tem prioridade e um bônus de desempenho. Piloto 2 pode receber ordem de equipe para ceder posição. Igual significa sem prioridade. O status vem do desempenho em relação ao companheiro ou de uma cláusula do contrato.'],
   ['Ordem de equipe e confiança', 'Quando você, como piloto 2, está na frente do piloto 1, a equipe pode mandar ceder a posição. Obedecer aumenta a confiança da equipe; desafiar reduz bastante. Confiança baixa pode custar o status e até a renovação.'],
@@ -460,7 +460,7 @@ function layout(view, main, aside = '') {
   </div>`;
 }
 
-// Atributos do piloto em barras: nível (com a faixa do teto estimado marcada), fama e estilo de pilotagem.
+// Atributos do piloto em barras: habilidade (com a faixa do potencial marcada), fama e estilo de pilotagem.
 function attributes(p) {
   const clamp = (n) => Math.max(0, Math.min(100, n));
   const skill = clamp(Math.round(p.skill));
@@ -470,12 +470,12 @@ function attributes(p) {
   const fameTier = [[2, 'Desconhecido'], [6, 'Promessa'], [12, 'Conhecido'], [22, 'Famoso'], [35, 'Estrela']].find(([lim]) => p.fame < lim)?.[1] ?? 'Lenda';
   const style = STYLES[p.style];
   const gap = hi - skill;
-  const room = gap <= 0 ? 'Você já está no topo da faixa estimada.' : `Falta até ${gap} ponto${gap === 1 ? '' : 's'} para o teto estimado.`;
+  const room = gap <= 0 ? 'Você já está no topo da faixa estimada.' : `Falta até ${gap} ponto${gap === 1 ? '' : 's'} para o potencial.`;
   return `<div class="attrs">
-    <div class="attr" title="Sua habilidade hoje. A faixa clara é o teto que os olheiros estimam.">
-      <div class="attr-head"><span>Nível</span><b class="num">${skill}</b></div>
+    <div class="attr" title="Sua habilidade hoje. A faixa listrada é o potencial que os olheiros estimam.">
+      <div class="attr-head"><span>Habilidade</span><b class="num">${skill}</b></div>
       <div class="meter lg"><i class="fill skill" style="width:${skill}%"></i><i class="band" style="left:${clamp(lo)}%;width:${clamp(hi) - clamp(lo)}%"></i></div>
-      <div class="attr-foot mute small">Teto estimado: <b class="num">${lo}–${hi}</b>. ${esc(room)}</div>
+      <div class="attr-foot mute small">Potencial: <b class="num">${lo}–${hi}</b>. ${esc(room)}</div>
     </div>
     <div class="attr" title="Sobe com resultados e mídia; abre portas no mercado.">
       <div class="attr-head"><span>Fama</span><b class="tier">${esc(fameTier)} <span class="num mute small">${fame}</span></b></div>
@@ -509,7 +509,7 @@ function ficha(view) {
       <div class="bar-meter"><i style="width:${trustPct}%"></i></div></div>` : '';
   return `<section class="card ficha" aria-label="Ficha do piloto">
     <div class="ficha-top">
-      <div class="ovr" title="Nível: a sua habilidade hoje (0 a 100)"><b>${esc(Math.round(p.skill))}</b><small>nível</small></div>
+      <div class="ovr" title="Habilidade: o quanto você é rápido hoje (0 a 100)"><b>${esc(Math.round(p.skill))}</b><small>habilidade</small></div>
       <div class="ficha-id">
         <div class="ficha-name">${esc(p.name)}</div>
         <div class="chips-row"><span class="chip">#${esc(p.number)}</span><span class="chip">${esc(p.flag ?? '')}</span><span class="chip">${esc(STYLES[p.style]?.name ?? p.style)}</span></div>
@@ -521,7 +521,7 @@ function ficha(view) {
     <div class="counters">${stat('GP', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Poles', c.poles)}</div>
     <div class="vitrine"><small class="mute">VITRINE</small> ${trophies.length ? trophies.join(' ') : '<span class="mute small">vazia por enquanto</span>'}</div>
     ${f1Extra}
-    <p class="mute small">Teto estimado é o palpite dos olheiros de até onde você chega.</p>
+    <p class="mute small">Potencial é o palpite dos olheiros de até onde você chega.</p>
   </section>`;
 }
 
@@ -624,7 +624,7 @@ function screenCreate() {
     <h3>Estilo de pilotagem</h3>
     <div class="grid2">${Object.entries(STYLES).map(([id, s]) =>
       `<button type="button" class="opt ${d.style === id ? 'on' : ''}" data-act="style" data-id="${id}"><strong>${esc(s.name)}</strong><span>${esc(s.text)}</span></button>`).join('')}</div>
-    <p class="mute" style="font-size:14px">Idade inicial sorteada entre 14 e 16 anos: mais novo começa menos pronto, mas tem teto de evolução maior.</p>
+    <p class="mute" style="font-size:14px">Idade inicial sorteada entre 14 e 16 anos: mais novo começa menos pronto, mas tem potencial de evolução maior.</p>
     ${noSlots ? '<div class="note">Os 3 slots estão ocupados. Apague uma carreira acima para começar outra.</div>' : ''}
     ${ui.error ? `<div class="note err">${esc(ui.error)}</div>` : ''}
     <div class="row"><button class="btn" type="submit" data-act="create" ${noSlots ? 'disabled' : ''}>Começar carreira</button></div>
