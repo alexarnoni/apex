@@ -512,7 +512,11 @@ function openOffers(s) {
       scope: 'f1',
       options: offers.map((o) => {
         const rank = carRank(world, o.teamId);
-        return { ...o, teamName: teamName(world, o.teamId), carRank: rank, carLabel: carLabel(rank) };
+        let why;
+        if (o.kind === 'renew') why = 'Seu contrato acabou e a equipe quer renovar.';
+        else if (o.kind === 'keep') why = 'Sua cláusula de saída deixa você ficar ou sair; ficar mantém o contrato.';
+        else why = `Você vale mais para o mercado que ${weakestMate(world, o.teamId)?.name ?? 'o piloto mais fraco'}, o piloto mais fraco dessa equipe.`;
+        return { ...o, teamName: teamName(world, o.teamId), carRank: rank, carLabel: carLabel(rank), why };
       }),
     },
   };
@@ -650,6 +654,19 @@ function devNarrative(world, devLog) {
   return lines;
 }
 
+// Por que o jogador tem o status atual (espelha as regras de assignStatus, sem mostrar números de skill).
+export function statusWhy(world, p) {
+  if (!p.status) return null;
+  const mate = world.drivers.find((d) => d.team === p.team && d !== p);
+  if (!mate) return null;
+  if (p.statusClause || mate.statusClause) return 'Definido pela cláusula de status do contrato.';
+  const gap = p.skill - mate.skill;
+  const near = Math.abs(gap) <= CONFIG.status.statusSkillGap;
+  if (p.status === 'p1') return `Você é claramente mais rápido que ${mate.name}.`;
+  if (p.status === 'p2') return `${mate.name} é claramente mais rápido que você.`;
+  return near ? `Você e ${mate.name} estão no mesmo nível.` : 'O campeão do ano anterior nunca fica como piloto 2, então a equipe trata os dois igual.';
+}
+
 export function f1View(s) {
   const { world, season } = s.f1;
   const p = s.player;
@@ -661,6 +678,8 @@ export function f1View(s) {
   return {
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank) },
     status: p.status ?? null,
+    statusWhy: statusWhy(world, p),
+    races: (season?.races ?? []).map((r) => ({ n: r.n, playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null })),
     trust: p.trust,
     contract: { years: p.contract, statusClause: p.statusClause, exitClause: p.exitClause },
     worldSeason: world.season,

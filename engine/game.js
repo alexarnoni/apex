@@ -230,6 +230,9 @@ function openOffers(s, rng) {
     academy: !!s.player.academy && (nextId === 'f1' ? team.id === s.player.academy.teamId : team.academy === s.player.academy.teamId),
     label: `Subir para ${CATEGORIES[nextId].name} pela ${team.name}`,
     consequence: null,
+    why: tier === 'top'
+      ? 'Sua nota de scouting foi alta: equipes de ponta querem você.'
+      : 'Sua nota de scouting só convenceu equipes do fundo do grid.',
   }));
   s.pendingDecision = {
     type: 'offer_pick',
@@ -238,7 +241,7 @@ function openOffers(s, rng) {
       tier,
       options: [
         ...ups,
-        { id: 'stay', kind: 'stay', category: bc.category, teamId: bc.teamId, teamName: curTeam.name, label: `Ficar na ${curTeam.name}`, consequence: `Mais um ano em ${curName}.` },
+        { id: 'stay', kind: 'stay', category: bc.category, teamId: bc.teamId, teamName: curTeam.name, label: `Ficar na ${curTeam.name}`, consequence: `Mais um ano em ${curName}.`, why: 'Ficar dá mais um ano para melhorar a nota de scouting.' },
       ],
     },
   };
@@ -327,6 +330,22 @@ function scoutingLine(summary) {
   return 'Ninguém ligou. Os olheiros não viram o suficiente.';
 }
 
+const num1 = (n) => (Math.round(n * 10) / 10).toLocaleString('pt-BR');
+const signed = (n) => `${n >= 0 ? '+' : '−'}${num1(Math.abs(n))}`;
+
+// Uma linha com o porquê da nota de scouting da temporada (parcelas somadas) e o que cada oferta exige.
+export function scoutingWhy(sum) {
+  const pr = sum.scoutingParts;
+  if (!pr) return null;
+  const T = CONFIG.scouting.offerThresholds;
+  const bits = [`resultado (${sum.position}º) ${signed(pr.result)}`];
+  if (pr.weakCar > 0) bits.push(`bateu carros melhores ${signed(pr.weakCar)}`);
+  if (pr.academy) bits.push(`academia ${signed(pr.academy)}`);
+  if (pr.fame) bits.push(`fama ${signed(pr.fame)}`);
+  if (pr.age < 0) bits.push(`idade acima do típico ${signed(pr.age)}`);
+  return `Nota ${num1(sum.scouting)}: ${bits.join(' · ')}. Equipes de ponta pedem ${T.top}; equipes do fundo do grid, ${T.mid}.`;
+}
+
 function rivalLine(r, playerPos) {
   if (!r.lastResult) return `${r.name} ainda não correu contra você.`;
   const { category, year, position } = r.lastResult;
@@ -365,6 +384,7 @@ export function getView(state) {
         champion: sum.champion,
         rivalResults: sum.rivalResults,
         scouting: scoutingLine(sum),
+        why: scoutingWhy(sum),
       },
     };
   }

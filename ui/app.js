@@ -24,7 +24,7 @@ let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
-let ui = { notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let ui = { autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -124,14 +124,40 @@ function errorReport() {
     `navegador: ${navigator.userAgent}`,
   ].filter(Boolean).join('\n');
 }
-const decide = (answer) => run((s) => applyDecision(s, answer));
+// Evento sem escolha de verdade (uma única opção): com o modo automático ligado, resolve sozinho.
+function isNoChoice(pd) {
+  return !!pd && (pd.type === 'story_event' || pd.type === 'race_event') && pd.payload.options.length === 1;
+}
+function settle(s) {
+  let cur = s;
+  while (ui.autoSingle && isNoChoice(cur.pendingDecision)) {
+    cur = applyDecision(cur, { id: cur.pendingDecision.payload.options[0].id });
+  }
+  return cur;
+}
 
-function simRest() {
+const decide = (answer) => run((s) => settle(applyDecision(s, answer)));
+
+// Simula até n corridas no modo equilibrado. Para sozinho numa decisão com escolha real
+// (evento, ordem de equipe) ou no fim da temporada, e diz por que parou.
+function simRaces(n) {
   run((s) => {
-    let cur = s;
-    while (cur.phase === 'F1_FIM_DE_SEMANA' && cur.pendingDecision?.type === 'weekend_approach') {
-      cur = applyDecision(cur, { id: cur.pendingDecision.payload.out ? 'rest' : 'balanced' });
+    const before = getView(s).f1.races.length;
+    let cur = settle(s);
+    let done = 0;
+    while (done < n && cur.phase === 'F1_FIM_DE_SEMANA' && cur.pendingDecision?.type === 'weekend_approach') {
+      cur = settle(applyDecision(cur, { id: cur.pendingDecision.payload.out ? 'rest' : 'balanced' }));
+      done += 1;
     }
+    const v = getView(cur);
+    const ran = v.f1.races.slice(before);
+    const results = ran.map((r) => (r.missed ? 'fora' : r.playerPos ? `P${r.playerPos}` : 'abandono')).join(' · ');
+    const pd = cur.pendingDecision;
+    let why = '';
+    if (pd?.type === 'team_order') why = ' Parou: ordem de equipe para você decidir.';
+    else if (pd?.type === 'race_event' || pd?.type === 'story_event') why = ' Parou: evento com escolha.';
+    else if (!pd || cur.phase !== 'F1_FIM_DE_SEMANA') why = ' A temporada terminou.';
+    ui.notice = ran.length ? `Corridas ${ran[0].n}–${ran.at(-1).n}: ${results}.${why}` : null;
     return cur;
   });
 }
@@ -273,7 +299,7 @@ function seasonResultCard(view) {
       <div class="stats">${stat('Pontos', ls.points)}${stat('Vitórias', ls.wins)}</div></div>
     ${ls.champion ? `<p class="mute">Campeão: ${esc(ls.champion)}</p>` : `<p><span class="pill good">Campeão</span></p>`}
     <p class="mute">Seus rivais: ${rivals}</p>
-    <p class="note">${esc(ls.scouting)}</p></section>`;
+    <p class="note">${esc(ls.scouting)}</p>${ls.why ? `<p class="mute" style="font-size:14px">${esc(ls.why)}</p>` : ''}</section>`;
 }
 
 function screenBase(view) {
@@ -295,7 +321,7 @@ function screenBase(view) {
         : o.consequence;
       const color = o.category === 'f1' && o.kind === 'up' ? TEAM_COLOR[o.teamId] : null;
       const label = color ? `<span class="team"><i style="background:${esc(color)}"></i>${esc(o.label)}</span>` : esc(o.label);
-      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${label}</strong><span>${esc(sub)}</span></button>`;
+      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${label}</strong><span>${esc(sub)}</span>${o.why ? `<span>${esc(o.why)}</span>` : ''}</button>`;
     }).join('');
     body = `<section class="card focus"><h2>Ofertas</h2><div class="grid2">${cards}</div></section>`;
   }
@@ -320,7 +346,7 @@ function f1Strip(view) {
     <div class="row">${teamTag(f1)}<span class="chip">carro: ${esc(f1.team.carLabel)} (#${esc(f1.team.carRank)})</span>
       ${f1.rival ? `<span class="chip">rival do ano: ${esc(f1.rival)}</span>` : ''}
       <span class="chip">contrato: ${esc(c.years)} ano(s)${c.statusClause ? ` · ${esc(c.statusClause)}` : ''}${c.exitClause ? ' · saída livre' : ''}</span></div>
-    <p class="mute" style="font-size:14px">${esc(STATUS_TEXT[f1.status] ?? 'Seu status na equipe é definido no início da temporada.')}</p>
+    <p class="mute" style="font-size:14px">${esc(STATUS_TEXT[f1.status] ?? 'Seu status na equipe é definido no início da temporada.')}${f1.statusWhy ? ` <b>Por quê:</b> ${esc(f1.statusWhy)}` : ''}</p>
     <div><div class="row" style="justify-content:space-between"><small class="mute">CONFIANÇA DA EQUIPE</small><span class="num">${trustPct}</span></div>
       <div class="bar-meter"><i style="width:${trustPct}%"></i></div></div>
     ${playerStats(view)}</section>`;
@@ -360,7 +386,9 @@ function screenF1(view) {
         <div class="grid2">${p.options.map((o) => `<button class="opt" data-act="order" data-id="${o.id}"><strong>${esc(o.label)}</strong><span>${esc(o.description)}</span></button>`).join('')}</div></section>`;
     } else {
       body = `<section class="card focus"><h2>${pd.payload.out ? 'Você está fora desta corrida' : 'Abordagem do fim de semana'}</h2>${optionCards(pd.payload.options, 'approach')}
-        <div class="row"><button class="btn ghost small" data-act="simrest">Simular o resto da temporada (equilibrado)</button></div></section>`;
+        <div class="row"><button class="btn ghost small" data-act="sim5">Simular 5 corridas</button><button class="btn ghost small" data-act="simrest">Simular o resto da temporada</button></div>
+        <label class="row" style="gap:6px;font-size:14px;color:var(--mute)"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho eventos sem escolha</label>
+        <p class="mute" style="font-size:14px">A simulação usa a abordagem equilibrada e para quando há uma decisão sua.</p></section>`;
     }
     body = `${prog}${body}`;
   }
@@ -398,7 +426,7 @@ function screenOffers(view) {
   } else if (pd.type === 'offer_pick') {
     body = `<section class="card focus"><h2>Mercado de pilotos</h2><div class="grid2">${pd.payload.options.map((o) => {
       const verb = o.kind === 'renew' ? 'Renovar com' : o.kind === 'keep' ? 'Cumprir contrato com' : 'Assinar com';
-      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${verb} ${esc(o.teamName)}</strong><span>Carro: ${esc(o.carLabel)} (#${esc(o.carRank)})</span></button>`;
+      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${verb} ${esc(o.teamName)}</strong><span>Carro: ${esc(o.carLabel)} (#${esc(o.carRank)})</span>${o.why ? `<span>${esc(o.why)}</span>` : ''}</button>`;
     }).join('')}</div></section>`;
   } else if (pd.type === 'contract_terms') {
     const o = pd.payload.options;
@@ -536,6 +564,7 @@ document.addEventListener('change', (e) => {
   else if (t.name === 't-clause') ui.terms.clause = t.value;
   else if (t.id === 't-exit') ui.terms.exit = t.checked;
   else if (t.id === 'f-import' && t.files?.[0]) importFile(t.files[0]);
+  else if (t.id === 't-auto') { ui.autoSingle = t.checked; run((s) => settle(s)); }
 });
 
 document.addEventListener('click', (e) => {
@@ -571,8 +600,9 @@ document.addEventListener('click', (e) => {
     case 'approach': return decide({ id });
     case 'event': return decide({ id });
     case 'order': return decide({ id });
-    case 'simrest': return simRest();
-    case 'next': return run((s) => advance(s));
+    case 'simrest': return simRaces(Infinity);
+    case 'sim5': return simRaces(5);
+    case 'next': return run((s) => settle(advance(s)));
     case 'retire': return decide({ id });
     case 'terms': ui.terms = { years: ui.terms.years, clause: ui.terms.clause, exit: ui.terms.exit }; return decide({ years: ui.terms.years, clause: ui.terms.clause, exitClause: ui.terms.exit });
     case 'copy': return copySummary();

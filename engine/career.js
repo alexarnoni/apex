@@ -4,7 +4,7 @@
 
 import { CONFIG } from './config.js';
 import { runSeason } from './season.js';
-import { scoutingScore, offerTier } from './market.js';
+import { scoutingScore, scoutingBreakdown, offerTier } from './market.js';
 import { makeRookie } from './drivers.js';
 import { BASE_TEAMS } from '../data/baseTeams.js';
 
@@ -86,7 +86,7 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
   player.perfBonus = 0;
   const pos = result.standings.indexOf(player) + 1;
 
-  const score = scoutingScore({
+  const scoutingArgs = {
     championshipPos: pos,
     gridSize: drivers.length,
     carRank,
@@ -94,7 +94,8 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
     typicalMaxAge: category.typicalAge[1],
     hasAcademy,
     fame: (player.fame ?? 0) + scoutingBonus,
-  });
+  };
+  const score = scoutingScore(scoutingArgs);
 
   return {
     position: pos,
@@ -106,6 +107,7 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
     teamId: team.id,
     teamName: team.name,
     scouting: score,
+    scoutingParts: scoutingBreakdown(scoutingArgs),
     offer: offerTier(score),
     carRank,
   };

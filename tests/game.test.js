@@ -241,3 +241,42 @@ test('desfazer = voltar ao estado anterior e repetir a mesma decisão dá o mesm
   const b = applyDecision(s0, { option: 'A' }); // "desfez" e repetiu
   assert.deepEqual(a, b);
 });
+
+// --- F.3: explicar o porquê -------------------------------------------------
+
+test('scoutingBreakdown soma exatamente a scoutingScore', async () => {
+  const { scoutingScore, scoutingBreakdown } = await import('../engine/market.js');
+  const args = { championshipPos: 4, gridSize: 20, carRank: 9, age: 20, typicalMaxAge: 17, hasAcademy: true, fame: 3 };
+  const p = scoutingBreakdown(args);
+  assert.ok(p.weakCar > 0 && p.age < 0 && p.academy > 0);
+  assert.ok(Math.abs(scoutingScore(args) - (p.result + p.weakCar + p.academy + p.fame + p.age)) < 1e-9);
+});
+
+test('temporada de base traz a explicação da nota e cada oferta explica o motivo', () => {
+  let s = applyDecision(createCareer({ ...HERO, seed: 11 }), { option: 'A' });
+  const v = getView(s);
+  assert.match(v.base.lastSeason.why, /^Nota .*resultado \(\d+º\)/);
+  assert.match(v.base.lastSeason.why, /Equipes de ponta pedem/);
+  for (let seed = 1; seed < 40; seed++) {
+    s = applyDecision(createCareer({ ...HERO, seed }), { option: 'A' });
+    if (s.pendingDecision.type === 'offer_pick') {
+      for (const o of s.pendingDecision.payload.options) assert.ok(o.why && o.why.length > 10, `${o.id} sem motivo`);
+      return;
+    }
+  }
+  assert.fail('nenhuma seed gerou oferta');
+});
+
+test('F1: status e ofertas vêm com motivo; a view expõe as corridas do ano', () => {
+  let s = applyDecision(f1Start(), { id: 'train' });
+  while (s.pendingDecision.type !== 'weekend_approach') s = applyDecision(s, answerFor(s));
+  for (let i = 0; i < 6; i++) {
+    s = applyDecision(s, answerFor(s));
+    while (s.pendingDecision && s.pendingDecision.type !== 'weekend_approach') s = applyDecision(s, answerFor(s));
+  }
+  const v = getView(s);
+  assert.ok(v.f1.races.length >= 6);
+  assert.ok(v.f1.statusWhy === null || v.f1.statusWhy.length > 10);
+  const full = play(f1Start(), (x) => x.pendingDecision?.type === 'offer_pick' && x.pendingDecision.payload.scope === 'f1', { retireAt: 99 });
+  if (full.s.pendingDecision) for (const o of full.s.pendingDecision.payload.options) assert.ok(o.why, `${o.id} sem motivo`);
+});

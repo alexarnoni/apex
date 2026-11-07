@@ -35,12 +35,22 @@ export function fillSeats(teams, seated, market, rng, makeExtra) {
 
 // Nota de scouting em categoria de base -> define o leque de ofertas de subida.
 // championshipPos: 1-based. carRank: 1 = melhor carro do grid da categoria.
-export function scoutingScore({ championshipPos, gridSize, carRank, age, typicalMaxAge, hasAcademy, fame = 0 }) {
+// Parcelas da nota (para explicar o porquê ao jogador). scoutingScore é a soma delas.
+export function scoutingBreakdown({ championshipPos, gridSize, carRank, age, typicalMaxAge, hasAcademy, fame = 0 }) {
   const S = CONFIG.scouting;
   const resultTerm = (gridSize - championshipPos + 1) / gridSize * 10; // 10 = campeão
-  const weakCarTerm = Math.max(0, carRank - championshipPos) * S.weakCarBonus; // bateu carros melhores
-  const ageTerm = Math.max(0, age - typicalMaxAge) * S.agePenaltyPerYearOver;
-  return resultTerm * S.championshipWeight + weakCarTerm + (hasAcademy ? S.academyBonus : 0) + fame - ageTerm;
+  return {
+    result: resultTerm * S.championshipWeight,
+    weakCar: Math.max(0, carRank - championshipPos) * S.weakCarBonus, // bateu carros melhores
+    academy: hasAcademy ? S.academyBonus : 0,
+    fame,
+    age: 0 - Math.max(0, age - typicalMaxAge) * S.agePenaltyPerYearOver, // "0 -" evita -0, que o JSON do save troca por 0
+  };
+}
+
+export function scoutingScore(args) {
+  const p = scoutingBreakdown(args);
+  return p.result + p.weakCar + p.academy + p.fame + p.age;
 }
 
 // Traduz a nota em tipo de oferta.
