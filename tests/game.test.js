@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createCareer, advance, applyDecision, getView } from '../engine/game.js';
+import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '../engine/game.js';
 import { legacyScore } from '../engine/f1.js';
 import { CONFIG } from '../engine/config.js';
 
@@ -215,4 +215,29 @@ test('F1: termos de contrato inválidos são rejeitados; cláusula de saída exi
 test('legacyScore segue a fórmula da spec-backend', () => {
   const sum = { titlesF1: 2, vice: 1, wins: 10, poles: 4, podiums: 20, points: 900, baseTitles: 2, altRouteTitles: 0 };
   assert.equal(legacyScore(sum), 2 * 1000 + 250 + 10 * 50 + 4 * 15 + 20 * 10 + 900 + 2 * 40);
+});
+
+// --- versão, seed e histórico (F.2, F.4, F.5) -------------------------------
+
+test('estado carrega engineVersion e a view expõe seed e versão', () => {
+  const s = createCareer({ ...HERO, seed: 321 });
+  assert.equal(s.engineVersion, ENGINE_VERSION);
+  const v = getView(s);
+  assert.equal(v.seed, 321);
+  assert.equal(v.engineVersion, ENGINE_VERSION);
+});
+
+test('cada decisão entra no histórico; o estado anterior não muda', () => {
+  const s0 = createCareer({ ...HERO, seed: 5 });
+  assert.deepEqual(s0.history, []);
+  const s1 = applyDecision(s0, { option: 'B' });
+  assert.deepEqual(s1.history, [{ type: 'base_choice', answer: { option: 'B' } }]);
+  assert.deepEqual(s0.history, []);
+});
+
+test('desfazer = voltar ao estado anterior e repetir a mesma decisão dá o mesmo resultado', () => {
+  const s0 = createCareer({ ...HERO, seed: 9 });
+  const a = applyDecision(s0, { option: 'A' });
+  const b = applyDecision(s0, { option: 'A' }); // "desfez" e repetiu
+  assert.deepEqual(a, b);
 });

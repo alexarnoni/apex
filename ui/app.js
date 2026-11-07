@@ -1,7 +1,7 @@
 // UI do Apex. Só apresenta e coleta decisões: toda regra vive em engine/.
 // Entrada única: createCareer / advance / applyDecision / getView (spec-loop-jogador).
 
-import { createCareer, advance, applyDecision, getView } from '../engine/game.js';
+import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '../engine/game.js';
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { TEAMS_F1 } from '../data/world2026.js';
 
@@ -21,7 +21,9 @@ const CLAUSE_TEXT = { none: 'Sem cláusula de status', p1: 'Exigir status de pil
 const TEAM_COLOR = Object.fromEntries(TEAMS_F1.map((t) => [t.id, t.color]));
 
 let state = null;
-let ui = { baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
+const UNDO_MAX = 30;
+let ui = { notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -38,6 +40,10 @@ function loadSave() {
     const raw = sessionStorage.getItem(SAVE_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw);
+    if (s.engineVersion !== ENGINE_VERSION) {
+      ui.notice = 'A carreira salva era de uma versão antiga do jogo e foi descartada.';
+      throw new Error('versão antiga');
+    }
     getView(s); // valida: se corromper, descarta
     return s;
   } catch {
@@ -51,13 +57,34 @@ function clearSave() { try { sessionStorage.removeItem(SAVE_KEY); } catch { /* i
 
 function run(fn) {
   try {
+    const before = state;
     state = fn(state);
+    if (state !== before) { undoStack.push(before); if (undoStack.length > UNDO_MAX) undoStack.shift(); }
     ui.error = null;
     save();
   } catch (e) {
     ui.error = e.message || String(e);
   }
   render();
+}
+
+function undo() {
+  if (!undoStack.length) return;
+  state = undoStack.pop();
+  ui.error = null;
+  ui.baseOpt = null;
+  save();
+  render();
+}
+
+function errorReport() {
+  const s = state;
+  return [
+    `APEX · erro: ${ui.error}`,
+    s ? `seed ${s.seed} · v${s.engineVersion} · fase ${s.phase} · ${s.year}` : 'sem carreira ativa',
+    s ? `últimas decisões: ${JSON.stringify((s.history ?? []).slice(-15))}` : '',
+    `navegador: ${navigator.userAgent}`,
+  ].filter(Boolean).join('\n');
 }
 const decide = (answer) => run((s) => applyDecision(s, answer));
 
@@ -88,6 +115,8 @@ function header(view) {
     <div class="logo">Ap<b>e</b>x</div>
     <span class="chip">${esc(p.flag ?? '')} #${esc(p.number)} ${esc(p.name)}</span>
     <span class="chip">${esc(view.year)} · ${esc(p.age)} anos</span>
+    <span class="chip" title="Use esta seed na criação para repetir a carreira">seed ${esc(view.seed)}</span>
+    <button class="btn ghost small" data-act="undo" ${undoStack.length ? '' : 'disabled'}>Desfazer</button>
     <button class="btn ghost small" data-act="newgame">${ui.confirmNew ? 'Apagar e recomeçar?' : 'Recomeçar'}</button>
   </header>${ui.confirmNew ? `<div class="note">A carreira atual será perdida. <button class="btn small" data-act="newgame-yes">Sim, recomeçar</button> <button class="btn ghost small" data-act="newgame-no">Cancelar</button></div>` : ''}`;
 }
@@ -146,6 +175,7 @@ function screenCreate(hasSave) {
     <h1>Do kart à glória</h1>
     <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
   </section>
+  ${ui.notice ? `<div class="note">${esc(ui.notice)}</div>` : ''}
   ${hasSave ? `<section class="card focus"><h2>Carreira em andamento</h2><p class="mute">Você tem uma carreira salva nesta aba.</p><div class="row"><button class="btn" data-act="continue">Continuar carreira</button></div></section>` : ''}
   <form class="card" id="create" autocomplete="off">
     <h2>Novo piloto</h2>
@@ -368,7 +398,7 @@ function render() {
     case 'ROTA_ALTERNATIVA': html = screenAlt(view); break;
     default: html = `<div class="note err">Tela desconhecida: ${esc(view.screen)}</div>`;
   }
-  if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)}</div>${html}`;
+  if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
   el.innerHTML = html;
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
   if (key !== lastKey) { lastKey = key; window.scrollTo(0, 0); }
@@ -402,7 +432,7 @@ function startCareer() {
 }
 
 function resetToMenu() {
-  state = null; ui.confirmNew = false; ui.baseOpt = null; ui.error = null; saveCache = null; clearSave(); lastKey = '';
+  state = null; undoStack = []; ui.confirmNew = false; ui.baseOpt = null; ui.error = null; saveCache = null; clearSave(); lastKey = '';
   render();
 }
 
@@ -441,9 +471,19 @@ document.addEventListener('click', (e) => {
     case 'retire': return decide({ id });
     case 'terms': ui.terms = { years: ui.terms.years, clause: ui.terms.clause, exit: ui.terms.exit }; return decide({ years: ui.terms.years, clause: ui.terms.clause, exitClause: ui.terms.exit });
     case 'copy': return copySummary();
+    case 'undo': return undo();
+    case 'copy-error': return copyErrorReport();
     default:
   }
 });
+
+function copyErrorReport() {
+  const text = errorReport();
+  const msg = document.getElementById('err-msg');
+  const say = (t) => { if (msg) msg.textContent = t; };
+  if (navigator.clipboard?.writeText) navigator.clipboard.writeText(text).then(() => say('Relatório copiado.'), () => say(text));
+  else say(text);
+}
 
 function copySummary() {
   const ta = document.getElementById('summary');

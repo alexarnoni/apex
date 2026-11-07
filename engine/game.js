@@ -20,6 +20,9 @@ import { TEAMS_F1 } from '../data/world2026.js';
 
 const STYLES = Object.keys(CONFIG.styles);
 
+// Sobe quando o formato do estado ou as regras mudam de um jeito que invalida saves antigos.
+export const ENGINE_VERSION = 1;
+
 // Executa uma transição sobre uma cópia do estado, com RNG e contador de nomes restaurados.
 function transition(state, fn) {
   const s = structuredClone(state);
@@ -51,6 +54,8 @@ export function createCareer({ surname, number, flag = null, style, seed } = {})
   const realSeed = (seed ?? Date.now()) >>> 0;
 
   const blank = {
+    engineVersion: ENGINE_VERSION,
+    history: [],            // [{ type, answer }] de cada decisão: base de relatório de erro e de replay futuro
     seed: realSeed,
     rngState: realSeed,
     rookieCounter: 0,
@@ -116,6 +121,12 @@ export function advance(state) {
 export function applyDecision(state, answer) {
   const pd = state.pendingDecision;
   if (!pd) throw new Error('não há decisão pendente');
+  const next = resolveDecision(state, pd, answer);
+  next.history = [...(state.history ?? []), { type: pd.type, answer }];
+  return next;
+}
+
+function resolveDecision(state, pd, answer) {
   switch (pd.type) {
     case 'base_choice': return transition(state, (s, rng) => resolveBaseChoice(s, rng, answer));
     case 'academy_invite': return transition(state, (s, rng) => resolveAcademyInvite(s, rng, answer));
@@ -329,6 +340,8 @@ export function getView(state) {
   const p = state.f1 ? (state.f1.world.drivers.find((d) => d.isPlayer) ?? state.player) : state.player;
   const view = {
     screen: state.phase,
+    seed: state.seed,
+    engineVersion: state.engineVersion,
     year: state.year,
     player: { name: p.name, number: p.number, flag: p.flag, style: p.style, age: p.age, fame: p.fame, academy: p.academy, stats: p.stats },
     decision: state.pendingDecision,

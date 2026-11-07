@@ -80,12 +80,12 @@ Itens que não são "recurso de jogo", mas decidem se dá para jogar sem perder 
 
 | # | Item | Esforço | Nível | Notas |
 |---|---|---|---|---|
-| F.1 | Transformar o projeto em repositório git | P | 1 | Hoje não há histórico nem como desfazer mudança ruim. Primeira coisa a resolver. |
-| F.2 | Mostrar a seed na tela durante o jogo | P | 1 | O campo existe na criação; falta exibir, para dois amigos jogarem a mesma carreira e compararem. |
+| ~~F.1~~ | ~~Transformar o projeto em repositório git~~ | P | 1 | ✅ **Feito (2026-11-07).** `git init` na branch `main`, `.gitignore` (node_modules, dist) e primeiro commit. |
+| ~~F.2~~ | ~~Mostrar a seed na tela durante o jogo~~ | P | 1 | ✅ **Feito (2026-11-07).** Chip "seed N" no cabeçalho de toda tela de carreira; a view expõe `seed`. |
 | F.3 | Explicar o porquê (nota de scouting, status, oferta) em uma linha | P | 1 | Ensina as regras sem tutorial longo. |
-| F.4 | Tela de erro útil com "copiar relatório" (estado, seed, últimas decisões) | P | 1 | Hoje o erro aparece só como faixa vermelha. |
-| F.5 | `engineVersion` no snapshot e aviso de save antigo | P | 1 | Evita erro estranho depois de mudar a engine. |
-| F.6 | Desfazer a última decisão | P-M | 2 | O estado já é imutável: guardar uma pilha de estados é quase de graça. |
+| ~~F.4~~ | ~~Tela de erro útil com "copiar relatório" (estado, seed, últimas decisões)~~ | P | 1 | ✅ **Feito (2026-11-07).** O estado guarda `history` (tipo e resposta de cada decisão); o botão "Copiar relatório do erro" junta mensagem, seed, versão, fase, últimas 15 decisões e navegador. Esse histórico também serve de base para o replay do item 4.3. |
+| ~~F.5~~ | ~~`engineVersion` no snapshot e aviso de save antigo~~ | P | 1 | ✅ **Feito (2026-11-07).** `ENGINE_VERSION` em `engine/game.js` (subir quando o formato do estado mudar); save de outra versão é descartado com aviso na tela inicial. |
+| ~~F.6~~ | ~~Desfazer a última decisão~~ | P-M | 2 | ✅ **Feito (2026-11-07).** Botão "Desfazer" no cabeçalho, até 30 passos, só em memória (some ao recarregar a página). Repetir a mesma decisão depois de desfazer dá o mesmo resultado (testado). |
 | F.7 | Salvar na máquina (`localStorage`), com alguns slots e exportar arquivo | M | 2 | Hoje o progresso fica em `sessionStorage` e some ao fechar a aba. |
 | F.8 | Controle de velocidade (simular 5 corridas, até o próximo evento, pular eventos sem escolha) | M | 2 | Hoje são 24 cliques por temporada; já existe "simular o resto da temporada". |
 | F.9 | Formulário de feedback com resumo da carreira, seed e texto | M | 2 | Hoje só existe "copiar resumo" no fim da carreira. |
