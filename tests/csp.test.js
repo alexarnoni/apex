@@ -63,6 +63,9 @@ test('build real: os hashes da política batem com o script e o estilo embutidos
   assert.equal(styles.length, 1);
   assert.ok(csp.includes(sha256(styles[0])), 'hash do estilo na política');
 
+  // Regressão: o PowerShell em pt-BR gerou "x=""10,5""" (vírgula decimal) no logotipo e no ícone. SVG só aceita ponto.
+  assert.doesNotMatch(html, /\s(x|y|width|height|cx|cy|r|rx|ry)="-?\d+,\d+"/, 'número com vírgula decimal em atributo SVG');
+  assert.doesNotMatch(decodeURIComponent(html.match(/<link rel="icon"[^>]*href="([^"]+)"/)[1]), /\s(x|y|width|height)="-?\d+,\d+"/, 'favicon com vírgula decimal');
   // Sem scripts externos além dos permitidos (nenhum, no build padrão).
   assert.doesNotMatch(html, /<script[^>]*\ssrc=/);
   assert.doesNotMatch(html, /\son(click|load|error)=/i, 'sem manipuladores inline, que a política bloquearia');

@@ -60,3 +60,12 @@ test('endereço do Worker de feedback: vazio desliga, https obrigatório', () =>
   assert.throws(() => normalizeEndpoint('fb.exemplo.dev'), /BANDEIRADA_FEEDBACK_ENDPOINT inválido/);
   assert.throws(() => normalizeEndpoint('https://a b.dev'), /BANDEIRADA_FEEDBACK_ENDPOINT inválido/);
 });
+
+test('favicon: todos os atributos numéricos do SVG usam ponto decimal e a bandeira tem 12 quadrados', () => {
+  const href = buildHead({ siteUrl: DEFAULT_SITE_URL }).match(/<link rel="icon"[^>]*href="([^"]+)"/)[1];
+  const svg = decodeURIComponent(href.replace(/^data:image\/svg\+xml,/, ''));
+  assert.doesNotMatch(svg, /="-?\d+,\d+"/);
+  const rects = [...svg.matchAll(/<rect [^>]*>/g)].map((m) => m[0]);
+  assert.equal(rects.length, 13, 'fundo + 12 quadrados da bandeira 4x3');
+  for (const r of rects) for (const a of r.matchAll(/(x|y|width|height)="([^"]+)"/g)) assert.ok(Number.isFinite(Number(a[2])), `${a[1]}="${a[2]}" não é número`);
+});

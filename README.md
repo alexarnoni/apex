@@ -146,7 +146,7 @@ Endereço escolhido: **https://bandeirada.alexarnoni.com** (o domínio `alexarno
 4. **Análise de uso (GoatCounter, sem cookies):** crie o site em goatcounter.com, escolha o código (a parte antes de `.goatcounter.com`) e rode `gh variable set BANDEIRADA_GOATCOUNTER --body <codigo>` e o `gh workflow run` acima. Sem a variável, nenhuma análise é carregada. Marcos enviados: `carreira-iniciada`, `chegou-na-f1`, `carreira-terminada-*`, `fim-da-linha-na-base`, `ajuda-aberta`, `feedback-aberto`, `save-exportado`. Nunca vão nome, seed ou dados da carreira.
 5. Para testar localmente: `BANDEIRADA_SITE_URL=https://bandeirada.alexarnoni.com BANDEIRADA_GOATCOUNTER=codigo npm run build`.
 
-**Feedback por e-mail:** o botão flutuante "Feedback" e o cartão de fim de carreira enviam para um Worker da Cloudflare (`worker/`), que manda um e-mail para a caixa do autor sem exigir conta do jogador. Falta só o deploy, passo a passo em [worker/README.md](worker/README.md); o endereço do Worker entra como `BANDEIRADA_FEEDBACK_ENDPOINT`. Sem ele, o jogo só oferece "Copiar".
+**Feedback por e-mail:** o botão flutuante "Feedback" e o cartão de fim de carreira enviam para um Worker da Cloudflare (`worker/`), que manda um e-mail para a caixa do autor sem exigir conta do jogador. Publicado e ligado ao jogo (passo a passo para refazer em [worker/README.md](worker/README.md)); o endereço do Worker entra como `BANDEIRADA_FEEDBACK_ENDPOINT`. Sem ele, o jogo só oferece "Copiar".
 
 **Segurança:** site estático com Content-Security-Policy por hash (`tools/site-head.js`), Actions fixadas por SHA, Dependabot e relato privado de vulnerabilidade ([SECURITY.md](SECURITY.md)). Pendências e decisões em [docs/roadmap-ideias.md](docs/roadmap-ideias.md), seção "Segurança".
 
