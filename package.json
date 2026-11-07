@@ -10,7 +10,7 @@
     "events": "node tools/export-events.js",
     "dev": "node tools/build-ui.js && npx serve dist"
   },
-  "license": "MIT",
+  "license": "UNLICENSED",
   "devDependencies": {
     "esbuild": "^0.28.2"
   }

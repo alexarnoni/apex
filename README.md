@@ -125,6 +125,26 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
 
 Alternativa: Cloudflare Pages com build `npm run build` e pasta de saída `dist`. Para testar o botão de envio localmente: `APEX_FEEDBACK_URL=https://github.com/usuario/apex/issues/new npm run build`.
 
+### Endereço próprio e análise de uso (beta)
+
+Endereço escolhido: **https://apex.alexarnoni.com** (o domínio `alexarnoni.com` está na Cloudflare, e o site pessoal não roda no GitHub Pages, por isso um subdomínio e não `/apex`).
+
+1. **DNS (você, na Cloudflare):** Dashboard > `alexarnoni.com` > DNS > Records > Add record: tipo `CNAME`, nome `apex`, destino `alexarnoni.github.io`, proxy **somente DNS** (nuvem cinza) até o GitHub emitir o HTTPS.
+2. **GitHub (comandos):**
+   ```bash
+   gh api -X PUT repos/alexarnoni/apex/pages -f cname=apex.alexarnoni.com
+   gh variable set APEX_SITE_URL --body https://apex.alexarnoni.com
+   ```
+3. Quando o certificado estiver emitido (minutos até cerca de 1 hora):
+   ```bash
+   gh api -X PUT repos/alexarnoni/apex/pages -F https_enforced=true
+   gh workflow run "Publicar no GitHub Pages"
+   ```
+   `APEX_SITE_URL` vira o `canonical` e o `og:url`/`og:image` do cartão de compartilhamento.
+4. **Análise de uso (GoatCounter, sem cookies):** crie o site em goatcounter.com, escolha o código (a parte antes de `.goatcounter.com`) e rode `gh variable set APEX_GOATCOUNTER --body <codigo>` e o `gh workflow run` acima. Sem a variável, nenhuma análise é carregada. Marcos enviados: `carreira-iniciada`, `chegou-na-f1`, `carreira-terminada-*`, `fim-da-linha-na-base`, `ajuda-aberta`, `feedback-aberto`, `save-exportado`. Nunca vão nome, seed ou dados da carreira.
+5. Para testar localmente: `APEX_SITE_URL=https://apex.alexarnoni.com APEX_GOATCOUNTER=codigo npm run build`.
+
+**Licença:** todos os direitos reservados ([LICENSE](LICENSE)); o código é público para consulta. Apex é um projeto de fã, sem vínculo com a F1, a FIA ou as equipes; o jogo mostra esse aviso no rodapé e no painel "Sobre e privacidade". Antes de qualquer monetização, trocar os nomes reais (modo fictício, roadmap 3.10).
 ## Dívidas de design anotadas
 
 - Piloto 1 / piloto 2 e ordens de equipe

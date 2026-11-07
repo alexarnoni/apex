@@ -65,6 +65,10 @@ p { margin: 0; }
 .btn.small { font-size: 14px; padding: 6px 12px; min-height: 36px; }
 .btn:focus-visible, .opt:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 h1:focus, h2:focus { outline: none; }
+.foot { color: var(--mute); font-size: 13px; padding-top: 8px; border-top: 1px solid var(--line); }
+.linkbtn { font: inherit; color: var(--fg); background: none; border: 0; padding: 4px 0; text-decoration: underline; cursor: pointer; min-height: 32px; }
+.linkbtn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
+a { color: var(--fg); }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .pc { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; font-size: 13px; }
 .pc .pro { color: var(--good); }
@@ -120,5 +124,6 @@ details summary { cursor: pointer; color: var(--mute); font-size: 14px; }
 @media (prefers-reduced-motion: no-preference) { .bar-meter i { transition: width .25s; } }
 @media (max-width: 480px) { h1 { font-size: 32px; } .big { font-size: 44px; } }
 </style>
+<!--BODY-->
 <div class="wrap" id="app" role="main"></div>
 <script>{{BUNDLE}}</script>

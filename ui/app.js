@@ -11,6 +11,24 @@ import { buildFeedback, sendUrl, FEEDBACK_KINDS } from './feedback.js';
 // com APEX_FEEDBACK_URL. Sem ele o formulário só copia o relatório.
 // eslint-disable-next-line no-undef
 const FEEDBACK_URL = typeof __FEEDBACK_URL__ !== 'undefined' ? __FEEDBACK_URL__ : '';
+// Análise de uso (GoatCounter) só existe se o build recebeu APEX_GOATCOUNTER.
+// eslint-disable-next-line no-undef
+const ANALYTICS = typeof __ANALYTICS__ !== 'undefined' ? __ANALYTICS__ : false;
+const REPO_URL = 'https://github.com/alexarnoni/apex';
+
+// Conta um marco (sem cookies, sem nome, seed ou dados da carreira). Sem análise configurada, não faz nada.
+function track(name) {
+  if (!ANALYTICS) return;
+  try { window.goatcounter?.count?.({ path: `evento/${name}`, title: name, event: true }); } catch { /* análise bloqueada: segue o jogo */ }
+}
+
+// Marcos da carreira, a partir da mudança de estado numa jogada.
+function trackProgress(before, after) {
+  if (!before || !after) return;
+  if (after.f1 && !before.f1) track('chegou-na-f1');
+  if (after.phase === 'LEGADO' && before.phase !== 'LEGADO') track(`carreira-terminada-${after.legacy?.how ?? 'fim'}`);
+  if (after.phase === 'ROTA_ALTERNATIVA' && before.phase !== 'ROTA_ALTERNATIVA') track('fim-da-linha-na-base');
+}
 
 const FLAGS = ['BR', 'AR', 'PT', 'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'FI', 'JP', 'US', 'MX', 'AU'];
 const STYLES = {
@@ -30,7 +48,7 @@ let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
-let ui = { helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let ui = { aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -83,6 +101,7 @@ async function downloadFile(filename, text) {
     if (downloads) {
       await downloads.save({ filename, data: text });
       ui.notice = 'Arquivo de save pronto. Guarde-o: dá para importar na tela inicial.';
+      track('save-exportado');
     } else {
       const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
       const a = document.createElement('a');
@@ -103,7 +122,7 @@ function run(fn) {
   try {
     const before = state;
     state = fn(state);
-    if (state !== before) { undoStack.push(before); if (undoStack.length > UNDO_MAX) undoStack.shift(); }
+    if (state !== before) { undoStack.push(before); if (undoStack.length > UNDO_MAX) undoStack.shift(); trackProgress(before, state); }
     ui.error = null;
     save();
   } catch (e) {
@@ -148,7 +167,27 @@ function helpPanel() {
     ${HELP.map(([t, d]) => `<details><summary>${esc(t)}</summary><p style="margin-top:6px">${esc(d)}</p></details>`).join('')}</section>`;
 }
 
-const panels = () => (ui.helpOpen ? helpPanel() : '') + (ui.fb.open ? feedbackPanel() : '');
+// --- sobre, aviso de projeto de fã e privacidade -------------------------------
+
+function aboutPanel() {
+  const stats = ANALYTICS
+    ? 'O site conta visitas e etapas da carreira (como "chegou à F1") com o GoatCounter, sem cookies e sem dados pessoais. O nome do piloto, a seed e o conteúdo da carreira não são enviados.'
+    : 'O site não coleta estatísticas de uso.';
+  return `<section class="card focus" id="about-panel"><div class="row" style="justify-content:space-between"><h2>Sobre e privacidade</h2><button class="btn ghost small" data-act="about-close">Fechar</button></div>
+    <details open><summary>Sobre o Apex</summary><p style="margin-top:6px">Apex é um projeto de fã, independente, sem vínculo com a Fórmula 1, a FIA, as equipes ou os pilotos citados. Nomes, marcas e logotipos pertencem aos seus donos e aparecem só para ambientar o jogo. Os resultados são simulados e não retratam pessoas reais.</p></details>
+    <details open><summary>Privacidade</summary>
+      <p style="margin-top:6px">Sua carreira fica salva só no seu navegador. Nada dela é enviado a nenhum servidor.</p>
+      <p style="margin-top:6px">${esc(stats)}</p>
+      <p style="margin-top:6px">As fontes do texto vêm do Google Fonts, então o Google vê o endereço IP de quem abre o site.</p>
+      <p style="margin-top:6px">O feedback só sai se você copiar ou enviar. Se marcar a opção, o relatório leva a seed e as últimas decisões da carreira.</p></details>
+    <details open><summary>Código e licença</summary><p style="margin-top:6px">O código está visível em <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">${REPO_URL.replace('https://', '')}</a>, com todos os direitos reservados.</p></details></section>`;
+}
+
+function footer() {
+  return `<footer class="foot">Projeto de fã independente, sem vínculo com a F1, a FIA ou as equipes. <button class="linkbtn" data-act="about-open">Sobre e privacidade</button></footer>`;
+}
+
+const panels = () => (ui.aboutOpen ? aboutPanel() : '') + (ui.helpOpen ? helpPanel() : '') + (ui.fb.open ? feedbackPanel() : '');
 
 // --- feedback (F.9) ---------------------------------------------------------
 
@@ -573,7 +612,7 @@ function focusHeading(root) {
 
 function render() {
   const el = $app();
-  if (!state) { el.innerHTML = panels() + screenCreate(); return; }
+  if (!state) { el.innerHTML = panels() + screenCreate() + footer(); return; }
   const view = getView(state);
   let html;
   switch (view.screen) {
@@ -589,7 +628,7 @@ function render() {
   }
   if (ui.notice) html = `<div class="note" role="status">${esc(ui.notice)}</div>${html}`;
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
-  el.innerHTML = panels() + html;
+  el.innerHTML = panels() + html + footer();
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
   if (key !== lastKey) { lastKey = key; window.scrollTo(0, 0); focusHeading(el); }
 }
@@ -615,6 +654,7 @@ function startCareer() {
     state = createCareer({ surname: d.surname.trim(), number: Number(d.number), flag: d.flag, style: d.style, seed });
     activeSlot = slot;
     undoStack = [];
+    track('carreira-iniciada');
     ui.error = null;
     ui.notice = null;
     ui.baseOpt = null;
@@ -707,9 +747,11 @@ document.addEventListener('click', (e) => {
     case 'copy': return copySummary();
     case 'undo': return undo();
     case 'copy-error': return copyErrorReport();
-    case 'help-open': ui.helpOpen = true; ui.fb.open = false; render(); document.getElementById('help-panel')?.scrollIntoView?.({ block: 'start' }); return undefined;
+    case 'about-open': ui.aboutOpen = true; ui.helpOpen = false; ui.fb.open = false; render(); document.getElementById('about-panel')?.scrollIntoView?.({ block: 'start' }); return undefined;
+    case 'about-close': ui.aboutOpen = false; return render();
+    case 'help-open': track('ajuda-aberta'); ui.aboutOpen = false; ui.helpOpen = true; ui.fb.open = false; render(); document.getElementById('help-panel')?.scrollIntoView?.({ block: 'start' }); return undefined;
     case 'help-close': ui.helpOpen = false; return render();
-    case 'fb-open': ui.helpOpen = false; ui.fb.open = true; ui.fb.msg = ''; if (ui.error && !ui.fb.text) ui.fb.text = `Erro: ${ui.error}\n`; render(); document.getElementById('fb-text')?.focus(); return undefined;
+    case 'fb-open': track('feedback-aberto'); ui.aboutOpen = false; ui.helpOpen = false; ui.fb.open = true; ui.fb.msg = ''; if (ui.error && !ui.fb.text) ui.fb.text = `Erro: ${ui.error}\n`; render(); document.getElementById('fb-text')?.focus(); return undefined;
     case 'fb-close': ui.fb.open = false; return render();
     case 'fb-copy': return copyFeedback();
     case 'fb-send': if (!ui.fb.text.trim()) { e.preventDefault(); ui.fb.msg = 'Escreva o que aconteceu antes de enviar.'; const m = document.getElementById('fb-msg'); if (m) m.textContent = ui.fb.msg; } return undefined;

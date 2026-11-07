@@ -99,6 +99,28 @@ Itens que não são "recurso de jogo", mas decidem se dá para jogar sem perder 
 | F.17 | Teste de desempenho em carreira longa e celular fraco | M | 3 | Cada transição clona o estado inteiro; medir antes de o mundo crescer. |
 | F.18 | Tradução (i18n): separar os textos do código | M-G | 4 | Mais barato fazer antes de o volume de texto crescer. |
 
+## Beta público e profissional (transversal)
+
+O que separa "amigos testando" de um beta público com cara profissional. O jogo roda todo no navegador, então o site é estático (CDN, custo zero, muita gente jogando ao mesmo tempo não pesa); servidor só entra com ranking e compartilhamento (4.1). Ordenado do mais fácil ao mais difícil.
+
+| # | Item | Esforço | Notas |
+|---|---|---|---|
+| ~~B.1~~ | ~~Aviso de projeto de fã e painel "Sobre e privacidade"~~ | P | ✅ **Feito (2026-11-07).** Rodapé em toda tela e painel com aviso (sem vínculo com a F1, a FIA, equipes e pilotos), privacidade (save só no navegador, análise sem cookies se ativada, Google Fonts vê o IP) e link do código. |
+| ~~B.2~~ | ~~LICENSE~~ | P | ✅ **Feito (2026-11-07).** Todos os direitos reservados (decisão sua), em português e inglês; `package.json` com `UNLICENSED`. Mantém a porta aberta para monetizar e dá para abrir depois. |
+| ~~B.3~~ | ~~Favicon, descrição e cartão de compartilhamento~~ | P | ✅ **Feito (2026-11-07), a confirmar no ar.** Título, descrição, ícone, `canonical`, `og:*` e `twitter:*` no cabeçalho do site (`tools/site-head.js`, testado) e imagem 1200×630 em `ui/assets/og.jpg`. Falta ver o cartão aparecendo de verdade no WhatsApp depois do deploy: os raspadores guardam cache e eu não consigo testá-los daqui. |
+| B.4 | Domínio `apex.alexarnoni.com` | P | **Preparado, falta você.** Código e workflow prontos (`APEX_SITE_URL`). Falta criar o CNAME `apex` → `alexarnoni.github.io` na Cloudflare (proxy desligado no início) e rodar os comandos do README (seção "Endereço próprio"). Riscado quando o endereço responder com HTTPS. |
+| B.5 | Análise de uso (GoatCounter) | P | **Preparado, falta você.** Script por variável (`APEX_GOATCOUNTER`) e marcos da carreira (`chegou-na-f1`, `carreira-terminada-*` e outros) já no jogo e testados com um contador de mentira. Falta criar a conta/site no goatcounter.com e gravar o código na variável. Grátis para uso não comercial. |
+| B.6 | Fontes hospedadas no próprio site (sai o Google Fonts) | P-M | Evita expor o IP do visitante ao Google e acelera o primeiro carregamento. Exige baixar os arquivos das fontes (Barlow, Barlow Condensed, IBM Plex Mono, todas com licença livre). |
+| B.7 | Migrar saves entre versões do jogo | M | Hoje, ao mudar o formato, o save antigo é descartado. Com muita gente jogando isso vira perda de carreira. Mínimo: avisar para exportar antes; ideal: migração por versão. |
+| B.8 | Feedback sem conta no GitHub | M | Hoje o envio exige GitHub; quem não tem só consegue copiar o relatório. Opções: formulário simples (Formspree, Google Forms) ou o futuro backend. |
+| B.9 | Captura automática de erros | M | Hoje um erro só chega se o jogador copiar o relatório. Opções: Sentry (plano gratuito) ou um envio próprio. |
+| B.10 | Teste automático da interface no CI (F.13) | M | Percorre uma carreira clicando, em navegador de verdade, antes de cada deploy. |
+| B.11 | Teste em aparelhos reais (iOS Safari, Android, Firefox) | M | Só foi testado em Chromium emulado. Cuidado com `localStorage` no modo privado do iOS. |
+| B.12 | Rotas alternativas (3.11) | M-G | Cerca de 9% das carreiras caem em "Fim da linha". Para público de fora, é o maior beco sem saída. |
+| B.13 | README para jogadores, changelog e canal da comunidade | M | O README atual é de quem desenvolve. Falta uma página "sobre o jogo", histórico de versões e um grupo (WhatsApp ou Discord) para o feedback. |
+| B.14 | Modo fictício antes de qualquer monetização (3.10) | M | O jogo usa nomes e marcas reais. Isso é aceitável como projeto de fã sem fins lucrativos; com anúncios, venda ou assinatura o risco de notificação por marca e direito de imagem sobe muito. Troca de nomes é só trocar arquivos de dados. Também muda de plano no GoatCounter e na licença. |
+| B.15 | Backend de ranking e compartilhamento (4.1) | G | Só aqui entra servidor (FastAPI + Postgres, atrás da Cloudflare, com limite de requisições e backup). A carga é pequena: um envio por carreira terminada. O risco real é fraude no ranking (replay no servidor, 4.3). |
+
 ## Pendências de qualidade (transversais)
 
 - Calibrar com jogo real, não com política passiva: taxa de título (hoje 24% passivo), crescimento do jogador na base, frequência de eventos, frequência de `fia_polemica_titulo` e `contrato_vazado` (nunca dispararam em simulação passiva).

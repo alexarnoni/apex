@@ -34,6 +34,11 @@ jobs:
         env:
           # O botão "Enviar pelo GitHub" do formulário de feedback abre uma issue neste repositório.
           APEX_FEEDBACK_URL: https://github.com/${{ github.repository }}/issues/new
+          # Variáveis do repositório (Settings > Secrets and variables > Actions > Variables); vazias = padrão.
+          # APEX_SITE_URL: endereço público (ex.: https://apex.alexarnoni.com). Vira canonical e og:url/og:image.
+          APEX_SITE_URL: ${{ vars.APEX_SITE_URL }}
+          # APEX_GOATCOUNTER: código do site no GoatCounter. Sem ele, nenhuma análise é carregada.
+          APEX_GOATCOUNTER: ${{ vars.APEX_GOATCOUNTER }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
