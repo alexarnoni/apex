@@ -209,7 +209,7 @@ export const NARRATIVE_EVENTS = [
 
 export const RACE_EVENTS = [
   {
-    id: 'garoa_pit', phase: 'race', weight: 4, chance: 0.10,
+    id: 'garoa_pit', phase: 'race', safe: 'pit', weight: 4, chance: 0.10,
     cond: (c) => c.pos !== null && !c.w.wet,
     title: 'Garoa na volta 40',
     text: (c) => `Rádio: "${c.player.name}, começou a garoar na curva 3. Boxes agora ou fica na pista?"`,
@@ -225,7 +225,7 @@ export const RACE_EVENTS = [
     ],
   },
   {
-    id: 'safety_restart', phase: 'race', weight: 3,
+    id: 'safety_restart', phase: 'race', safe: 'segurar', weight: 3,
     cond: (c) => c.pos !== null && c.pos >= 2 && c.pos <= 6,
     title: 'Relargada',
     text: () => 'Safety car entrando. Pneus quentes, todo mundo colado na sua traseira. Como você sai na relargada?',
@@ -239,7 +239,7 @@ export const RACE_EVENTS = [
     ],
   },
   {
-    id: 'pneu_aposta', phase: 'race', weight: 3,
+    id: 'pneu_aposta', phase: 'race', safe: 'manter', weight: 3,
     cond: (c) => c.pos !== null && c.pos > 10,
     title: 'Aposta de pneu',
     text: (c) => `Rádio: "${c.player.name}, estamos fora dos pontos. Tem um pneu diferente do resto do grid, mas é arriscado."`,
@@ -252,7 +252,7 @@ export const RACE_EVENTS = [
     ],
   },
   {
-    id: 'duelo_rival', phase: 'race', weight: 4,
+    id: 'duelo_rival', phase: 'race', safe: 'pressionar', weight: 4,
     cond: (c) => !!c.rivalAheadOnTrack,
     title: 'Duelo com o rival',
     text: (c) => `${c.rival.name} está logo à sua frente, de novo. A arquibancada levanta.`,
@@ -269,7 +269,7 @@ export const RACE_EVENTS = [
     ],
   },
   {
-    id: 'problema_motor', phase: 'race', weight: 3, chance: 0.08,
+    id: 'problema_motor', phase: 'race', safe: 'poupar', weight: 3, chance: 0.08,
     cond: (c) => c.pos !== null,
     title: 'Motor perdendo pressão',
     text: (c) => `Rádio: "${c.player.name}, a pressão de óleo está caindo. Poupa ou força?"`,
@@ -282,7 +282,7 @@ export const RACE_EVENTS = [
     ],
   },
   {
-    id: 'chamada_estrategia', phase: 'race', weight: 2,
+    id: 'chamada_estrategia', phase: 'race', safe: 'confiar', weight: 2,
     cond: (c) => c.pos !== null,
     title: 'Estratégia no muro',
     text: (c) => `Rádio: "${c.player.name}, temos uma estratégia alternativa. Confia na gente ou vai do seu jeito?"`,
@@ -295,7 +295,7 @@ export const RACE_EVENTS = [
     ],
   },
   {
-    id: 'defesa_agressiva', phase: 'race', weight: 3,
+    id: 'defesa_agressiva', phase: 'race', safe: 'limpo', weight: 3,
     cond: (c) => c.pos !== null && c.pos <= 3,
     title: 'Pressão nas últimas voltas',
     text: () => 'Pneu no fim e um carro mais rápido colado na sua traseira, com o pódio em jogo.',
@@ -311,7 +311,7 @@ export const RACE_EVENTS = [
     ],
   },
   {
-    id: 'largada_confusa', phase: 'race', weight: 3,
+    id: 'largada_confusa', phase: 'race', safe: 'esperar', weight: 3,
     cond: (c) => c.pos !== null && c.pos >= 5 && c.pos <= 15,
     title: 'Largada confusa',
     text: () => 'As luzes se apagam e o pelotão se espreme na primeira curva. Tem espaço por dentro, mas é pouco.',
@@ -329,7 +329,7 @@ export const RACE_EVENTS = [
     ],
   },
   {
-    id: 'bandeira_amarela', phase: 'race', weight: 3,
+    id: 'bandeira_amarela', phase: 'race', safe: 'levantar', weight: 3,
     cond: (c) => c.pos !== null && c.pos <= 8,
     title: 'Bandeira amarela',
     text: () => 'Bandeira amarela no setor 2. Você levanta o pé como mandam as regras ou mantém o ritmo e torce para os comissários não notarem?',

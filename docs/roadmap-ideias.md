@@ -174,6 +174,8 @@ Feedback de quem jogou: na F1 cada corrida é a mesma escolha de três botões (
 | D.4 | Narrativa da corrida: resumo do que aconteceu (largada, ultrapassagens, safety car, abandonos de rivais) em vez de uma linha | Aberto, sugestão minha; combina com D.2. |
 | D.5 | Metas e tensão de temporada: objetivos da equipe, pressão do contrato, briga de título com o rival | Aberto, sugestão minha. |
 
+Simulação de corridas (corrigido em 2026-11-07): "Simular 5 corridas" e "Simular o resto da temporada" paravam no primeiro evento de corrida com escolha (54% de chance por etapa) e, se nenhuma corrida tinha terminado, não avisavam nada, parecendo quebrados. Agora a simulação decide sozinha os eventos com a opção cautelosa de cada um (`safe` em `data/events.js`, testado) e obedece às ordens de equipe, e o aviso no topo conta as posições e o que foi decidido. Há uma caixa "Parar a simulação nos eventos de corrida e ordens de equipe" para quem quer decidir. Notícias de temporada com escolha (meio e fim do ano) continuam parando. Saves antigos com um evento já pendente param nele uma vez, porque o payload salvo não tem `safe`.
+
 Texto para leigos: as descrições com "pp" (ponto percentual) foram reescritas em palavras ("mais risco de abandonar a corrida", "aumenta bastante a chance de uma academia te convidar"). Saves em andamento guardam o texto antigo na decisão pendente; carreiras novas já saem com o novo.
 
 ## Pendências de qualidade (transversais)

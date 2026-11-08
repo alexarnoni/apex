@@ -292,7 +292,7 @@ export function resolveWeekendApproach(s, rng, answer) {
       s.pendingDecision = {
         type: 'race_event',
         payload: {
-          race: season.raceIndex + 1, eventId: ev.id, title: ev.title, text: ev.text(ctx),
+          race: season.raceIndex + 1, eventId: ev.id, title: ev.title, text: ev.text(ctx), safe: ev.safe ?? null,
           options: ev.options.map((o) => ({ id: o.id, label: o.label, description: o.description })),
         },
       };

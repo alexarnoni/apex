@@ -54,7 +54,7 @@ let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
-let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '', contact: '', status: '' }, end: { rating: null, text: '', include: true, status: '', msg: '' }, autoSingle: true, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '', contact: '', status: '' }, end: { rating: null, text: '', include: true, status: '', msg: '' }, autoSingle: true, simStop: false, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -385,14 +385,29 @@ const decide = (answer) => run((s) => settle(applyDecision(s, answer)));
 
 // Simula até n corridas no modo equilibrado. Para sozinho numa decisão com escolha real
 // (evento, ordem de equipe) ou no fim da temporada, e diz por que parou.
+// Por padrão a simulação decide sozinha os eventos de corrida (opção cautelosa de cada um) e as ordens de
+// equipe (obedece), e diz o que decidiu. Com "Parar nas decisões" marcado, ela para em cada uma.
+// Notícias de temporada com escolha (meio e fim do ano) sempre param: são decisões de carreira.
 function simRaces(n) {
   run((s) => {
     const before = getView(s).f1.races.length;
     let cur = settle(s);
     let done = 0;
-    while (done < n && cur.phase === 'F1_FIM_DE_SEMANA' && cur.pendingDecision?.type === 'weekend_approach') {
-      cur = settle(applyDecision(cur, { id: cur.pendingDecision.payload.out ? 'rest' : 'balanced' }));
-      done += 1;
+    const auto = [];
+    for (let guard = 0; guard < 5000; guard++) {
+      const pd = cur.pendingDecision;
+      if (cur.phase !== 'F1_FIM_DE_SEMANA' || !pd) break;
+      if (pd.type === 'weekend_approach') {
+        if (done >= n) break;
+        cur = settle(applyDecision(cur, { id: pd.payload.out ? 'rest' : 'balanced' }));
+        done += 1;
+      } else if (!ui.simStop && pd.type === 'race_event' && pd.payload.safe) {
+        auto.push(pd.payload.title);
+        cur = settle(applyDecision(cur, { id: pd.payload.safe }));
+      } else if (!ui.simStop && pd.type === 'team_order') {
+        auto.push('ordem de equipe (obedeceu)');
+        cur = settle(applyDecision(cur, { id: 'obey' }));
+      } else break;
     }
     const v = getView(cur);
     const ran = v.f1.races.slice(before);
@@ -400,11 +415,14 @@ function simRaces(n) {
     const pd = cur.pendingDecision;
     let why = '';
     if (pd?.type === 'team_order') why = ' Parou: ordem de equipe para você decidir.';
-    else if (pd?.type === 'race_event' || pd?.type === 'story_event') why = ' Parou: evento com escolha.';
+    else if (pd?.type === 'race_event') why = ` Parou na etapa ${pd.payload.race}: ${pd.payload.title}, uma decisão sua.`;
+    else if (pd?.type === 'story_event') why = ' Parou: notícia com escolha.';
     else if (!pd || cur.phase !== 'F1_FIM_DE_SEMANA') why = ' A temporada terminou.';
-    ui.notice = ran.length ? `Corridas ${ran[0].n}–${ran.at(-1).n}: ${results}.${why}` : null;
+    const decided = auto.length ? ` Decidi sozinho ${auto.length} ${auto.length === 1 ? 'situação' : 'situações'} (${auto.join(', ')}).` : '';
+    ui.notice = ran.length ? `Etapas ${ran[0].n}–${ran.at(-1).n}: ${results}.${decided}${why}` : (why.trim() || null);
     return cur;
   });
+  window.scrollTo(0, 0); // o aviso do que aconteceu fica no topo da página
 }
 
 // --- peças ------------------------------------------------------------------
@@ -750,7 +768,8 @@ function screenF1(view) {
       body = `${circuitCard(pd.payload.circuit)}<section class="card focus"><h2>${pd.payload.out ? 'Você está fora desta corrida' : 'Abordagem do fim de semana'}</h2>${optionCards(pd.payload.options, 'approach')}
         <div class="row"><button class="btn ghost small" data-act="sim5">Simular 5 corridas</button><button class="btn ghost small" data-act="simrest">Simular o resto da temporada</button></div>
         <label class="row" style="gap:6px;font-size:14px;color:var(--mute)"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho eventos sem escolha</label>
-        <p class="mute" style="font-size:14px">A simulação usa a abordagem equilibrada e para quando há uma decisão sua.</p></section>`;
+        <label class="row" style="gap:6px;font-size:14px;color:var(--mute)"><input type="checkbox" id="t-stop" ${ui.simStop ? 'checked' : ''}> Parar a simulação nos eventos de corrida e ordens de equipe</label>
+        <p class="mute" style="font-size:14px">A simulação usa a abordagem equilibrada. Sem a caixa acima marcada, ela resolve sozinha os eventos com a opção cautelosa e obedece às ordens de equipe, e conta o que decidiu.</p></section>`;
     }
     body = `${prog}${body}`;
   }
@@ -948,6 +967,7 @@ document.addEventListener('change', (e) => {
   else if (t.id === 'fb-include') { ui.fb.include = t.checked; refreshSendLink(); }
   else if (t.id === 'fb-full') { ui.fb.full = t.checked; refreshSendLink(); }
   else if (t.id === 't-auto') { ui.autoSingle = t.checked; run((s) => settle(s)); }
+  else if (t.id === 't-stop') ui.simStop = t.checked;
 });
 
 document.addEventListener('keydown', (e) => {
