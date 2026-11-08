@@ -1,29 +1,27 @@
-# Próximo pacote: fim de semana mais vivo
+# Pacotes de atualização
 
-Proposta registrada em 2026-11-08. Identificador de trabalho: **v0.10**; não é uma versão publicada. Escopo planejado, ainda não implementado.
+## v0.10 — ritmo e propósito (implementada)
 
-## Objetivo
+Código `36bc86f`, em 2026-11-08. Detalhes e limites em `v0.10.md`. Publicação a conferir no pipeline da integração na main.
 
-Fazer as decisões da F1 terem consequências conectadas, sem transformar cada corrida numa sequência repetitiva de botões. Entregar o conjunto no site após validar jogo, saves e balanceamento.
+- [x] ~~Plano persistente no lugar da abordagem repetida~~ — **Feito**.
+- [x] ~~Avançar até uma decisão relevante e explicar a interrupção~~ — **Feito**; modo passo a passo preservado.
+- [x] ~~Automático competente com as mesmas regras do manual~~ — **Feito**; considera plano, ritmo, pontos e meta no fim da temporada.
+- [x] ~~Objetivos proporcionais ao carro e consequências na confiança~~ — **Feito na F1**; sem bônus de habilidade ou barra extra.
+- [x] ~~Painel de temporada com companheiro e histórico recente~~ — **Feito**, usando resultados registrados.
+- [x] ~~Validar carreira completa, saves e redução de entradas~~ — **Feito**: 167 testes Node, 18 de navegador e comparação de calibração.
+- [x] ~~Novo piloto acima dos saves e laterais da página inicial~~ — **Feito**; laterais apenas no desktop.
 
-## Lista do pacote
+## Candidatos seguintes
 
-- [ ] **Treino livre antes da classificação:** escolher preparação, receber informação útil de ritmo/acerto e carregar o efeito para o fim de semana. Explicar o benefício e o custo de cada opção.
-- [ ] **Estratégia e box como momento próprio:** decidir permanecer ou parar conforme pneus, clima e situação. Começar por fases/stints simplificados; definir o contrato do motor antes de alterar telas. Não apresentar isso como tempo por volta real.
-- [ ] **Safety car com efeito coletivo:** mudar a situação de todos os classificados elegíveis e abrir decisão de box quando fizer sentido. Evitar um bônus isolado e gratuito para o jogador.
-- [ ] **Relato coerente:** conectar preparação, largada, parada, duelo e chegada; citar rivais envolvidos e não inventar ações após abandono.
-- [ ] **Ritmo da interface:** permitir simulação segura das novas decisões e evitar interrupções sem escolha relevante. Preservar desfazer e retomada no meio de cada fase.
-- [ ] **Validação do conjunto:** testes da engine e navegador, fluxo antigo de saves, carreiras completas, calibração comparável e verificação no site após deploy.
+1. **Rotas alternativas jogáveis:** pedido recente do usuário inclui WEC e NASCAR, além de IndyCar/FE/Super Fórmula; especificar ofertas por desempenho/experiência, adaptação, estatísticas e retorno possível à F1. Não implementado.
+2. **Mercado e silly season:** notícias, perfis de contratação e história dos contratos (D.8/D.14).
+3. **Base dinâmica:** etapas-chave e metas (D.3/D.5).
+4. **Corrida por fases:** treino, boxes e safety car coletivo, quando houver estado que sustente escolhas interessantes (D.2). Não acrescentar telas obrigatórias apenas para aumentar cliques.
+5. **Sons:** acabamento discreto e opcional (D.15).
 
-Treino livre é o primeiro incremento interno. Boxes e safety car exigem definir fases e dados compartilhados: se essa base exigir uma reescrita maior, ajustar explicitamente o escopo do pacote e registrar o que foi adiado, sem marcar itens incompletos como feitos.
+A ordem dos próximos pacotes deve ser fechada na conversa. Não começar todos ao mesmo tempo.
 
-## Como trabalhar e publicar
+## Forma de entrega
 
-1. Trabalhar em branch `codex/` para o pacote; `main` continua com a versão estável. Fazer commits menores por funcionalidade, com o pacote inteiro revisável antes da integração.
-2. Antes de codificar fases, fechar estado mínimo, ordem dos efeitos e política automática. Reusar o determinismo; atribuir pontos só após todas as consequências.
-3. Validar cada incremento com testes relevantes. Ao fechar o pacote, executar a suite completa e os cenários de navegador; fazer comparação de calibração com a versão publicada, usando mesmas políticas e relatando denominador/incerteza.
-4. Atualizar roadmap, versões e handoff. Riscar apenas itens realmente concluídos. Registrar impacto e limites de saves; não apagar carreiras incompatíveis silenciosamente.
-5. Integrar o pacote pronto na `main`, fazer push e acompanhar Pages. A intenção do usuário é publicar pacotes concluídos ao final, sem pedir confirmação por cada tarefa interna. Interromper apenas por decisão de produto necessária, risco material ou bloqueio real.
-6. Confirmar pipeline e versão servida no domínio. Se falhar, corrigir antes de considerar a atualização entregue.
-
-Não juntar mercado, base e som neste pacote: cada área terá seu próprio conjunto coerente de mudanças. A cadência passa a ser por pacote jogável; o tamanho do commit continua pequeno o bastante para revisão e reversão.
+Branch `codex/`, commits internos pequenos, pacote jogável e documentado, verificações proporcionais e integração na main só quando validado. O usuário autorizou publicar o conjunto pronto ao final sem confirmação por tarefa interna. Conferir pipeline e conteúdo servido antes de anunciar publicação concluída. Riscar apenas itens realmente feitos.

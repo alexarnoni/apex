@@ -33,6 +33,9 @@ engine/    módulos puros, isomórficos (Node + navegador), sem dependências
   strategy.js     pneus e duelos finais de ataque/defesa
   start.js        escolha de largada e risco de toque
   profile.js      pressão e desenvolvimento por perfil de equipe
+  season-goals.js objetivos e resumo da temporada
+  race-policy.js  recomendações e relevância das decisões
+  advance-races.js avanço por etapas ou até decisão importante
   game.js         máquina de estados e API da UI: createCareer / advance / applyDecision / getView
 data/      ponto de partida do mundo e parâmetros por categoria
 tools/     balance.js: simulação em massa com os critérios de validação
@@ -53,7 +56,7 @@ npm run dev       # constrói e serve dist/ via npx serve
 npm run test:ui   # Chromium isolado em desktop/celular; instalar navegador antes
 ```
 
-Guia da suite de navegador, instalação e limites: [`docs/testes-interface.md`](docs/testes-interface.md). São 10 testes adicionais, separados dos 158 testes Node. Os workflows de PR e publicação estão configurados para executar ambos.
+Guia da suite de navegador, instalação e limites: [`docs/testes-interface.md`](docs/testes-interface.md). São 18 testes de navegador, separados dos 167 testes Node, incluindo carreira inteira pela interface. Os workflows de PR e publicação estão configurados para executar ambos.
 
 ## Critérios de mundo crível (o que `npm run balance` verifica)
 
@@ -65,7 +68,7 @@ Guia da suite de navegador, instalação e limites: [`docs/testes-interface.md`]
 
 ## Calibração e ferramentas de medição
 
-Quem for mexer nos números do jogo deve ler [`docs/calibracao.md`](docs/calibracao.md): como rodar as ferramentas de `tools/calibrate/` (`npm run calibrate:player`, `calibrate:champions`, `calibrate:veterans`, `calibrate:age`), as metas atuais, as decisões tomadas e as armadilhas (ruído estatístico, comparar as duas pontas, ablação).
+Quem for mexer nos números do jogo deve ler [`docs/calibracao.md`](docs/calibracao.md): como rodar as ferramentas de `tools/calibrate/` (`npm run calibrate:player`, `calibrate:champions`, `calibrate:veterans`, `calibrate:age`, `calibrate:pace`), as metas atuais, as decisões tomadas e as armadilhas (ruído estatístico, comparar as duas pontas, ablação).
 
 ## Versões do jogo
 
@@ -73,9 +76,9 @@ O histórico de versões (o que cada marco trouxe, compatibilidade de saves e on
 
 ## Roadmap atual
 
-Engine, loop de carreira, UI pública, eventos, saves e feedback já estão implementados. Marco atual de funcionalidades: **v0.9.2**, perfis de equipe nas ofertas; ferramentas de calibração também estão no Git.
+Engine, loop de carreira, UI pública, eventos, saves e feedback já estão implementados. Versão do pacote: **v0.10.0**, com plano persistente, objetivos e avanço contextual da F1. Mudanças e limites em [`docs/v0.10.md`](docs/v0.10.md).
 
-Próximos passos, conforme `docs/roadmap-ideias.md`: (1) completar o dinamismo e a narrativa da F1; (2) mercado/silly season; (3) mini calendário da base e metas; (4) sons. Ranking e compartilhamento com backend ficam para depois. O site atual usa **GitHub Pages**, com um Worker separado para feedback.
+Próximos candidatos: rotas alternativas jogáveis (incluindo WEC/NASCAR, pedido recente), mercado/silly season, mini calendário da base e sons. Corrida por fases continua planejada, sem acrescentar decisões repetidas. A ordem será definida na conversa. Ranking e compartilhamento com backend ficam para depois. O site atual usa **GitHub Pages**, com um Worker separado para feedback.
 
 ## Alterações publicadas após v0.9.2 (`007b831`)
 

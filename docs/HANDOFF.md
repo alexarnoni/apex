@@ -1,37 +1,35 @@
 # Retomada — Bandeirada
 
-Atualizado em **2026-11-08**. Leia este arquivo e o índice; abra outras referências conforme a tarefa.
+Atualizado em **2026-11-08**, pacote v0.10.0.
 
-## Estado confirmado
+## Estado verificável
 
-- Publicado: **`007b831`**, após o marco v0.9.2. Repositório `alexarnoni/apex`, branch `main`.
-- Site: https://bandeirada.alexarnoni.com. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42520319063); HTTP 200 e hashes CSP conferidos.
-- **158 testes Node + 10 testes Playwright passaram localmente e no pipeline**; build aprovado. Calibração completa não refeita após largada/defesa.
-- Entregue: defesa final (D.2.a), largada (D.2.b), UI desktop/375 px, feedback sem cobrir decisões no celular e aviso acessível de importação.
-- `ENGINE_VERSION = 1`; pacote interno ainda `0.1.0`. Sem ranking online; Worker de feedback separado.
+- Código v0.10: **`36bc86f`**; documentação no commit seguinte. Repositório `alexarnoni/apex`. Conferir `git log`, branch e pipeline antes de afirmar publicação atual.
+- Site: https://bandeirada.alexarnoni.com. Push na main publica pelo Pages. O usuário autorizou integrar/publicar este pacote ao concluir testes; acompanhar workflow da integração.
+- **167 testes Node e 18 testes Playwright aprovados**, incluindo carreira inteira por cliques em desktop/375 px; build e capturas conferidos.
+- Comparação 120 sementes/cenário com `007b831`: agregados da política antiga iguais; equipe a 22% com título contra 17% antigo, notrain 4,3% contra 5,2%. Denominador só quem chegou à F1; incerteza relevante. Detalhes em `calibracao.md`.
+- Ritmo pareado: 27 temporadas, 648 etapas, 2528 → 994 entradas (−60,7%) com mesmos resultados; não é medida de diversão humana.
 
-## Trabalho desta etapa
+## Entregue
 
-- Adotado contexto enxuto: global → índice mestre → índice do projeto → handoff.
-- Globais criados: `C:/Users/alexc/.codex/AGENTS.md` e `INDEX.md` (fora do Git). Somente Bandeirada cadastrado.
-- Projeto: leitura seletiva no `AGENTS.md`, mapa em `INDEX.md`, decisões estáveis em `DECISIONS.md`, rotina em `contexto-agentes.md`.
-- Organização documental e plano do próximo pacote preparados para commit nesta etapa; consulte `git log` para o hash. Nenhuma alteração de gameplay ou novos testes nesta etapa. Sem push documental separado.
+- Plano persistente (ajustável), avanço até decisão importante, recomendação contextual e delegação, modo manual preservado.
+- Metas proporcionais ao carro inicial, progresso, cobrança na confiança sem barra extra, comparação com companheiro e situação do contrato.
+- Novo piloto acima dos saves; laterais de jornada/ajuda apenas no desktop. Beta 0.10.0 visível.
+- EngineVersion continua 1; campos aditivos. Saves antigos recebem fallback equilibrado e meta ao preparar a próxima corrida. Chaves Apex preservadas.
+- Organização de contexto enxuto já commitada em `5d8abe9`; global/índice pessoais fora do Git.
 
-## Próximo trabalho
+## Próximos candidatos (a definir na conversa)
 
-**Pacote v0.10: fim de semana mais vivo**, planejado em `proxima-atualizacao.md`: treino livre, boxes por fases, safety car coletivo, relato e validação. Ainda não implementado. Começar pelo contrato de fases e treino livre.
+Pedido recente: rotas alternativas **WEC, NASCAR, IndyCar, Fórmula E e Super Fórmula**, com ofertas por perfil/desempenho/experiência e possível retorno à F1. Registrado no roadmap, **não implementado**.
 
-O usuário quer pacotes maiores publicados ao final: trabalhar em branch `codex/`, commits internos menores e um push de integração quando o conjunto estiver pronto e validado. A pergunta desta etapa foi sobre a abordagem; nenhum desenvolvimento do pacote foi iniciado.
-
-Prioridades seguintes: mercado/silly season → mini calendário da base/metas → sons. A base continua uma decisão por temporada.
+Também pendentes: mercado/silly season, base dinâmica/metas, sons e corrida por fases (treino/boxes/safety car). Não iniciar todos; `proxima-atualizacao.md` lista os pacotes.
 
 ## Limites
 
-- Corrida ainda simulada de uma vez; decisões alteram o resultado antes dos pontos. Não há modelo por volta.
-- Automático cede na defesa e usa `hold` na largada; métricas antigas de títulos não validam essa versão.
-- Chromium com viewport móvel não substitui aparelhos reais; carreira inteira pela UI continua pendente.
-- Sem migração de saves; rotas alternativas terminais. Regras e armadilhas: `DECISIONS.md`.
+- Corrida ainda simulada de uma vez; decisões reordenam antes dos pontos. Sem tempos por volta ou gaps reais.
+- Rotas alternativas atuais terminam a carreira. Sem migração automática de formato.
+- Chromium móvel emulado não substitui aparelhos reais. Regras/armadilhas em `DECISIONS.md`.
 
 ## Retomar
 
-Confira `git status --short` e `git log -3 --oneline`. Não repita testes só para confirmar este documento. Para a próxima mudança, consulte comandos em `testes-interface.md`, medições em `calibracao.md` e prioridades no início de `roadmap-ideias.md`.
+Confira `git status --short` e `git log -3 --oneline`. Leia só referências necessárias; não repetir suítes sem mudança/dúvida. Pacote: `v0.10.md`; testes: `testes-interface.md`; tarefas: início de `roadmap-ideias.md`.

@@ -2,7 +2,7 @@
 
 Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele reúne o que estava espalhado nos outros `.md` do projeto (README, roadmap, specs, segurança e Worker) e no histórico do git.
 
-**Sobre a numeração.** O jogo ainda não tinha versões numeradas. Os números abaixo (v0.1 a v0.9.2) são marcos que agrupam os commits por assunto, escolhidos na hora de escrever este documento. Eles **não** são a `ENGINE_VERSION` (que é o formato do save e continua em 1; ver "Compatibilidade de saves"). Quando houver uma versão pública de verdade, a numeração oficial começa daqui.
+**Sobre a numeração.** O jogo ainda não tinha versões numeradas. Os números abaixo (v0.1 a v0.9.2) são marcos que agrupam os commits por assunto, escolhidos na hora de escrever este documento. Eles **não** são a `ENGINE_VERSION` (que é o formato do save e continua em 1; ver "Compatibilidade de saves"). A partir de v0.10.0, o pacote tem versão explícita no package.json e na página inicial; os marcos anteriores continuam agrupamentos retrospectivos.
 
 **Endereço:** https://bandeirada.alexarnoni.com · **Repositório:** `alexarnoni/apex` · **Deploy:** automático a cada push na `main` (GitHub Pages).
 
@@ -23,6 +23,7 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 | v0.9 | Corrida em momentos, declínio previsível, veteranos, nomes por país e mercado | 2026-11-08 | sim (commit `4b9add0`) |
 | v0.9.1 | Talento de berço e dedicação no lugar do corte de potencial | 2026-11-08 | sim (commit `f35795c`) |
 | v0.9.2 | Perfil da equipe nas ofertas: pressão x desenvolvimento | 2026-11-08 | sim (commit `659b46a`) |
+| v0.10.0 | Ritmo contextual, planos, metas, história da temporada e nova página inicial | 2026-11-08 | pacote desta atualização; código `36bc86f` |
 
 ---
 
@@ -137,6 +138,10 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 - **Pressão:** só cobrança; ficar abaixo do esperado para o carro custa nota de scouting na base e confiança na F1.
 - **Desenvolvimento:** acelera ou freia o crescimento de habilidade e o ganho de teto por treino (nunca o declínio).
 - Para manter a taxa de títulos, a média do talento de berço baixou de 85,5 para 84,5. Medido (400 carreiras): nunca treina 5% de títulos, política mista 20%.
+
+## v0.10.0 — ritmo e propósito
+
+Pacote implementado em 2026-11-08, código `36bc86f`. Plano persistente, avanço contextual, recomendação da equipe, metas na F1, painel de temporada e criação acima dos saves com laterais no desktop. **167 testes Node e 18 de navegador aprovados**; detalhes, compatibilidade e evidências em [`v0.10.md`](v0.10.md). Publicação vinculada ao workflow da integração na main.
 
 ## Compatibilidade de saves
 

@@ -10,7 +10,8 @@ Após o [`AGENTS.md`](../AGENTS.md), leia somente [`HANDOFF.md`](HANDOFF.md) par
 
 | Documento | Uso |
 |---|---|
-| [`proxima-atualizacao.md`](proxima-atualizacao.md) | Escopo e critérios do próximo pacote, ainda planejado. |
+| [`proxima-atualizacao.md`](proxima-atualizacao.md) | Pacote v0.10 concluído e próximos candidatos. |
+| [`v0.10.md`](v0.10.md) | Mudanças, evidências e limites da v0.10.0. |
 | [`DECISIONS.md`](DECISIONS.md) | Decisões estáveis e erros a evitar. |
 | [`contexto-agentes.md`](contexto-agentes.md) | Organização global/projeto e transferência entre agentes. |
 | [`../README.md`](../README.md) | Arquitetura, comandos, publicação e diário histórico. |

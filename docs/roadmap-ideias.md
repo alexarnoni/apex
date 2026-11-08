@@ -5,7 +5,7 @@ Itens já registrados como dívida no README estão marcados com (README).
 
 ## Resumo do estado (atualizado em 2026-11-08)
 
-O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, 158 testes Node + 10 de navegador locais após D.2.a/D.2.b; último código publicado `007b831`, pipeline aprovado e produção conferida em 2026-11-08). Para retomar, leia também `INDEX.md` e `HANDOFF.md`. Esta seção resume as prioridades; os detalhes de cada item estão nas seções abaixo.
+O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, v0.10.0: 167 testes Node + 18 de navegador aprovados localmente, código `36bc86f`; publicação deste lote pelo pipeline da main). Para retomar, leia também `INDEX.md` e `HANDOFF.md`. Esta seção resume as prioridades; os detalhes de cada item estão nas seções abaixo.
 
 ### Feito (neste ciclo)
 
@@ -26,7 +26,7 @@ O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnon
 
 ### Falta, por ordem de importância (critério: o que mais muda a experiência de quem joga, depois o que protege o projeto)
 
-**Próximo pacote planejado:** `docs/proxima-atualizacao.md` (v0.10: treino livre, boxes por fases, safety car coletivo e relato). Trabalhar e testar em conjunto; publicar ao concluir. Nenhum desses novos itens está implementado nesta etapa.
+**Pacote v0.10 implementado:** plano persistente, avanço contextual, automático por situação, metas e painel da temporada; página inicial reorganizada. Evidências e limites em `docs/v0.10.md`. Treino livre, boxes e safety car por fases continuam pendentes.
 
 1. **Corrida em momentos completa (D.2, parte 2) e narrativa (D.4).** É a queixa principal ("na F1 fica chato"). Hoje está ativa a **versão enxuta** (classificação com estratégia de pneus, final de corrida e relato); o que falta para a versão completa está listado no item D.2: treino livre, parada de box como momento, safety car e ritmo por volta. Defesa final (D.2.a) e largada (D.2.b) foram publicadas no commit `007b831`.
 2. **Mercado de pilotos, parte 2 (D.8) e silly season (D.14).** Falta boato no meio do ano, perfil de cada equipe, academia real e o seu contrato na história. (Declínio previsível D.6, nomes por país D.7 e a primeira parte do mercado já estão feitos.)
@@ -35,14 +35,14 @@ O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnon
 5. **Rivais persistentes (3.1 e 3.2) e estatísticas da carreira com gráfico (2.1 e 2.2).** Sensação de história por pouco custo.
 6. **Segurança e lançamento (rápidos, vários são com você):** 2FA no GitHub e na Cloudflare (S.7), verificar o domínio no GitHub (S.5), limite de envios do Worker (S.6), GoatCounter (B.5), e-mail "noreply" nos commits (S.9), subdomínio do Worker, 5 PRs do Dependabot.
 7. **Rotas alternativas (3.11).** Cerca de 9% das carreiras caem em "Fim da linha", o maior beco sem saída.
-8. **Qualidade:** teste automático da interface (F.13), migração de saves (B.7), captura de erros (B.9), teste em aparelhos reais (B.11).
+8. **Qualidade:** ampliar cenários dos testes de interface (F.13 já implementado), migração de saves (B.7), captura de erros (B.9), teste em aparelhos reais (B.11).
 9. **Revisão dos textos dos eventos (1.3):** você lê `docs/textos-eventos.md` e diz o que mudar.
 10. **Identidade e acabamento:** mostrar o talento na ficha (hoje só a faixa de potencial), trocar os contadores GP/Vitórias/Pódios/Poles (R.16), lista de países com bandeira em cada linha, ofertas com estrelas (R.7), tela própria de criação (R.8), fontes hospedadas (R.9), ficha em faixa horizontal (R.17), renomear o repositório (R.10), conferir marca e domínio (R.11, é com você).
 11. **Mais para frente:** modo fictício antes de qualquer monetização (B.14), ranking e compartilhamento com servidor (4.1 e 4.2), tradução (F.18), o nível "100% real" (seção 5).
 
 ### Limites conhecidos
 
-- **Medições anteriores à defesa D.2.a; não revalidadas após esta mudança local.** A taxa de títulos do jogador depende de treinar e das escolhas de oferta: nas simulações de 400 carreiras, nunca treina 5% e a política mista (treina todo ano na F1) 20%. A média do talento de berço (84,5) foi ajustada para compensar o empurrão dos perfis de equipe.
+- **Histórico anterior à v0.10; comparação atual em `docs/calibracao.md`.** A taxa de títulos do jogador depende de treinar e das escolhas de oferta: nas simulações históricas de 400 carreiras, nunca treina 5% e a política mista (treina todo ano na F1) 20%. A média do talento de berço (84,5) foi ajustada para compensar o empurrão dos perfis de equipe.
 - Numa das três sementes do balanceamento a maior dinastia chegou a 9 títulos seguidos (alvo < 9).
 - Saves antigos guardam textos e dados antigos de uma decisão pendente (abordagens, pista, evento sem `safe`) e pilotos gerados com nomes antigos ("Almeida II") e sem nacionalidade; o potencial do jogador salvo continua o antigo e só passa a subir com o treino daqui para frente. Carreiras novas já saem certas.
 - A taxa de títulos depende de a pessoa treinar (5% a 26% nas simulações); o jogador comum fica no meio. O "talento" ainda não aparece de forma legível na ficha (só a faixa de potencial).
@@ -138,7 +138,7 @@ Itens que não são "recurso de jogo", mas decidem se dá para jogar sem perder 
 | F.10 | Seletor de dificuldade ou modo assistido | M | 2 | Ajusta potencial e frequência de eventos; exige recalibrar cada nível. |
 | ~~F.11~~ | ~~Hospedagem fora do Artifact (Cloudflare Pages ou GitHub Pages)~~ | M | 2 | ✅ **Feito (2026-11-07).** Site público em **https://bandeirada.alexarnoni.com** (endereço antigo `alexarnoni.github.io/apex` redireciona), repositório público https://github.com/alexarnoni/apex. O workflow `.github/workflows/pages.yml` roda `npm test` (Node 22, Linux) e `npm run build` a cada push na `main` e publica sozinho; o botão "Enviar pelo GitHub" do feedback abre issue nesse repositório. O Artifact antigo continua no ar, mas a versão pública é a do GitHub Pages. |
 | F.12 | Desafio diário (uma seed por dia) e ranking local dos amigos | M | 3 | Funciona sem backend, com o resumo copiado. |
-| F.13 | Teste automático da interface no `npm test` | M | 3 | **Parcial (2026-11-08):** suite Playwright com comando separado `npm run test:ui`, 10 cenários desktop/celular passando. Cobre criação/base, importação, largada, defesa, desfazer, retomada e simulação. Falta carreira inteira por cliques (ofertas, contratos e legado). Detalhes em `docs/testes-interface.md`. |
+| ~~F.13~~ | ~~Testes automáticos da interface~~ | M | 3 | ✅ **Feito na v0.10 (2026-11-08).** Comando separado `npm run test:ui`: 18 testes desktop/celular incluindo carreira inteira por cliques, contratos e legado. CI executa Node e navegador. Ampliações de cenários continuam possíveis; aparelhos reais são B.11. |
 | ~~F.13.a~~ | ~~Suite inicial de navegador para os fluxos de corrida e save~~ | M | 3 | ✅ **Feito e publicado (2026-11-08), commit `007b831`.** 10 testes passaram localmente e no pipeline; capturas inspecionadas. Corrigidos anúncio acessível da importação e sobreposição do feedback no celular. |
 | F.14 | Pipeline único de publicação (`npm run release`) | M | 3 | Roda testes e balanceamento, constrói e publica; evita publicar versão quebrada. |
 | F.15 | PWA e modo offline | M | 3 | O jogo todo já roda no cliente. |
@@ -161,7 +161,7 @@ O que separa "amigos testando" de um beta público com cara profissional. O jogo
 | B.7 | Migrar saves entre versões do jogo | M | Hoje, ao mudar o formato, o save antigo é descartado. Com muita gente jogando isso vira perda de carreira. Mínimo: avisar para exportar antes; ideal: migração por versão. |
 | ~~B.8~~ | ~~Feedback sem conta no GitHub~~ | M | ✅ **Feito (2026-11-07).** Worker `bandeirada-feedback` publicado na Cloudflare e ligado ao jogo (`BANDEIRADA_FEEDBACK_ENDPOINT`). Testado no ar: origem errada e robô sem `Origin` recebem 403, o pré-voo CORS libera só o domínio do jogo, e um envio feito pelo próprio jogo em `bandeirada.alexarnoni.com` chegou na caixa de entrada, sem violação de CSP. Pendências do Worker: regra de Rate Limiting da Cloudflare (S.6) e decidir o subdomínio `workers.dev`, que hoje contém parte do e-mail pessoal. |
 | B.9 | Captura automática de erros | M | Hoje um erro só chega se o jogador copiar o relatório. Opções: Sentry (plano gratuito) ou um envio próprio. |
-| B.10 | Teste automático da interface no CI (F.13) | M | **Parcial (2026-11-08):** workflows de PR e Pages configurados para instalar Chromium e rodar os 10 testes de interface antes da publicação. Suite passou localmente e no GitHub no deploy `42520319063`. Percurso de carreira inteira continua aberto. |
+| ~~B.10~~ | ~~Teste automático da interface no CI (F.13)~~ | M | ✅ **Feito**; workflows de PR e Pages executam a suite. V0.10 amplia para 18 testes, incluindo carreira inteira. A instalação/pipeline já foi comprovada no deploy `42520319063`; execução da suite ampliada acompanha o lote v0.10. |
 | B.11 | Teste em aparelhos reais (iOS Safari, Android, Firefox) | M | Só foi testado em Chromium emulado. Cuidado com `localStorage` no modo privado do iOS. |
 | B.12 | Rotas alternativas (3.11) | M-G | Cerca de 9% das carreiras caem em "Fim da linha". Para público de fora, é o maior beco sem saída. |
 | B.13 | README para jogadores, changelog e canal da comunidade | M | O README atual é de quem desenvolve. Já existe histórico técnico em `docs/versoes.md`; faltam uma página voltada ao jogador e um grupo (WhatsApp ou Discord) para o feedback. |
@@ -221,7 +221,7 @@ Feedback de quem jogou: na F1 cada corrida é a mesma escolha de três botões (
 | ~~D.2.b~~ | ~~Decisão de largada e risco na primeira curva~~ | ✅ **Feito e publicado (2026-11-08), commit `007b831`.** Nova decisão `race_start` entre pneus e eventos: atacar ou largar com margem. Ataque pode ganhar uma posição, perder uma, manter ou causar abandono por toque; chuva e rua elevam contato, e estilo agressivo melhora a chance de ganhar. Na pole só há largada com margem; a opção única é resolvida se o modo de resolução automática estiver ligado. Simulação usa `hold`, neutro sobre a ordem bruta e sem sorteio extra nessa escolha. Não é simulação por volta: aplica efeito sobre o resultado já sorteado, antes dos pontos. Relato registra a decisão e a causa específica de abandono, sem inventar eventos posteriores ao toque. Saves JSON e políticas de simulação atualizados; **158 testes e build aprovados**. Calibração completa ainda pendente. |
 | D.3 | Mini calendário na base: 3 a 5 etapas-chave por temporada, com pista e uma decisão em cada | Aberto. Reaproveita D.1 e D.2 em versão curta; a base ainda não tem pistas. |
 | D.4 | Narrativa da corrida: resumo do que aconteceu (largada, ultrapassagens, safety car, abandonos de rivais) em vez de uma linha | **Parcial (2026-11-08).** Cada corrida tem um relato do jogador: largada (posição na primeira volta, um caminho plausível entre o grid e a chegada), estratégia e seu resultado, evento de corrida e ordem de equipe, e chegada ou **causa do abandono** (motor, suspensão, toque, erro de pilotagem, sorteada pelo estilo e pelo carro). Aparece no cartão da última corrida e, recolhido, na aba "Etapas". **Falta:** safety car, abandonos dos rivais e ultrapassagens por nome. |
-| D.5 | Metas e tensão de temporada: objetivos da equipe, pressão do contrato, briga de título com o rival | Aberto, sugestão minha. |
+| D.5 | Metas e tensão de temporada: objetivos da equipe, pressão do contrato, briga de título com o rival | **Parcial na v0.10 (2026-11-08).** Metas de F1 fixadas pela força inicial do carro, progresso, confiança sem punição duplicada, comparação com companheiro, distância ao líder e aviso de fim de contrato. Faltam metas na base e narrativa de título mais profunda. |
 | ~~D.6~~ | ~~Declínio previsível do piloto do jogador~~ | ✅ Feito (2026-11-08). Curva fixa por idade, sem sorteio (`playerDeclineDelta`): começa aos 30 (agressivo), 31 (consistente) ou 32 (técnico), perde 0,5 no primeiro ano e mais 0,2 a cada ano, até −1,8; escolher "Treinar" na pré-temporada corta a queda do ano em 35%. A ficha mostra "Fase da carreira" com a previsão. O crescimento antes do pico segue com variação. **A pedido seu, o declínio não pode ser uma parede:** a curva é bem mais gentil que a primeira versão, e os veteranos controlados pelo jogo ganharam "ano bom" (30% de chance, a partir dos 34 anos, de quase não cair), aposentadoria mais lenta para a elite (fator 0,45 acima de 86 de habilidade, `retirePerYear` de 0,07 para 0,035) e idade máxima de 47 anos. Resultado medido (120 mundos de 25 anos): campeão com 35+ anos em 8% das temporadas, 0,67 piloto com 38+ por temporada (antes 0,18) e veteranos no top 3 de vez em quando, sem desequilibrar dinastias. Testes em `tests/decline.test.js` e `tests/realism.test.js`. |
 | ~~D.7~~ | ~~Nomes genéricos por país, com bandeira nas tabelas~~ | ✅ Feito (2026-11-08). Todo piloto tem nacionalidade (`nat`; os 22 reais em `data/world2026.js`, os gerados sorteados por peso em `NAME_POOLS`: 24 países, dez nomes e doze sobrenomes cada). Nome gerado no formato "I. Sobrenome" (sem "II" e sem colidir com os reais). A bandeira aparece na tabela de pilotos e no grid de largada. Testes em `tests/names.test.js`. Falta nacionalidade nos rivais de base (hoje só têm nome) e bandeira nas tabelas de equipes. |
 | D.8 | Mercado de pilotos inteligente | **Parcial (2026-11-08).** Feito: renovação por força do carro (melhor carro renova 65%, pior 38%, mais 10 pontos para a elite, além do top 3 do mundial que continua renovando 85%), lealdade (o ex-piloto tem preferência na vaga), equipes irmãs (Red Bull e Racing Bulls, Ferrari e Haas, Mercedes e Williams), duas estrelas só em carro top 2 e resumo "Mercado de pilotos" na pré-temporada (trocas, estreias e aposentadorias do ano). Ajustes em `CONFIG.market`; dinastias e campeões por era seguem nos alvos. Testes em `tests/market.test.js`. **Falta:** boatos de mercado no meio do ano, perfil de cada equipe (veterano ou novato), academia real e o seu contrato entrando na história. É a base da silly season (D.14). |
@@ -262,3 +262,25 @@ A sequência abaixo registra o planejamento inicial. Para trabalho novo, siga **
 ## Continuidade entre agentes
 
 - ~~Organizar instruções, índice, handoff curto e decisões estáveis~~ — **Feito (2026-11-08)**. Entrada em `AGENTS.md`, mapa em `docs/INDEX.md`, estado em `docs/HANDOFF.md`, decisões em `docs/DECISIONS.md`. Global e índice mestre pessoais criados no Codex; rotina em `docs/contexto-agentes.md`. Esta atualização documental ainda não foi commitada.
+
+## Continuidade fora da F1 — proposta ampliada
+
+Pedido do usuário em 2026-11-08, inspirado nas ofertas de outras categorias para pilotos experientes no F1 Glory. Amplia 3.11/B.12; **planejado, ainda não implementado**. A rota alternativa atual é terminal.
+
+- [ ] Ofertas de **WEC, NASCAR, IndyCar e Fórmula E**, além das opções já citadas no planejamento (Super Fórmula).
+- [ ] Elegibilidade por desempenho recente, experiência, reputação, perfil da categoria e vagas; idade é contexto, não gatilho único nem expulsão automática da F1.
+- [ ] Poder aceitar outra categoria, continuar buscando F1 ou encerrar; a nova série precisa ter carreira jogável e estatísticas próprias.
+- [ ] Adaptação esportiva: endurance, ovais e monopostos exigem perfis diferentes; não apenas trocar nomes na tela.
+- [ ] Retorno à F1 possível quando fizer sentido; decisão por avaliação e oportunidades, sem retorno garantido.
+- [ ] Preservar legado e conquistas de cada categoria no save; conferir regras/dados oficiais ao especificar campeonatos reais.
+
+Pacote posterior à v0.10 de ritmo e objetivos; não foi adicionado silenciosamente ao escopo atual.
+
+## Entrega v0.10 — ritmo e propósito
+
+- ~~Plano persistente, avanço contextual e automático por situação~~ — **Feito (2026-11-08)**. Código `36bc86f`; política utiliza as mesmas regras do manual. A abordagem repetida saiu do caminho principal, mas acompanhamento passo a passo permanece.
+- ~~Metas e história da temporada na F1~~ — **Feito no escopo desta versão**. Carro inicial define expectativa; painel acompanha pontos, companheiro, confrontos recentes e contrato. D.5 completo, sobretudo na base, continua parcial.
+- ~~Criar piloto acima dos saves e aproveitar laterais no desktop~~ — **Feito**, com teste de ordem/responsividade.
+- ~~Validação do conjunto~~ — **Feito**: 167 testes Node, 18 de navegador, comparação 120 sementes por cenário e 60,7% menos entradas em roteiro pareado de 27 temporadas completas.
+
+Detalhes em `docs/v0.10.md`; os próximos candidatos em `docs/proxima-atualizacao.md`. WEC/NASCAR e demais rotas alternativas permanecem planejadas, sem implementação nesta versão.

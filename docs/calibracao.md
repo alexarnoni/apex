@@ -88,3 +88,29 @@ As políticas são cenários de teste, não uma estimativa validada de comportam
 | 2026-11-08 | Perfil da equipe | Primeira versão: `notrain` 12%, `a` 28%. Final (sem bônus positivo, talento 84,5): `notrain` 5%, `a` 20%. |
 
 Os detalhes de cada item estão em `docs/roadmap-ideias.md`; o diário completo, em `README.md` (sessões 1 a 7).
+
+## v0.10: comparação com a versão publicada
+
+Medição em 2026-11-08, **sementes 1–120 por cenário**, código-base `007b831` e código v0.10 `36bc86f`. Política `a`: treina na F1; `notrain`: não treina. O roteiro das ferramentas aposenta a partir dos 34 anos. São cenários fixos, não uma estimativa de todos os jogadores.
+
+| Cenário | Chegaram à F1 | Com título entre quem chegou | Títulos/car. F1 | Vitórias/car. F1 |
+|---|---|---|---|---|
+| `007b831`, política a | 100/120 | 17/100 (17%) | 0,47 | 7,5 |
+| v0.10, a, `--driving legacy` | 100/120 | 17/100 (17%) | 0,47 | 7,5 |
+| v0.10, a, `--driving team` | 100/120 | 22/100 (22%) | 0,57 | 11,2 |
+| `007b831`, notrain | 115/120 | 6/115 (5,2%) | 0,10 | 2,0 |
+| v0.10, notrain, legacy | 115/120 | 6/115 (5,2%) | 0,10 | 2,0 |
+| v0.10, notrain, team | 115/120 | 5/115 (4,3%) | 0,06 | 1,6 |
+
+Os agregados exibidos com a política antiga ficaram iguais aos da base. A política da equipe melhora decisões e pode mudar a dificuldade: a taxa a passou de 17% a 22%, enquanto notrain foi de 5,2% a 4,3%. Erros-padrão das taxas finais: aproximadamente **4,1 pp** e **1,9 pp**, respectivamente. Amostra insuficiente para afirmar equivalência, aumento significativo ou realismo; não foram alterados talento/potencial para forçar uma taxa-alvo.
+
+```bash
+npm run calibrate:player -- --policy a --n 120 --driving legacy
+npm run calibrate:player -- --policy a --n 120 --driving team
+npm run calibrate:player -- --policy notrain --n 120 --driving team
+npm run calibrate:pace -- --n 30
+```
+
+`--driving legacy` continua padrão para preservar comparações históricas. `team` usa a recomendação da engine durante corridas; narrativa e decisões de carreira mantêm a política definida.
+
+**Ritmo:** 30 sementes, 27 primeiras temporadas de F1 completas, 648 corridas. Passo a passo: 2528 entradas; roteiro contextual: 994 (**60,7% menos**). `tools/calibrate/pace.js` verifica que ambos chegam ao mesmo estado final com as mesmas escolhas. Não mede tempo humano nem diversão; não deve ser tratado como teste com usuários.
