@@ -14,6 +14,7 @@ import { createWorld, beginYear, endYear } from './world.js';
 import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeason, trackFor } from './season.js';
 import { circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
 import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, paceEdge } from './strategy.js';
+import { raisePotential } from './drivers.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
 import { marketScore } from './market.js';
 import { applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
@@ -64,7 +65,6 @@ function carLabel(rank) {
 
 // teamId: equipe de F1 da oferta aceita. O jogador toma o assento do piloto mais fraco dela.
 export function enterF1(s, rng, teamId) {
-  const E = F1().entry;
   const world = createWorld({ teams: TEAMS_F1, drivers: DRIVERS_F1, category: CATEGORIES.f1, names: SURNAMES });
   const team = world.teams.find((t) => t.id === teamId);
   if (!team) throw new Error(`equipe de F1 desconhecida: ${teamId}`);
@@ -74,7 +74,6 @@ export function enterF1(s, rng, teamId) {
   world.drivers = world.drivers.filter((d) => d !== displaced);
 
   const p = s.player;
-  p.potential = Math.min(p.potential, E.potentialCap);
   p.baseStats = p.stats;
   p.stats = { wins: 0, podiums: 0, poles: 0, titles: 0, seasons: 0, points: 0, dnfs: 0, vice: 0 };
   p.team = team.id;
@@ -195,7 +194,7 @@ export function resolveSeasonFocus(s, rng, answer) {
   if (!f) throw new Error(`id inválido (use ${Object.keys(F1().focus).join(', ')})`);
   const p = s.player;
   s.f1.lastEvent = null;
-  if (f.skillGain) p.skill = clampSkill(p, p.skill + f.skillGain);
+  if (f.skillGain) { raisePotential(p); p.skill = clampSkill(p, p.skill + f.skillGain); }
   if (f.fameGain) p.fame += f.fameGain;
   if (f.devBonus) s.f1.devBonus += f.devBonus;
   s.f1.focus = answer.id;

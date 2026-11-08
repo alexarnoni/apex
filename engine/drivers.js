@@ -13,6 +13,16 @@ export function ageDelta(age, rng) {
   return -1;
 }
 
+// Dedicação: treinar eleva o teto do jogador (potencial), com rendimento decrescente. Quem treina muito pode virar um talento
+// geracional; quem não treina fica no talento de berço. Devolve quanto o teto subiu.
+export function raisePotential(player, amount = CONFIG.talent.trainGain) {
+  const T = CONFIG.talent;
+  const factor = Math.max(0.15, Math.min(1, 1 - (player.potential - T.trainFrom) / T.trainSlope));
+  const before = player.potential;
+  player.potential = Math.min(T.max, player.potential + amount * factor);
+  return player.potential - before;
+}
+
 // Queda de habilidade do jogador ao fazer `age` anos (negativa), ou null se ainda não está em declínio.
 // shield: o foco "Treinar" do ano corta a queda.
 export function playerDeclineDelta(age, style, shield = false) {

@@ -103,7 +103,15 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 
 ## v0.9: corrida em momentos, declínio e mercado
 
-*Commit `4b9add0`, 2026-11-08; 137 testes passando. Um ajuste de calibração posterior baixou o teto de potencial do jogador na entrada da F1 de 88 para 87: com o declínio gentil e os veteranos, 88 deixava 22% das carreiras passivas com título (87 dá 15%, 86 dá 11%; a meta é cerca de 14%).*
+*Commit `4b9add0`, 2026-11-08; 137 testes passando.* O ajuste de calibração `25af201` baixou o corte de potencial na entrada da F1 de 88 para 87 (88 deixava 22% das carreiras passivas com título; 87 dá 15%).
+
+### v0.9.1: talento de berço e dedicação *(em preparo, ainda não publicada)*
+
+- O corte fixo de potencial na entrada da F1 (87) foi **removido**.
+- **Talento de berço:** o potencial do jogador é sorteado na criação numa curva em sino (média 85,5, poucos geracionais acima de 95), com um pequeno bônus por começar cedo.
+- **Dedicação:** cada escolha de treino (base e F1) eleva o teto do jogador em 0,30, com rendimento decrescente. Quem treina muito pode virar um talento geracional.
+- Medido (300 carreiras por política): quem nunca treina chega à F1 em 94% e ganha título em 5%; quem treina todo ano na F1 chega em 88% e ganha título em 20%; quem sempre treina (base e F1) chega em 85% e ganha título em 26%.
+- Dois testes ficaram menos frágeis: nem toda semente chega mais à F1.
 
 - **Corrida em momentos:**
   - Tela de **classificação** com o grid de largada, previsão de chuva, traços da pista e **estratégia de pneus** (aposta de 1 ou 2 posições; a escolha padrão tem efeito médio zero).

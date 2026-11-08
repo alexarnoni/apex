@@ -32,7 +32,10 @@ test('gravar e carregar devolve a mesma carreira; o slot fica ocupado', () => {
   assert.equal(saves.list()[1].info.title, 'Teste');
   assert.equal(saves.firstEmpty(), 1);
   // a carreira carregada continua jogável e igual
-  const a = applyDecision(saves.load(2), saves.load(2).pendingDecision.type === 'offer_pick' ? { id: 'stay' } : { id: 'ok' });
+  const loaded = saves.load(2);
+  const t = loaded.pendingDecision.type;
+  const answer = t === 'offer_pick' ? { id: 'stay' } : t === 'base_choice' ? { option: 'A' } : t === 'academy_invite' ? { accept: false } : { id: 'ok' };
+  const a = applyDecision(loaded, answer);
   assert.ok(a);
   s = null;
 });

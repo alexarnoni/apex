@@ -152,14 +152,19 @@ test('F1: ao aceitar a oferta, o jogador tem equipe, contrato e assento no grid'
 });
 
 test('F1: carreira completa só pela API termina em LEGADO com nota calculada pela fórmula', () => {
-  for (const seed of [1, 2, 3]) {
+  // Com o talento sorteado, nem toda semente chega à F1 (algumas acabam em rota alternativa, que também é um fim válido).
+  let legacies = 0;
+  for (let seed = 1; seed <= 10 && legacies < 3; seed++) {
     const { s } = playFull(seed);
-    assert.equal(s.phase, 'LEGADO', `seed ${seed}: ${s.phase}`);
+    assert.ok(['LEGADO', 'ROTA_ALTERNATIVA'].includes(s.phase), `seed ${seed}: ${s.phase}`);
+    if (s.phase !== 'LEGADO') continue;
+    legacies += 1;
     const { legacy } = getView(s);
     assert.equal(legacy.score, legacyScore(legacy));
     assert.ok(legacy.seasons >= 1);
     assert.equal(s.pendingDecision, null);
   }
+  assert.equal(legacies, 3, 'em 10 sementes, pelo menos 3 carreiras chegam ao legado');
 });
 
 test('F1: determinismo — mesmo seed + mesmas decisões = mesma carreira', () => {
@@ -200,7 +205,10 @@ test('F1: ordem de equipe contra o jogador interrompe e a escolha muda a confian
   const mine = (st) => st.f1.season.ordersLog.filter((o) => o.p2 === st.player.name).at(-1);
   assert.equal(mine(obey).defied, false);
   assert.equal(mine(defy).defied, true);
-  assert.equal(obey.f1.season.pendingRace, null);
+  // Depois da ordem de equipe pode vir o final de corrida (atacar ou administrar): resolve antes de conferir.
+  let done = obey;
+  if (done.pendingDecision?.type === 'race_finale') done = applyDecision(done, { id: done.pendingDecision.payload.safe });
+  assert.equal(done.f1.season.pendingRace, null);
 });
 
 test('F1: termos de contrato inválidos são rejeitados; cláusula de saída exige mérito', () => {

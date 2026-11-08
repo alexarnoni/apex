@@ -11,7 +11,7 @@ import {
   resolveStoryEvent, resolveRaceEvent, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View,
 } from './f1.js';
 import { createRng } from './rng.js';
-import { applyAging, makeRookie, getRookieCounter, setRookieCounter, declineInfo } from './drivers.js';
+import { applyAging, makeRookie, getRookieCounter, setRookieCounter, declineInfo, raisePotential } from './drivers.js';
 import { createPlayer, runBaseSeasonSummary, pickTeamByTier, teamsByStrength } from './career.js';
 import { BASE_TEAMS } from '../data/baseTeams.js';
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
@@ -152,7 +152,7 @@ function resolveBaseChoice(s, rng, answer) {
   const choice = CONFIG.base.choices[bc.category][answer?.option];
   if (!choice) throw new Error('option inválida (use "A" ou "B")');
   const p = s.player;
-  if (choice.skillGain) p.skill = Math.min(p.potential, p.skill + choice.skillGain);
+  if (choice.skillGain) { raisePotential(p); p.skill = Math.min(p.potential, p.skill + choice.skillGain); }
   if (choice.fameGain) p.fame += choice.fameGain;
   bc.mods = {
     carBonus: choice.carBonus ?? 0,

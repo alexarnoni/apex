@@ -183,6 +183,11 @@ export const CONFIG = {
     statusEqualCounterChance: 0.5,// chance de contra-oferecer cláusula equal quando recusa p1
   },
 
+  // Talento do jogador (2026-11-08): potencial de berço sorteado numa curva em sino (a maioria é bom, poucos são geracionais)
+  // mais um pequeno bônus por começar cedo; a dedicação eleva o teto: cada escolha de treino soma trainGain ao potencial,
+  // com rendimento decrescente (quanto mais alto o potencial, menos cada treino rende: trainFrom e trainSlope).
+  talent: { mean: 85.5, sd: 4.5, min: 74, max: 100, youthPerYear: 1.0, trainGain: 0.30, trainFrom: 80, trainSlope: 30 },
+
   // Carreira do jogador na base (spec-loop-jogador)
   base: {
     startYear: 2026,
@@ -227,7 +232,10 @@ export const CONFIG = {
 
   // Carreira do jogador na F1 (spec-loop-jogador)
   f1: {
-    entry: { goodPool: 4, badPool: 3, potentialCap: 87 },   // era 84, depois 88 (grid mais forte e carWeight 0.60); 87 desde o declínio gentil e os veteranos de 2026-11-08 (88 dava 22% de carreiras passivas com título, 87 dá 15%, 86 dá 11%). potentialCap: teto de potencial do jogador ao entrar na F1 (calibrado, ver README sessão 4); oferta 'good' = sorteio entre as N melhores equipes; 'bad' = entre as N piores
+    // Sem corte de potencial na entrada da F1 (era potentialCap 84, 88, 87: um remendo de calibração). O teto do jogador agora
+    // vem do talento de berço sorteado na criação (CONFIG.talent) e da dedicação ao longo da carreira (treinar eleva o teto).
+    // Oferta 'good' = sorteio entre as N melhores equipes; 'bad' = entre as N piores.
+    entry: { goodPool: 4, badPool: 3 },
     playerGrowthRate: 0.0,                // gap até o potencial fechado por ano na F1, além da curva de idade
     focus: {                              // season_focus: uma decisão por ano
       train: { label: 'Treinar', description: '+1 de skill extra no ano.', skillGain: 1 },
