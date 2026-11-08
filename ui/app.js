@@ -460,22 +460,14 @@ function layout(view, main, aside = '') {
   </div>`;
 }
 
-// Atributos do piloto em barras: habilidade (com a faixa do potencial marcada), fama e estilo de pilotagem.
+// Atributos do piloto: fama (barra) e estilo de pilotagem. Habilidade e potencial ficam no medidor e nos quadradinhos.
 function attributes(p) {
   const clamp = (n) => Math.max(0, Math.min(100, n));
-  const skill = clamp(Math.round(p.skill));
-  const [lo, hi] = p.potentialBand;
   const fame = Math.round(p.fame * 10) / 10;
   const famePct = clamp((p.fame / 40) * 100);
   const fameTier = [[2, 'Desconhecido'], [6, 'Promessa'], [12, 'Conhecido'], [22, 'Famoso'], [35, 'Estrela']].find(([lim]) => p.fame < lim)?.[1] ?? 'Lenda';
   const style = STYLES[p.style];
-  const gap = hi - skill;
-  const room = gap <= 0 ? 'Você já está no topo da faixa estimada.' : `Falta até ${gap} ponto${gap === 1 ? '' : 's'} para o potencial.`;
   return `<div class="attrs">
-    <div class="attr" title="Sua habilidade hoje. O arco fino por fora do medidor é o potencial que os olheiros estimam.">
-      <div class="attr-head"><span>Habilidade</span><b class="num">${skill}</b></div>
-      <div class="attr-foot mute small">Potencial: <b class="num">${lo}–${hi}</b>. ${esc(room)}</div>
-    </div>
     <div class="attr" title="Sobe com resultados e mídia; abre portas no mercado.">
       <div class="attr-head"><span>Fama</span><b class="tier">${esc(fameTier)} <span class="num mute small">${fame}</span></b></div>
       <div class="meter"><i class="fill fame" style="width:${famePct}%"></i></div>
@@ -487,6 +479,9 @@ function attributes(p) {
     </div>
   </div>`;
 }
+
+// Quanto falta para o topo da faixa de potencial (vira "no teto" quando já chegou).
+const margin = (p) => { const g = p.potentialBand[1] - Math.round(p.skill); return g > 0 ? `+${g}` : 'no limite'; };
 
 // Medidor circular: anel de dentro = habilidade; arco fino por fora = faixa do potencial estimado.
 function skillDial(p) {
@@ -506,7 +501,7 @@ function skillDial(p) {
       </g>
     </svg>
     <div class="dial-num"><b>${esc(skill)}</b></div>
-    <div class="dial-cap"><span>habilidade</span><span class="dial-pot">potencial ${lo}–${hi}</span></div>
+    <div class="dial-cap"><span>habilidade</span></div>
   </div>`;
 }
 
@@ -537,7 +532,7 @@ function ficha(view) {
       </div>
     </div>
     ${attributes(p)}
-    <div class="stats">${stat('Idade', p.age)}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
+    <div class="tiles">${stat('Idade', p.age)}${stat('Potencial', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}${stat('Margem', margin(p))}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
     ${team}
     <div class="counters">${stat('GP', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Poles', c.poles)}</div>
     <div class="vitrine"><small class="mute">SALA DE TROFÉUS</small> ${trophies.length ? trophies.join(' ') : '<span class="mute small">vazia por enquanto</span>'}</div>

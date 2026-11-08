@@ -274,7 +274,11 @@ h2::before { display: none; }
 .ficha-top .chip { background: var(--panel2); color: var(--fg); border-color: var(--line); }
 .chip { border-radius: 999px; background: var(--panel2); border-color: transparent; }
 .counters { background: none; padding: 0; gap: 8px; }
-.counters .stat { background: var(--panel2); border-radius: 12px; padding: 10px 4px; }
+.counters .stat, .tiles .stat { background: var(--panel2); border-radius: 12px; padding: 10px 4px; align-items: center; text-align: center; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(76px, 1fr)); gap: 8px; }
+.tiles .stat b { font-size: 20px; }
+.tiles .stat:nth-child(2) b { color: var(--amber); }
+.tiles .stat:nth-child(3) b { color: var(--signal-text); }
 .counters .stat b { font-size: 24px; }
 .opt { border-radius: 14px; background: var(--panel2); border-left-width: 1px; border: 1.5px solid var(--oc, var(--line)); }
 .opt strong { font-size: 21px; }
