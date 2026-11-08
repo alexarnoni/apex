@@ -56,9 +56,11 @@ export const CONFIG = {
   regulation: {
     conceptRange: 0.40,          // era 0.32; pós-renormalização o conceito pode ser mais decisivo
     everyNSeasons: 7,            // era 5 → ~3.6 eras por período de 25 anos
-    carryWeight: 0.20,           // era 0.30 → reset mais destruidor, corta dinastias longas
-    budgetWeight: 0.25,
-    lotteryWeight: 0.55,         // sobe pra compensar (soma = 1)
+    // Realismo (2026-11-07): com 55% de sorteio, equipe de orçamento baixo (Racing Bulls, Haas, Williams)
+    // ganhava 11% dos títulos. Agora o orçamento pesa mais e o sorteio menos: ~6-8% (soma = 1).
+    carryWeight: 0.30,
+    budgetWeight: 0.45,
+    lotteryWeight: 0.25,
     floor: 62,
     range: 34,
   },
@@ -86,10 +88,12 @@ export const CONFIG = {
   rookies: {
     perSeason: 5,
     ageRange: [18, 20],
-    skillRange: [66, 76],
-    starChance: 0.04,
-    starPotRange: [94, 100],
-    normalPotRange: [72, 85],
+    // Realismo (2026-11-07): com novatos fracos (potencial 72-85, 4% de estrelas) o nível do grid caía com
+    // os anos: campeão com habilidade média 93 nos anos 1-7 e 83 nos anos 15-25. Agora fica em ~90.
+    skillRange: [70, 82],
+    starChance: 0.15,
+    starPotRange: [92, 100],
+    normalPotRange: [78, 92],
     contractRange: [2, 3],
   },
 
@@ -175,7 +179,7 @@ export const CONFIG = {
 
   // Carreira do jogador na F1 (spec-loop-jogador)
   f1: {
-    entry: { goodPool: 4, badPool: 3, potentialCap: 84 },   // potentialCap: teto de potencial do jogador ao entrar na F1 (calibrado, ver README sessão 4); oferta 'good' = sorteio entre as N melhores equipes; 'bad' = entre as N piores
+    entry: { goodPool: 4, badPool: 3, potentialCap: 88 },   // era 84; subiu junto com o grid mais forte (novatos melhores, F1 com carWeight 0.60), mantendo ~14% das carreiras passivas com título. potentialCap: teto de potencial do jogador ao entrar na F1 (calibrado, ver README sessão 4); oferta 'good' = sorteio entre as N melhores equipes; 'bad' = entre as N piores
     playerGrowthRate: 0.0,                // gap até o potencial fechado por ano na F1, além da curva de idade
     focus: {                              // season_focus: uma decisão por ano
       train: { label: 'Treinar', description: '+1 de skill extra no ano.', skillGain: 1 },
