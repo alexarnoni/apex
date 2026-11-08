@@ -2,7 +2,11 @@
 
 Jogo de carreira de Fórmula 1 no navegador, inspirado no F1 Glory: da largada à bandeirada, com um mundo fictício vivo a partir do grid 2026 real.
 
-## Decisões de design (fechadas)
+## Retomar o projeto
+
+Leia [`docs/INDEX.md`](docs/INDEX.md) para encontrar os documentos e [`docs/HANDOFF.md`](docs/HANDOFF.md) para o estado confirmado e o próximo trabalho. Regras para agentes em [`AGENTS.md`](AGENTS.md).
+
+## Decisões de design vigentes
 
 - **Arquitetura:** simulação 100% no cliente, save em localStorage com export/import. Backend mínimo (FastAPI + Postgres) só para ranking e compartilhamento, adicionado na fase 4.
 - **A base é prólogo, a F1 é o jogo.** Karting, F4, F3 e F2 rodam em modo resumido: uma decisão por temporada, botão de simular, leque de ofertas. 3-5 minutos até a F1. Sem economia de dinheiro; academia é status binário.
@@ -26,6 +30,9 @@ engine/    módulos puros, isomórficos (Node + navegador), sem dependências
   world.js        orquestra um ano da F1 (dev -> temporada -> virada de ano)
   career.js       carreira do jogador na base (temporadas resumidas + ofertas)
   f1.js           F1 do jogador: foco, fim de semana, ordens, ofertas/contrato, legado
+  strategy.js     pneus e duelos finais de ataque/defesa
+  start.js        escolha de largada e risco de toque
+  profile.js      pressão e desenvolvimento por perfil de equipe
   game.js         máquina de estados e API da UI: createCareer / advance / applyDecision / getView
 data/      ponto de partida do mundo e parâmetros por categoria
 tools/     balance.js: simulação em massa com os critérios de validação
@@ -40,8 +47,13 @@ worker/    Worker da Cloudflare que recebe o feedback e envia por e-mail
 ```bash
 npm test          # testes da engine
 npm run balance   # distribuições de validação (campeões distintos, dinastias, idades...)
-npm run dev       # serve ui/ e prova a engine no navegador
+npm run build     # gera dist/index.html e assets
+npm run serve     # serve dist/ em http://127.0.0.1:5056
+npm run dev       # constrói e serve dist/ via npx serve
+npm run test:ui   # Chromium isolado em desktop/celular; instalar navegador antes
 ```
+
+Guia da suite de navegador, instalação e limites: [`docs/testes-interface.md`](docs/testes-interface.md). São 10 testes adicionais, separados dos 158 testes Node. Os workflows de PR e publicação estão configurados para executar ambos.
 
 ## Critérios de mundo crível (o que `npm run balance` verifica)
 
@@ -59,15 +71,19 @@ Quem for mexer nos números do jogo deve ler [`docs/calibracao.md`](docs/calibra
 
 O histórico de versões (o que cada marco trouxe, compatibilidade de saves e onde está cada documento) fica em [`docs/versoes.md`](docs/versoes.md). O que falta, por ordem de importância, fica em [`docs/roadmap-ideias.md`](docs/roadmap-ideias.md).
 
-## Roadmap
+## Roadmap atual
 
-1. ~~Protótipo do motor e do mundo~~ (validado em simuladores interativos)
-2. **Agora:** engine consolidada + balanceamento via `tools/balance.js`
-3. Loop do jogador: criação -> base resumida -> F1 (decisões de fim de semana, foco de temporada, contratos) -> aposentadoria e legado
-4. UI real (Cloudflare Pages) + eventos narrativos, lesões, rivalidades, rotas alternativas
-5. Backend de ranking (FastAPI + Postgres na Oracle VM) + compartilhamento
+Engine, loop de carreira, UI pública, eventos, saves e feedback já estão implementados. Marco atual de funcionalidades: **v0.9.2**, perfis de equipe nas ofertas; ferramentas de calibração também estão no Git.
+
+Próximos passos, conforme `docs/roadmap-ideias.md`: (1) completar o dinamismo e a narrativa da F1; (2) mercado/silly season; (3) mini calendário da base e metas; (4) sons. Ranking e compartilhamento com backend ficam para depois. O site atual usa **GitHub Pages**, com um Worker separado para feedback.
+
+## Alteração local após v0.9.2
+
+**D.2.a — defesa no final da corrida:** implementada e testada em 2026-11-08, ainda não publicada. O jogador pode disputar com o perseguidor ou ceder a posição; ritmo relativo afeta a defesa e o relato registra o resultado antes dos pontos. A decisão de **largada (D.2.b)** também está implementada localmente: atacar na primeira curva ou largar com margem, com risco influenciado por chuva e pista de rua. Verificações atuais: **158 testes e build aprovados**. Métricas históricas de calibração não foram refeitas após essa alteração.
 
 ## Diário de balanceamento
+
+Registro histórico: pendências e números de cada sessão refletem aquela etapa, não necessariamente o estado atual. Consulte `docs/calibracao.md` e o resumo do roadmap para a configuração vigente.
 
 **Sessão 1 (estado inicial):**
 - Kart calibrado: posição média 11.7/20, ofertas 24% top / 39% mid / 37% sem oferta. Dentro do alvo.
@@ -127,7 +143,7 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
 - **Jogador:** declínio fixo (`playerDecline`: começa aos 30/31/32 por estilo, de -0.5 a -1.8 por ano, "Treinar" corta 35%). O corte de potencial na entrada da F1 (`potentialCap` 84, 88 e 87, descrito na sessão 4) foi **removido** e substituído por `CONFIG.talent`: potencial de berço sorteado (média 85.5, desvio 4.5) e treino que o eleva (`trainGain` 0.30 com rendimento decrescente). Medição com política passiva (300 carreiras por política): nunca treina 94% chegam à F1 e 5% ganham título; treina todo ano na F1 88% e 20%; sempre treina 85% e 26%.
 - **Corrida:** decisões novas `race_strategy` (estratégia de pneus, aposta de 1 ou 2 posições com média zero na escolha padrão) e `race_finale` (atacar o rival à frente ou administrar, ±1 posição conforme o ritmo), relato por corrida (`race.story`) com a causa do abandono, e 24 pistas com traços (`CONFIG.tracks`) e chuva por pista. A simulação automática usa sempre a opção segura. Em `tests/`, 137 testes.
 - **Perfil da equipe (D.17):** CONFIG.teamProfile (ponta 1.15 / meio 1.0 / fundo 0.85 de desenvolvimento; pressão 1.0 / 0.5 / 0; visibilidade do fundo 1.4), engine/profile.js (perfil por posição do carro, esperado = 2 x posição + 1, cobrança de nota na base e de confiança na F1, bônus da ponta só se corresponder ao esperado). Primeira versão com bônus positivo de pressão e expectativa menor tirou ofertas da base (sem oferta 44%) e subiu os títulos (mista 27%); a versão final ficou em sem oferta 38% e mista 20% / nunca treina 5% com o talento médio em 84,5.
-- **Ferramentas de medição** usadas (scripts de rascunho, não versionados): campeão por época, veteranos no grid e carreiras passivas por política de treino.
+- **Ferramentas de medição:** os rascunhos foram substituídos por scripts portáveis versionados em `tools/calibrate/`; comandos e limitações em `docs/calibracao.md`.
 
 ## Publicar o jogo (GitHub Pages)
 
@@ -172,7 +188,7 @@ Endereço escolhido: **https://bandeirada.alexarnoni.com** (o domínio `alexarno
 **Licença:** todos os direitos reservados ([LICENSE](LICENSE)); o código é público para consulta. A Bandeirada é um projeto de fã, sem vínculo com a F1, a FIA ou as equipes; o jogo mostra esse aviso no rodapé e no painel "Sobre e privacidade". Antes de qualquer monetização, trocar os nomes reais (modo fictício, roadmap 3.10).
 ## Dívidas de design anotadas
 
-- Piloto 1 / piloto 2 e ordens de equipe
+- Piloto 1 / piloto 2 e ordens de equipe: implementados; melhorias de contexto ficam no roadmap.
 - Rotas alternativas (Super Fórmula, IndyCar, FE) como tabela leve que regenera scouting
 - Moral/confiança da equipe como modulador invisível de ofertas e desenvolvimento
 - Orçamento de equipe seguindo lentamente o sucesso (com piso)

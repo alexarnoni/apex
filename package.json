@@ -13,10 +13,12 @@
     "calibrate:player": "node tools/calibrate/player.js",
     "calibrate:champions": "node tools/calibrate/champions.js",
     "calibrate:veterans": "node tools/calibrate/veterans.js",
-    "calibrate:age": "node tools/calibrate/start-age.js"
+    "calibrate:age": "node tools/calibrate/start-age.js",
+    "test:ui": "playwright test"
   },
   "license": "UNLICENSED",
   "devDependencies": {
+    "@playwright/test": "^1.65.0",
     "esbuild": "^0.28.2"
   }
 }

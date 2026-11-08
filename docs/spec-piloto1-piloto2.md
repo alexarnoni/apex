@@ -1,7 +1,9 @@
 # Spec: Piloto 1 / Piloto 2, Ordens de Equipe e Confiança
 
 Projeto: Bandeirada. Engine em `engine/`, constantes SEMPRE em `engine/config.js` (nenhum número mágico fora dele).
-Motivação: fechar a métrica "campeões distintos por era de 25 anos" (atual ~14, alvo 5-9). Ver "Diário de balanceamento" no README.
+> Especificação original, com sistema principal já implementado. Revisada em 2026-11-08. Números e trechos de configuração abaixo são históricos; consulte `engine/config.js` e `docs/calibracao.md` para os atuais.
+
+Motivação original: reduzir a dispersão de campeões. O alvo inicial de 5-9 foi substituído por **8-13 campeões distintos por era de 25 anos**; ver o diário no README.
 
 ## 1. Requisitos
 

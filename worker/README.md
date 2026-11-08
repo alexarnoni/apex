@@ -1,6 +1,6 @@
 # Worker de feedback (e-mail)
 
-O botão "Feedback" do jogo faz um `POST` neste Worker da Cloudflare, que valida a mensagem e envia um e-mail para a sua caixa pelo Email Routing. O jogador não precisa de conta em lugar nenhum, e nenhum serviço de terceiros entra no caminho.
+O botão "Feedback" do jogo faz um `POST` neste Worker da Cloudflare, que valida a mensagem e envia um e-mail para a sua caixa pelo Email Routing. O jogador não precisa de conta em lugar nenhum, usando Cloudflare e o provedor da caixa de destino; não há um serviço adicional de formulário.
 
 ```
 jogo (navegador) --POST--> Worker (Cloudflare) --Email Routing--> sua caixa de entrada
@@ -32,7 +32,7 @@ Se o envio falhar por causa do remetente, crie `feedback@alexarnoni.com` no Emai
 
 ## Proteção contra abuso
 
-- Só aceita chamadas vindas do jogo (`ALLOWED_ORIGINS` em `wrangler.toml`: o endereço do GitHub Pages e `bandeirada.alexarnoni.com`).
+- Valida o cabeçalho `Origin` contra os endereços configurados (isso não autentica clientes fora do navegador). Aceita origens do jogo (`ALLOWED_ORIGINS` em `wrangler.toml`: o endereço do GitHub Pages e `bandeirada.alexarnoni.com`).
 - Corpo de até 16 KB, mensagem de até 2.000 caracteres, campos cortados no tamanho máximo.
 - Campo-isca invisível: robôs que o preenchem recebem "ok", mas nada é enviado.
 - Até 5 envios por 10 minutos por IP. Esse limite vive na memória de cada instância do Worker, então é só uma primeira barreira. Para valer de verdade, crie uma regra de **Rate Limiting** da Cloudflare para esta rota. Se aparecer spam, o próximo passo é o Cloudflare Turnstile (gratuito).

@@ -13,7 +13,8 @@ import { CONFIG } from './config.js';
 import { createWorld, beginYear, endYear } from './world.js';
 import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeason, trackFor } from './season.js';
 import { circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
-import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, paceEdge } from './strategy.js';
+import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, finaleSituation, paceEdge } from './strategy.js';
+import { startOptions, resolveStart } from './start.js';
 import { raisePotential } from './drivers.js';
 import { tierOf, profileOf, profileView, trustPressure, effectiveDev, expectedPosition } from './profile.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
@@ -325,6 +326,20 @@ export function resolveRaceStrategy(s, rng, answer) {
   const w = deser(world, pr.w);
   const result = resolveStrategy(w, s.player, answer.id, pr.strategyCtx, rng);
   season.cur.strategy = { label: result.label, kind: result.kind, shift: result.shift, text: result.text };
+  const startCtx = { ...pr.strategyCtx, gridSize: world.drivers.length };
+  const { options: starts, safe } = startOptions(startCtx);
+  season.pendingRace = { w: ser(world, w), absent: false, eventId: null, startCtx };
+  s.pendingDecision = {
+    type: 'race_start',
+    payload: { race: season.raceIndex + 1, circuit: circuitView(season.raceIndex + 1), grid: startCtx.grid, wet: w.wet, options: starts, safe },
+  };
+}
+
+export function resolveRaceStart(s, rng, answer) {
+  const { world, season } = s.f1;
+  const pr = season.pendingRace;
+  const w = deser(world, pr.w);
+  season.cur.start = resolveStart(w, s.player, answer?.id, pr.startCtx, rng);
   season.pendingRace = null;
   openRaceEvent(s, rng, w, false);
 }
@@ -332,7 +347,7 @@ export function resolveRaceStrategy(s, rng, answer) {
 // Sorteia um evento de corrida (se houver, para na decisão); sem evento, segue para as ordens de equipe.
 function openRaceEvent(s, rng, w, out) {
   const { world, season } = s.f1;
-  if (!out) {
+  if (!out && !w.dnfs.includes(s.player)) {
     const ctx = raceCtx(s, w);
     const ev = pickRaceEvent(RACE_EVENTS, ctx, rng);
     if (ev) {
@@ -409,25 +424,24 @@ function continueToOrders(s, rng, w, absent, eventId = null) {
   openFinale(s, rng, w, absent, eventId);
 }
 
-// Final de corrida (versão enxuta): se há um rival logo à frente, o jogador decide entre atacar e administrar.
+// Um duelo final: ataque à frente ou defesa de um perseguidor, antes de atribuir pontos.
 function openFinale(s, rng, w, absent, eventId) {
   const { world, season } = s.f1;
   const p = s.player;
   const F = CONFIG.strategy.finale;
   if (!absent && !w.dnfs.includes(p)) {
-    const classified = w.result.filter((d) => !w.dnfs.includes(d));
-    const i = classified.indexOf(p);
-    const rival = i > 0 ? classified[i - 1] : null;
-    if (rival && rival.team !== p.team && rng.chance(F.chance)) {
+    const situation = finaleSituation(w, p, world.category.carWeight);
+    if (situation && rng.chance(F.chance)) {
+      const { rival, mode, pos } = situation;
       const edge = paceEdge(p, rival, world.category.carWeight);
-      const { options, safe } = finaleOptions(rival.name);
-      season.pendingRace = { w: ser(world, w), absent, eventId, finaleRival: rival.name };
+      const { options, safe } = finaleOptions(rival.name, mode);
+      season.pendingRace = { w: ser(world, w), absent, eventId, finaleRival: rival.name, finaleMode: mode };
       s.pendingDecision = {
         type: 'race_finale',
         payload: {
-          race: season.raceIndex + 1, circuit: circuitView(season.raceIndex + 1), pos: i + 1,
+          race: season.raceIndex + 1, circuit: circuitView(season.raceIndex + 1), pos, mode,
           rival: { name: rival.name, nat: rival.nat ?? rival.flag ?? null, team: rival.team, teamName: teamName(world, rival.team) },
-          pace: edge >= 2 ? 'faster' : edge <= -2 ? 'slower' : 'even',
+          pace: edge >= F.paceThreshold ? 'faster' : edge <= -F.paceThreshold ? 'slower' : 'even',
           options, safe,
         },
       };
@@ -441,10 +455,11 @@ export function resolveRaceFinale(s, rng, answer) {
   const { world, season } = s.f1;
   const pr = season.pendingRace;
   const rival = world.drivers.find((d) => d.name === pr.finaleRival);
-  const { options } = finaleOptions(pr.finaleRival);
+  const mode = pr.finaleMode ?? 'attack'; // decisões antigas continuam sendo de ataque
+  const { options } = finaleOptions(pr.finaleRival, mode);
   if (!options.some((o) => o.id === answer?.id)) throw new Error(`id inválido (use ${options.map((o) => o.id).join(', ')})`);
   const w = deser(world, pr.w);
-  const result = resolveFinale(w, s.player, rival, answer.id, world.category.carWeight, rng);
+  const result = resolveFinale(w, s.player, rival, answer.id, world.category.carWeight, rng, mode);
   season.cur.finale = { kind: result.kind, shift: result.shift, text: result.text, label: result.label };
   season.pendingRace = null;
   finishRace(s, rng, w, false, pr.eventId);
@@ -504,13 +519,19 @@ function raceStory(race, cur, order, p, gridSize, carRankNow, rng) {
   const lines = [];
   const grid = race.grid;
   const dnf = race.playerPos === null;
-  if (grid) {
+  if (cur?.start) {
+    lines.push({ when: 'Largada', text: cur.start.text });
+  } else if (grid) {
     const target = dnf ? grid + rng.int(0, 2) : race.playerPos;
     const lap1 = Math.max(1, Math.min(gridSize, Math.round(grid + (target - grid) * 0.35 + rng.gauss())));
     const d = grid - lap1;
     lines.push({ when: 'Largada', text: d > 0 ? `Largou em P${grid} e ganhou ${d} ${d === 1 ? 'posição' : 'posições'} na primeira volta (P${lap1}).`
       : d < 0 ? `Largou em P${grid} e perdeu ${-d} ${d === -1 ? 'posição' : 'posições'} na primeira volta (P${lap1}).`
         : `Largou em P${grid} e manteve a posição na primeira volta.` });
+  }
+  if (cur?.start?.kind === 'dnf') {
+    lines.push({ when: 'Abandono', text: 'Sua corrida terminou por um toque na primeira curva.' });
+    return lines;
   }
   if (cur?.strategy) lines.push({ when: `Estratégia (${cur.strategy.label})`, text: cur.strategy.text });
   if (cur?.event) lines.push({ when: cur.event, text: cur.eventText ?? 'Você teve de decidir na pista.' });

@@ -62,6 +62,7 @@ let lastKey = '';
 
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const $app = () => document.getElementById('app');
+const scrollToTop = () => { $app()?.scrollTo(0, 0); window.scrollTo(0, 0); };
 const ord = (n) => `${n}º`;
 
 // --- tema: automático (segue o sistema) > claro > escuro ------------------------------
@@ -372,7 +373,7 @@ function copyCareerFeedback() {
 
 // Evento sem escolha de verdade (uma única opção): com o modo automático ligado, resolve sozinho.
 function isNoChoice(pd) {
-  return !!pd && (pd.type === 'story_event' || pd.type === 'race_event') && pd.payload.options.length === 1;
+  return !!pd && ['story_event', 'race_event', 'race_start'].includes(pd.type) && pd.payload.options.length === 1;
 }
 function settle(s) {
   let cur = s;
@@ -402,7 +403,7 @@ function simRaces(n) {
         if (done >= n) break;
         cur = settle(applyDecision(cur, { id: pd.payload.out ? 'rest' : 'balanced' }));
         done += 1;
-      } else if (!ui.simStop && (pd.type === 'race_strategy' || pd.type === 'race_finale')) {
+      } else if (!ui.simStop && ['race_strategy', 'race_start', 'race_finale'].includes(pd.type)) {
         cur = settle(applyDecision(cur, { id: pd.payload.safe }));
       } else if (!ui.simStop && pd.type === 'race_event' && pd.payload.safe) {
         auto.push(pd.payload.title);
@@ -419,6 +420,7 @@ function simRaces(n) {
     let why = '';
     if (pd?.type === 'team_order') why = ' Parou: ordem de equipe para você decidir.';
     else if (pd?.type === 'race_strategy') why = ` Parou na etapa ${pd.payload.race}: estratégia de pneus, uma decisão sua.`;
+    else if (pd?.type === 'race_start') why = ` Parou na etapa ${pd.payload.race}: largada, uma decisão sua.`;
     else if (pd?.type === 'race_finale') why = ` Parou na etapa ${pd.payload.race}: final de corrida, uma decisão sua.`;
     else if (pd?.type === 'race_event') why = ` Parou na etapa ${pd.payload.race}: ${pd.payload.title}, uma decisão sua.`;
     else if (pd?.type === 'story_event') why = ' Parou: notícia com escolha.';
@@ -427,7 +429,7 @@ function simRaces(n) {
     ui.notice = ran.length ? `Etapas ${ran[0].n}–${ran.at(-1).n}: ${results}.${decided}${why}` : (why.trim() || null);
     return cur;
   });
-  window.scrollTo(0, 0); // o aviso do que aconteceu fica no topo da página
+  scrollToTop(); // o aviso do que aconteceu fica no topo da página
 }
 
 // --- peças ------------------------------------------------------------------
@@ -667,7 +669,7 @@ function screenCreate() {
     <h1>Da largada à bandeirada</h1>
     <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
   </section>
-  ${ui.notice ? `<div class="note">${esc(ui.notice)}</div>` : ''}
+  ${ui.notice ? `<div class="note" role="status">${esc(ui.notice)}</div>` : ''}
   ${saves.available ? `<section class="card focus"><h2>Suas carreiras</h2>
     <p class="mute" style="font-size:14px">O jogo salva sozinho a cada decisão, neste navegador. Para levar a carreira a outro lugar, use "Salvar em arquivo" e importe aqui.</p>
     ${list.map(slotRow).join('')}
@@ -811,12 +813,15 @@ function strategyCard(p) {
     </section>`;
 }
 
-// Final de corrida: rival logo à frente; atacar ou administrar.
+// Final de corrida: ataque ao rival à frente ou defesa de um perseguidor.
 function finaleCard(p) {
-  const pace = { faster: 'Você parece mais rápido que ele: o ataque tem boa chance.', slower: 'Ele parece mais rápido que você: atacar é arriscado.', even: 'O ritmo de vocês é parecido: é uma aposta.' }[p.pace];
+  const defending = p.mode === 'defend';
+  const pace = (defending
+    ? { faster: 'Você tem mais ritmo: há uma boa chance de segurar a posição.', slower: 'O rival está mais rápido: defender será mais difícil.', even: 'O ritmo é parecido: a disputa pode ir para qualquer lado.' }
+    : { faster: 'Você parece mais rápido que ele: o ataque tem boa chance.', slower: 'Ele parece mais rápido que você: atacar é arriscado.', even: 'O ritmo de vocês é parecido: é uma aposta.' })[p.pace];
   return `${circuitCard(p.circuit)}
     <section class="card focus"><h2>Últimas voltas</h2>
-      <p>Você está em <b>P${esc(p.pos)}</b>. Logo à frente vem <b>${flagImg(p.rival.nat, { alt: false, h: 14 })} ${esc(p.rival.name)}</b> (${esc(p.rival.teamName)}).</p>
+      <p>Você está em <b>P${esc(p.pos)}</b>. ${defending ? 'Pressionando logo atrás vem' : 'Logo à frente vem'} <b>${flagImg(p.rival.nat, { alt: false, h: 14 })} ${esc(p.rival.name)}</b> (${esc(p.rival.teamName)}).</p>
       <p class="mute">${esc(pace)}</p>
       ${optionCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'finale')}
     </section>`;
@@ -857,6 +862,11 @@ function screenF1(view) {
       body = eventCard(pd);
     } else if (pd.type === 'race_strategy') {
       body = strategyCard(pd.payload);
+    } else if (pd.type === 'race_start') {
+      const p = pd.payload;
+      body = `${circuitCard(p.circuit)}<section class="card focus"><h2>Apagam-se as luzes</h2>
+        <p>Você larga em <b>P${esc(p.grid)}</b>. ${p.wet ? 'A pista está molhada: cuidado com a primeira curva.' : 'Escolha como abordar a primeira curva.'}</p>
+        ${optionCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'start')}</section>`;
     } else if (pd.type === 'race_finale') {
       body = finaleCard(pd.payload);
     } else if (pd.type === 'team_order') {
@@ -988,7 +998,7 @@ function render() {
   el.innerHTML = panels() + html + footer();
   document.body.classList.toggle('modal-open', !!anyModal());
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
-  if (key !== lastKey) { lastKey = key; window.scrollTo(0, 0); focusHeading(el); }
+  if (key !== lastKey) { lastKey = key; scrollToTop(); focusHeading(el); }
 }
 
 // --- eventos -----------------------------------------------------------------
@@ -1110,6 +1120,7 @@ document.addEventListener('click', (e) => {
     case 'approach': return decide({ id });
     case 'strategy': return decide({ id });
     case 'finale': return decide({ id });
+    case 'start': return decide({ id });
     case 'event': return decide({ id });
     case 'order': return decide({ id });
     case 'simrest': return simRaces(Infinity);

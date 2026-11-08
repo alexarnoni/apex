@@ -32,10 +32,17 @@ export const CONFIG = {
     fitBack: 0.5,                 // bônus para quem larga atrás (precisa arriscar)
     backGrid: 7, farBackGrid: 12, // a partir de que posição de largada vale o bônus (macios, duros)
     wetFit: { inters: 2, wait: 0, slicks: -0.5 },
-    // Final de corrida (versão enxuta): atacar o rival à frente ou administrar. Atacar rende +1 ou -1 posição conforme
-    // o ritmo relativo (fit = diferença de desempenho / fitScale, limitada a ±maxFit); administrar não muda nada.
-    finale: { chance: 0.5, pGood: 0.30, pBad: 0.30, perFit: 0.12, fitScale: 4, maxFit: 1.5 },
+    // Final: atacar à frente ou defender de um perseguidor. Ataque rende ±1; administrar ataque é neutro.
+    // Defesa pode manter posição ou perder até duas; ceder perde uma e evita o risco da disputa.
+    finale: {
+      chance: 0.5, pGood: 0.30, pBad: 0.30, perFit: 0.12, fitScale: 4, maxFit: 1.5,
+      paceThreshold: 2,
+      defense: { holdChance: 0.65, perFit: 0.12, minHold: 0.35, maxHold: 0.85, mistakeChance: 0.10 },
+    },
   },
+
+  // Largada (F1): efeito adicional sobre o resultado bruto; hold é neutro.
+  start: { gain: 0.35, loss: 0.25, contact: 0.03, wetContact: 0.03, streetContact: 0.02, aggressiveGain: 0.05 },
 
   // Perfil da equipe (base e F1): cada perfil troca pressão por desenvolvimento (engine/profile.js).
   //   ponta: muita pressão, mas quem vai bem evolui rápido. meio: pouca pressão, desenvolvimento médio.

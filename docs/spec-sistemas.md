@@ -1,5 +1,7 @@
 # Spec: Sistemas de Suporte (rotas alternativas, academia, orçamento dinâmico, fama)
 
+> Revisado em 2026-11-08. Documento de propostas, com implementação parcial. Academias são simplificadas; rotas alternativas continuam uma tela terminal, não séries jogáveis. Confira o roadmap e o código antes de assumir que os sistemas abaixo existem.
+
 Projeto: Bandeirada. Depende de: spec-piloto1-piloto2, spec-loop-jogador.
 Todos os números novos entram em `engine/config.js` nos blocos indicados.
 

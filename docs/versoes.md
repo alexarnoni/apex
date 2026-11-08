@@ -140,7 +140,19 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 
 ## Compatibilidade de saves
 
-- `ENGINE_VERSION` está em **1** desde o início; um save de outra versão é descartado com aviso. Nada mudou esse número até agora, porque as mudanças foram aditivas.
+### Alteração local após v0.9.2 (ainda não publicada)
+
+- **2026-11-08 — D.2.a:** final de corrida com defesa contra o perseguidor. Disputar pode preservar a posição ou custar até duas por erro; ceder perde uma sem disputa. Prioridade de defesa depende do ritmo relativo; companheiros e abandonos não são selecionados como perseguidores elegíveis.
+- A simulação automática escolhe ceder quando há decisão de defesa. As medições históricas de dificuldade não foram refeitas para esse comportamento.
+- Decisões antigas sem `mode` continuam sendo de ataque; `ENGINE_VERSION` permanece 1.
+- **2026-11-08 — D.2.b:** nova decisão `race_start` após a estratégia: atacar na primeira curva ou largar com margem. O ataque pode render uma posição, custar uma ou causar contato; chuva e pista de rua aumentam risco. Na pole há apenas a opção com margem. Abandono na largada tem causa específica e encerra o relato ali. Simulação e políticas de calibração usam `hold`.
+- Verificado após ambos os incrementos: **158 testes e build local**. Sem novo número de release, commit, push ou deploy nesta etapa. As novas decisões são aditivas; saves em eventos posteriores continuam do ponto salvo.
+
+- **Validação da interface (2026-11-08):** adicionada suite Playwright com 10 testes de desktop/celular passando, CI configurado, aviso acessível de importação e faixa de feedback no celular para evitar cobrir escolhas. Guia em `testes-interface.md`. Ainda não publicado.
+
+### Formato e dados antigos
+
+- `ENGINE_VERSION` está em **1** desde o início; um save de outra versão não é carregado/importado, com aviso (não implica apagar automaticamente o arquivo ou slot). Nada mudou esse número até agora, porque as mudanças foram aditivas.
 - Carreiras salvas antes de cada versão continuam abrindo, com estas diferenças:
   - **v0.7 e v0.8:** a decisão pendente guarda o texto e o cartão da pista daquela época (textos antigos, bandeira em emoji, que a tela converte em imagem); a tabela "Por categoria" só tem os totais da base.
   - **v0.7:** um evento de corrida já pendente não tem a opção cautelosa (`safe`), então a simulação para nele uma vez.
@@ -152,6 +164,9 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 
 | Documento | O que contém |
 |---|---|
+| `AGENTS.md` | Instruções curtas para agentes. |
+| `docs/INDEX.md` | Entrada e mapa dos documentos. |
+| `docs/HANDOFF.md` | Estado confirmado, limites e próximo trabalho. |
 | `README.md` | Decisões de design, estrutura do código, como rodar, critérios de balanceamento, diário de calibração, publicação. |
 | `docs/roadmap-ideias.md` | Tudo que falta, por importância, e o registro item a item do que foi feito (níveis 1 a 5, funcional, beta, segurança, identidade, dinamismo). |
 | `docs/spec-loop-jogador.md` | O loop da carreira do jogador. |
@@ -162,6 +177,7 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 | `docs/textos-eventos.md` | Os 28 textos de eventos para revisão (gerado por `npm run events`). |
 | `SECURITY.md` | Como relatar uma vulnerabilidade e o que há para proteger. |
 | `worker/README.md` | Como publicar e configurar o Worker de feedback. |
+| `docs/testes-interface.md` | Suite Playwright, execução, cobertura e limites. |
 | `docs/calibracao.md` | Como medir e calibrar os números do jogo (ferramentas em `tools/calibrate/`), metas, decisões e armadilhas. |
 
 Os documentos originais continuam onde estavam; este arquivo só resume e aponta para eles.

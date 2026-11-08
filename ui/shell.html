@@ -350,6 +350,13 @@ h2::before { display: none; }
 @media (prefers-reduced-motion: no-preference) { .bar-meter i, .meter .fill { transition: width .25s; } }
 @media (prefers-reduced-motion: reduce) { .btn, .opt { transition: none; } .btn:hover:not([disabled]), .opt:hover { transform: none; } }
 @media (max-width: 480px) { h1 { font-size: 32px; } .big { font-size: 44px; } }
+/* No celular, reserve uma faixa para o feedback em vez de cobrir decisões. */
+@media (max-width: 640px) {
+  body { margin-block: 0; padding-bottom: 0; height: 100dvh; overflow: hidden; }
+  .wrap { height: calc(100dvh - 72px - env(safe-area-inset-bottom, 0px)); overflow-y: auto; padding-bottom: 16px; }
+  .wrap > * { flex-shrink: 0; }
+  .fab { bottom: max(8px, env(safe-area-inset-bottom, 0px)); }
+}
 </style>
 <!--BODY-->
 <div class="wrap" id="app" role="main"></div>

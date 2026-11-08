@@ -103,6 +103,7 @@ test('o relato da corrida registra largada, estratégia e chegada (ou a causa do
   for (let guard = 0; guard < 40 && getView(s).f1.races.length < 3; guard++) {
     const pd = s.pendingDecision;
     if (pd.type === 'weekend_approach') s = applyDecision(s, { id: 'balanced' });
+    else if (pd.type === 'race_start') s = applyDecision(s, { id: pd.payload.safe });
     else if (pd.type === 'race_strategy') s = applyDecision(s, { id: pd.payload.safe });
     else if (pd.type === 'race_finale') s = applyDecision(s, { id: pd.payload.safe });
     else if (pd.type === 'race_event') s = applyDecision(s, { id: pd.payload.options[0].id });

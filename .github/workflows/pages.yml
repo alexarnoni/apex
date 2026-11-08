@@ -30,6 +30,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      - run: npx playwright install --with-deps chromium --only-shell
+      - run: npm run test:ui
       - run: npm run build
         env:
           # O botão "Enviar pelo GitHub" do formulário de feedback abre uma issue neste repositório.

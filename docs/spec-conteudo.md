@@ -1,5 +1,7 @@
 # Spec: Conteúdo (eventos narrativos e decisões de corrida)
 
+> Revisado em 2026-11-08. O motor e 19 eventos narrativos + 9 de corrida já existem. Tabelas abaixo registram o desenho inicial; o contrato efetivo é o de `engine/events.js` e `data/events.js`. `docs/textos-eventos.md` é gerado dos dados. Revisão final dos textos pelo usuário continua pendente (1.3).
+
 Projeto: Bandeirada. Depende de: spec-loop-jogador (tipos de pendingDecision).
 Formato: tabelas de dados em `data/events.js`, motor genérico em `engine/events.js`. Adicionar evento novo = adicionar linha, nunca código.
 

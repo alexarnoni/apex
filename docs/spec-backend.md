@@ -1,7 +1,10 @@
 # Spec: Ranking e Compartilhamento (backend)
 
-Projeto: Bandeirada. Backend: FastAPI + PostgreSQL na Oracle VM (mesma infra de Astraea/Scout). Frontend: Cloudflare Pages.
-Decisão de escopo: NÃO existe save persistente (carreira é uma sessão de minutos). O backend entra só no FIM da carreira: ranking e compartilhamento. O único estado local é um snapshot cru em sessionStorage (definido na spec-loop-jogador), sem versão nem migração.
+> Proposta futura, sem backend de ranking implementado. Revisada em 2026-11-08.
+
+Projeto: Bandeirada. Stack proposta: FastAPI + PostgreSQL; hospedagem do backend a reconfirmar antes de implementar. O frontend atual usa **GitHub Pages** e já há um Worker de feedback separado.
+
+O jogo já salva em três slots de localStorage e exporta/importa JSON com versão. Este backend acrescentaria ranking e compartilhamento ao fim da carreira; não é necessário para os saves atuais.
 
 ## 1. Nota de legado (fórmula do ranking)
 
@@ -9,7 +12,7 @@ Decisão de escopo: NÃO existe save persistente (carreira é uma sessão de min
 legadoScore = titulosF1*1000 + vicecampeonatos*250 + vitorias*50 + poles*15
             + podios*10 + pontosF1*1 + titulosBase*40 + titulosRotaAlternativa*60
 ```
-Calculada na engine (função pura, testada) e recalculada no servidor a partir do careerLog. A do servidor é a que vale.
+Hoje a engine calcula a nota (`legacyScore`, `CONFIG.legacy`). Recalcular no servidor é requisito futuro, não comportamento existente. O schema do envio e a suficiência do log precisam ser validados na implementação.
 
 ## 2. API (FastAPI)
 
@@ -27,10 +30,10 @@ Servidor:
 Retorna posições: `{ rank, playerName, flag, legadoScore, titulos, vitorias, id }`. Semanal = carreiras enviadas na semana ISO corrente.
 
 ### GET /api/v1/careers/{id}
-Dados públicos da carreira pra página de compartilhamento (card estilo F1 Glory: nome, bandeira, dorsal, totais, linha do tempo condensada).
+Dados públicos da carreira pra página de compartilhamento (card com identidade própria da Bandeirada: nome, nacionalidade, número do carro, totais e linha do tempo condensada).
 
 ### Anti-fraude, postura honesta
-O MVP aceita que score client-side é forjável por quem se esforçar. As defesas acima (recomputo do log + plausibilidade + rate limit) barram o trivial. Defesa forte fica documentada como v2: replay determinístico no servidor (seed + lista de decisões => o servidor re-simula a carreira com a mesma engine em Node e confere o resultado). A arquitetura já permite (engine isomórfica + seed + careerLog), só não implementar agora.
+O MVP aceita que score client-side é forjável por quem se esforçar. As defesas acima (recomputo do log + plausibilidade + rate limit) barram o trivial. Defesa forte fica documentada como v2: replay determinístico no servidor (seed + lista de decisões => o servidor re-simula a carreira com a mesma engine em Node e confere o resultado). A engine isomórfica e `history` dão a base, mas o replay precisa também dos parâmetros iniciais e da versão exata do código/regras: `ENGINE_VERSION` sozinho só identifica compatibilidade de formato. Validar esse contrato antes de implementar.
 
 ## 3. Banco (Postgres)
 

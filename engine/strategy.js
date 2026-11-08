@@ -68,7 +68,32 @@ export function finaleFit(edge) {
   return clamp(edge / F.fitScale, -F.maxFit, F.maxFit);
 }
 
-export function finaleOptions(rivalName) {
+// Escolhe um único duelo. Um perseguidor mais rápido ganha prioridade;
+// companheiros e abandonos não geram um duelo de defesa independente das ordens.
+export function finaleSituation(w, player, carWeight) {
+  if (w.dnfs.includes(player)) return null;
+  const classified = w.result.filter((d) => !w.dnfs.includes(d));
+  const i = classified.indexOf(player);
+  if (i < 0) return null;
+  const front = classified[i - 1];
+  const rear = classified[i + 1];
+  const attack = front && front.team !== player.team ? front : null;
+  const defense = rear && rear.team !== player.team ? rear : null;
+  const threshold = CONFIG.strategy.finale.paceThreshold;
+  if (defense && (!attack || paceEdge(player, defense, carWeight) <= -threshold)) {
+    return { mode: 'defend', rival: defense, pos: i + 1 };
+  }
+  return attack ? { mode: 'attack', rival: attack, pos: i + 1 } : null;
+}
+
+export function finaleOptions(rivalName, mode = 'attack') {
+  if (mode === 'defend') return {
+    options: [
+      { id: 'defend', label: 'Defender posição', description: `Disputar com ${rivalName}: pode manter a posição, mas uma defesa mal executada pode custar até duas posições.` },
+      { id: 'yield', label: 'Ceder a posição', description: `Deixar ${rivalName} passar: perde uma posição, sem arriscar um erro na disputa.` },
+    ],
+    safe: 'yield',
+  };
   return {
     options: [
       { id: 'attack', label: 'Atacar', description: `Tentar a ultrapassagem sobre ${rivalName}: se der certo você sobe uma posição; se der errado, perde uma.` },
@@ -78,7 +103,33 @@ export function finaleOptions(rivalName) {
   };
 }
 
-export function resolveFinale(w, player, rival, choiceId, carWeight, rng) {
+export function resolveFinale(w, player, rival, choiceId, carWeight, rng, mode = 'attack') {
+  if (mode === 'defend') {
+    const D = CONFIG.strategy.finale.defense;
+    const before = w.result.indexOf(player);
+    let kind = 'bad';
+    let requestedShift = -1;
+    let text = `Você cedeu a posição para ${rival.name} e evitou a disputa.`;
+    if (choiceId === 'defend') {
+      const hold = clamp(D.holdChance + D.perFit * finaleFit(paceEdge(player, rival, carWeight)), D.minHold, D.maxHold);
+      const roll = rng.next();
+      if (roll < hold) {
+        kind = 'good'; requestedShift = 0;
+        text = `Você fechou a porta para ${rival.name} e manteve a posição.`;
+      } else if (roll >= 1 - D.mistakeChance) {
+        requestedShift = -2;
+        text = `Você errou ao defender de ${rival.name} e saiu da trajetória.`;
+      } else {
+        text = `${rival.name} encontrou espaço e passou, apesar da sua defesa.`;
+      }
+    } else if (choiceId !== 'yield') {
+      throw new Error('id inválido (use defend ou yield)');
+    }
+    if (requestedShift) EFFECTS.shift({ w, player }, requestedShift);
+    const shift = before - w.result.indexOf(player);
+    if (shift) text += ` Perdeu ${Math.abs(shift)} ${shift === -1 ? 'posição' : 'posições'}.`;
+    return { kind, shift, label: choiceId === 'defend' ? 'Defender' : 'Ceder', text };
+  }
   if (choiceId !== 'attack') return { kind: 'none', shift: 0, label: 'Administrar', text: 'Você administrou o ritmo e levou a posição para casa.' };
   const F = CONFIG.strategy.finale;
   const fit = finaleFit(paceEdge(player, rival, carWeight));

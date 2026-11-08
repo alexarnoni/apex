@@ -16,6 +16,7 @@ function answerFor(state) {
     case 'weekend_approach': return { id: pd.payload.out ? 'rest' : 'balanced' };
     case 'story_event':
     case 'race_event': return { id: pd.payload.options[0].id };
+    case 'race_start':
     case 'race_strategy': return { id: pd.payload.safe };
     case 'race_finale': return { id: pd.payload.safe };
     case 'team_order': return { id: 'obey' };

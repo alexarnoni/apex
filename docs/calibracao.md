@@ -33,7 +33,13 @@ Caminhos que começam com `category.` mudam `data/categories.js` (ex.: `category
 - `train`: escolhe sempre a opção de treino na base e treina todo ano na F1. Abre mão do bônus de carro na base.
 - `notrain`: nunca treina (base: opção sem treino; F1: foco "imagem"). É o extremo baixo.
 
-O jogador de verdade fica entre `notrain` e `a`. Quem decide bem as ofertas e eventos deve ir melhor que a política passiva, que sempre escolhe a primeira opção e a opção segura.
+Essas políticas servem como referências; um jogador real pode ficar fora desse intervalo. Quem decide bem as ofertas e eventos deve ir melhor que a política passiva, que sempre escolhe a primeira opção e a opção segura.
+
+## Interpretação das medições
+
+`calibrate:player` divide a taxa de chegada à F1 por todas as tentativas. Já a taxa de título, títulos, vitórias e temporadas por carreira usam apenas as carreiras que chegaram ao legado da F1. As porcentagens abaixo seguem esse denominador; não são a chance de título entre todos que começaram no kart.
+
+As políticas são cenários de teste, não uma estimativa validada de comportamento humano. As metas são escolhas de design, não comprovação de realismo. Resultados registrados são de rodadas históricas; esta revisão documental não repetiu as medições.
 
 ## Metas atuais (2026-11-08)
 
@@ -58,11 +64,11 @@ O jogador de verdade fica entre `notrain` e `a`. Quem decide bem as ofertas e ev
 - **Novatos melhores** (`rookies`: habilidade 70-82, potencial 78-92, 15% de estrelas): sem isso o nível do grid caía com os anos (campeão com habilidade 93 nos anos 1-7 e 83 nos anos 15-25).
 - **Veteranos:** faixa 34-36 mais gentil, "ano bom" de veterano (30%), elite que se aposenta mais tarde, mercado sem a penalidade de idade exagerada e limite de 47 anos. O declínio do **jogador** é uma curva fixa (`playerDecline`), sem sorteio.
 - **Perfil da equipe** (`CONFIG.teamProfile`): ponta (pressão 1,0, desenvolvimento 1,15 **só se corresponder ao esperado**), meio (0,5 e 1,0), fundo (0 e 0,85, mais visibilidade). A pressão **só cobra**: o bônus positivo por superar o esperado foi removido porque duplicava o prêmio do desenvolvimento. Esperado = 2 x posição do carro + 1.
-- **Estratégia de pneus e final de corrida** têm efeito médio **zero** na escolha padrão (a que a simulação automática usa), para não mexer no campeonato.
+- **Ataque no final:** administrar não muda posições. Na estratégia de pneus, a opção padrão seca tem encaixe zero; na chuva, a recomendação não é neutra. A **largada (D.2.b)** usa `hold` como padrão: não altera a ordem bruta nem consome sorteio nessa escolha; o relato deixou de inventar posição na primeira volta, o que altera a sequência global de RNG. A nova **defesa (D.2.a)** usa ceder como opção automática e perde uma posição: não presumir efeito zero ou reutilizar as taxas históricas de títulos como medição dessa versão local.
 
 ## Armadilhas (já custaram tempo)
 
-1. **Ruído.** Com 300 carreiras, "% com título" tem erro de uns ±2,3 a ±2,5 pontos (a ferramenta imprime isso). Diferenças de 3 a 4 pontos entre duas rodadas **podem ser sorte**. Use 400 ou mais para decidir, e mantenha as mesmas sementes ao comparar duas versões.
+1. **Ruído.** A ferramenta imprime uma estimativa de **um erro-padrão**, não um intervalo de confiança de 95%. O valor depende da taxa e de quantas carreiras chegaram à F1. Amostras pequenas ou zero sucessos tornam a aproximação frágil. Compare as mesmas sementes e reporte amostra, denominador e incerteza; diferenças de poucos pontos podem ser ruído.
 2. **Compare sempre as duas pontas** (`notrain` e `a`). Uma mudança pode parecer boa numa política e inflar a outra (os perfis de equipe subiram `notrain` de 5% para 12% e `a` só de 20% para 24%).
 3. **Ablação.** Quando um número sobe sem explicação, desligue as peças uma a uma com `--set` (por exemplo, pressão e visibilidade a zero) e meça de novo. Foi assim que se achou que o bônus positivo da pressão inflava os títulos.
 4. **Mexer no sorteio muda tudo.** Qualquer mudança que consuma números aleatórios em outra ordem (nomes, eventos, estratégia) troca as carreiras de cada semente. Testes que dependem de uma semente específica ficam frágeis: prefira procurar entre várias sementes.
