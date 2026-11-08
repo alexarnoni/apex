@@ -31,12 +31,27 @@ import fi from './assets/flags/fi.svg';
 
 const IMG = { AU: au, CN: cn, JP: jp, BH: bh, SA: sa, US: us, CA: ca, MC: mc, ES: es, AT: at, GB: gb, BE: be, HU: hu, NL: nl, IT: it, AZ: az, SG: sg, MX: mx, BR: br, QA: qa, AE: ae, AR: ar, PT: pt, DE: de, FR: fr, FI: fi };
 
-export const COUNTRY = {
-  BR: 'Brasil', AR: 'Argentina', PT: 'Portugal', GB: 'Reino Unido', DE: 'Alemanha', FR: 'França', IT: 'Itália', ES: 'Espanha',
-  NL: 'Países Baixos', FI: 'Finlândia', JP: 'Japão', US: 'Estados Unidos', MX: 'México', AU: 'Austrália', CN: 'China', BH: 'Bahrein',
-  SA: 'Arábia Saudita', CA: 'Canadá', MC: 'Mônaco', AT: 'Áustria', BE: 'Bélgica', HU: 'Hungria', AZ: 'Azerbaijão', SG: 'Singapura',
-  QA: 'Catar', AE: 'Emirados Árabes',
-};
+import { COUNTRY_CODES } from './countries.js';
+
+// As 26 bandeiras mais usadas vão embutidas (IMG acima); as outras ~230 são arquivos em flags/ no site,
+// carregados só quando aparecem na tela.
+const FILE_SET = new Set(COUNTRY_CODES);
+
+// Nome do país em português, direto do navegador (Intl.DisplayNames), sem lista nossa para manter.
+let displayNames = null;
+try { displayNames = new Intl.DisplayNames(['pt-BR'], { type: 'region' }); } catch { displayNames = null; }
+export function countryName(code) {
+  const c = String(code ?? '').toUpperCase();
+  try { return displayNames?.of(c) || c; } catch { return c; }
+}
+// Objeto de consulta (COUNTRY[código]) para o resto da interface.
+export const COUNTRY = new Proxy({}, { get: (_, code) => (typeof code === 'string' ? countryName(code) : undefined) });
+
+// Todos os países, em ordem alfabética, com o Brasil primeiro.
+export function countryList() {
+  const rest = COUNTRY_CODES.filter((c) => c !== 'BR').sort((a, b) => countryName(a).localeCompare(countryName(b), 'pt-BR'));
+  return ['BR', ...rest];
+}
 
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
@@ -47,7 +62,7 @@ export function flagImg(code, { alt = true, h = 15 } = {}) {
   const c = (/^[\u{1F1E6}-\u{1F1FF}]{2}$/u.test(raw)
     ? [...raw].map((ch) => String.fromCharCode(ch.codePointAt(0) - 0x1F1E6 + 65)).join('')
     : raw).toUpperCase();
-  const src = IMG[c];
+  const src = IMG[c] ?? (FILE_SET.has(c) ? `flags/${c.toLowerCase()}.svg` : null);
   if (!src) return c ? `<span class="flag-code">${esc(c)}</span>` : '';
   const name = COUNTRY[c] ?? c;
   return `<img class="flag" src="${esc(src)}" width="${Math.round(h * 4 / 3)}" height="${h}" alt="${alt ? esc(name) : ''}" title="${esc(name)}">`;

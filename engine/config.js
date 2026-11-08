@@ -145,7 +145,13 @@ export const CONFIG = {
   // Carreira do jogador na base (spec-loop-jogador)
   base: {
     startYear: 2026,
-    teamCarJitter: 1.0,             // oscilação anual do carro de cada equipe de base
+    // Idade inicial escolhida na criação (12 a 16). calibratedFrom: a fórmula de habilidade e teto foi calibrada
+    // para 14-16; abaixo disso a habilidade perde skillLossPerYearUnder por ano (criança menos pronta).
+    startAge: { min: 12, max: 16, calibratedFrom: 14, skillLossPerYearUnder: 3 },
+    // Idade mínima para disputar cada categoria (aproximação de jogo: F1 = superlicença aos 18, confirmada;
+    // F4 15, F3 16 e F2 17 são valores de jogo, a confirmar com os regulamentos de cada série).
+    minAge: { f4: 15, f3: 16, f2: 17, f1: 18 },
+    teamCarJitter: 1.0,           // oscilação anual do carro de cada equipe de base
     tierPoolSize: 4,                // 'good' sorteia entre as N melhores equipes, 'bad' entre as N piores
     offersPerTier: { top: 3, mid: 2 }, // quantas equipes fazem oferta de subida em cada tier
     rivalCount: 3,

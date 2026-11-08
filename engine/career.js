@@ -113,15 +113,21 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
   };
 }
 
-export function createPlayer({ surname, number, style, rng }) {
-  const age = rng.int(14, 16);
+// age: idade inicial escolhida (CONFIG.base.startAge); sem ela, sorteia entre 14 e 16 como antes.
+// Dos 14 aos 16 a fórmula é a calibrada (mais novo = habilidade e teto maiores). Abaixo de 14 a habilidade
+// cai (criança ainda não está pronta) e o teto é limitado a 100, senão quem começa aos 12 chegaria à F1 esmagando o grid.
+export function createPlayer({ surname, number, style, rng, age: chosenAge = null }) {
+  const age = chosenAge ?? rng.int(14, 16);
+  const S = CONFIG.base.startAge;
+  const young = Math.max(0, S.calibratedFrom - age);
+  const skill = 50 + (16 - Math.max(age, S.calibratedFrom)) * 1.5 - young * S.skillLossPerYearUnder;
   return {
     name: surname,
     number,
     style,
     age,
-    skill: 50 + (16 - age) * 1.5,           // começar mais novo = menos pronto...
-    potential: 88 + (16 - age) * 3 + rng.range(0, 6), // ...mas teto maior
+    skill,
+    potential: Math.min(100, 88 + (16 - age) * 3 + rng.range(0, 6)),
     team: null,
     contract: 0,
     fame: 0,

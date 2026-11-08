@@ -10,7 +10,7 @@
 //   BANDEIRADA_FEEDBACK_ENDPOINT  endereço do Worker de feedback (e-mail); sem ele o formulário só copia o relatório
 
 import { build } from 'esbuild';
-import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, existsSync, copyFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { buildCsp, buildHead, normalizeEndpoint, normalizeGoatCounter, normalizeSiteUrl, sha256, TITLE } from './site-head.js';
@@ -69,6 +69,14 @@ ${head}</head><body>${body}
 `;
 writeFileSync(join(root, 'dist/apex.html'), full);
 writeFileSync(join(root, 'dist/index.html'), full);
+// Bandeiras de todos os países como arquivos do site (as mais usadas também vão embutidas no bundle).
+const flagsDir = join(root, 'ui/assets/flags');
+if (existsSync(flagsDir)) {
+  mkdirSync(join(root, 'dist/flags'), { recursive: true });
+  for (const f of readdirSync(flagsDir)) {
+    if (/^[a-z]{2}\.svg$/.test(f) || f === 'LICENSE-flag-icons.txt') copyFileSync(join(flagsDir, f), join(root, 'dist/flags', f));
+  }
+}
 // Contato de segurança (RFC 9116): no caminho padrão e na raiz (algumas ferramentas só olham a raiz).
 const secSrc = join(root, 'ui/assets/security.txt');
 if (existsSync(secSrc)) {

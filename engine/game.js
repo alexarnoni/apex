@@ -47,9 +47,11 @@ function log(s, type, text) {
 
 const nextCategoryId = (id) => BASE_LADDER[BASE_LADDER.indexOf(id) + 1] ?? 'f1';
 
-export function createCareer({ surname, number, flag = null, style, seed } = {}) {
+export function createCareer({ surname, number, flag = null, style, seed, age = null } = {}) {
   if (!surname) throw new Error('surname obrigatório');
   if (!Number.isInteger(number) || number < 1 || number > 99) throw new Error('number deve ser 1-99');
+  const A = CONFIG.base.startAge;
+  if (age !== null && (!Number.isInteger(age) || age < A.min || age > A.max)) throw new Error(`age deve ser um inteiro de ${A.min} a ${A.max}`);
   if (!STYLES.includes(style)) throw new Error(`style deve ser um de: ${STYLES.join(', ')}`);
   const realSeed = (seed ?? Date.now()) >>> 0;
 
@@ -68,7 +70,7 @@ export function createCareer({ surname, number, flag = null, style, seed } = {})
   };
 
   const s = transition(blank, (st, rng) => {
-    const player = createPlayer({ surname, number, style, rng });
+    const player = createPlayer({ surname, number, style, rng, age });
     player.flag = flag;
     player.trust = CONFIG.trust.trustStart;
     player.academy = null;
@@ -170,6 +172,10 @@ function resolveBaseChoice(s, rng, answer) {
   const st = p.stats;
   st.seasons += 1;
   st.gp = (st.gp ?? 0) + category.races;
+  // Números por categoria (a ficha mostra a carreira separada: kart, F4, F3, F2 e F1)
+  const cs = ((p.catStats ??= {})[category.id] ??= { seasons: 0, gp: 0, wins: 0, podiums: 0, poles: 0, titles: 0 });
+  cs.seasons += 1; cs.gp += category.races; cs.wins += p.seasonWins; cs.podiums += p.seasonPodiums; cs.poles += p.seasonPoles;
+  if (summary.position === 1) cs.titles += 1;
   st.wins += p.seasonWins;
   st.podiums += p.seasonPodiums;
   st.poles += p.seasonPoles;
@@ -211,6 +217,15 @@ function openOffers(s, rng) {
   const bc = s.baseCareer;
   const tier = bc.lastSummary.offer;
   s.phase = 'BASE_OFERTAS';
+  // Idade mínima da categoria de cima: quem ainda não tem idade repete o ano, sem contar como "sem oferta".
+  const upId = nextCategoryId(bc.category);
+  const minAge = CONFIG.base.minAge[upId];
+  if (tier !== 'none' && minAge && s.player.age + 1 < minAge) {
+    bc.lastSummary.ageBlock = { category: CATEGORIES[upId].name, minAge };
+    log(s, 'offer', `Ainda sem idade para ${CATEGORIES[upId].name} (mínimo ${minAge} anos): mais uma temporada em ${CATEGORIES[bc.category].name}.`);
+    startNextSeason(s, rng, bc.category, bc.teamId);
+    return;
+  }
   if (tier === 'none') {
     bc.noOfferStreak += 1;
     log(s, 'offer', 'Nenhuma oferta de subida: mais uma temporada na mesma categoria.');
@@ -341,6 +356,7 @@ function startNextSeason(s, rng, categoryId, teamId) {
 
 function scoutingLine(summary) {
   const up = CATEGORIES[nextCategoryId(summary.category)].name;
+  if (summary.ageBlock) return `Os olheiros gostaram, mas você ainda não tem idade para ${summary.ageBlock.category} (mínimo ${summary.ageBlock.minAge} anos): mais um ano na categoria.`;
   if (summary.offer === 'top') return `Os olheiros de ${up} anotaram seu nome: equipes de ponta querem conversar.`;
   if (summary.offer === 'mid') return `Há interesse de ${up}, mas só de equipes do fundo do grid.`;
   return 'Ninguém ligou. Os olheiros não viram o suficiente.';
@@ -361,6 +377,21 @@ export function careerTotals(state, p) {
     titles: n(base, 'titles') + n(f1, 'titles'),
     vice: n(f1, 'vice'),
   };
+}
+
+// Carreira separada por categoria, na ordem da pirâmide. Só aparecem categorias já disputadas.
+// Saves antigos não têm o detalhe da base (p.catStats): aí só valem os totais.
+export function categoryBreakdown(state, p) {
+  const rows = [];
+  for (const id of BASE_LADDER) {
+    const c = p.catStats?.[id];
+    if (c) rows.push({ id, name: CATEGORIES[id].name, ...c });
+  }
+  if (state.f1) {
+    const f = p.stats ?? {};
+    rows.push({ id: 'f1', name: CATEGORIES.f1.name, seasons: f.seasons ?? 0, gp: f.gp ?? 0, wins: f.wins ?? 0, podiums: f.podiums ?? 0, poles: f.poles ?? 0, titles: f.titles ?? 0 });
+  }
+  return rows;
 }
 
 // O potencial exato fica escondido: a UI mostra só uma faixa de 10 pontos ("estimativa dos olheiros").
@@ -406,6 +437,7 @@ export function getView(state) {
       skill: Math.round(p.skill * 10) / 10,
       potentialBand: potentialBand(p.potential),
       career: careerTotals(state, p),
+      byCategory: categoryBreakdown(state, p),
     },
     decision: state.pendingDecision,
     log: state.careerLog.slice(-10),

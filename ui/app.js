@@ -5,7 +5,8 @@ import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '.
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { TEAMS_F1 } from '../data/world2026.js';
 import { createSaves } from './saves.js';
-import { flagImg, COUNTRY } from './flags.js';
+import { flagImg, COUNTRY, countryList } from './flags.js';
+import { TRACKS, TRACK_BOX } from '../data/trackPaths.js';
 import { buildFeedback, careerSnapshot, sendUrl, feedbackPayload, sendFeedback, FEEDBACK_KINDS } from './feedback.js';
 
 // Destino opcional do feedback (ex.: página "nova issue" de um repositório), definido no build
@@ -34,7 +35,7 @@ function trackProgress(before, after) {
   if (after.phase === 'ROTA_ALTERNATIVA' && before.phase !== 'ROTA_ALTERNATIVA') track('fim-da-linha-na-base');
 }
 
-const FLAGS = ['BR', 'AR', 'PT', 'GB', 'DE', 'FR', 'IT', 'ES', 'NL', 'FI', 'JP', 'US', 'MX', 'AU'];
+const FLAGS = countryList();   // todos os países, como no automobilismo de verdade
 const STYLES = {
   agg: { name: 'Agressivo', text: 'Mais rápido na classificação, mas oscila mais e abandona mais.' },
   tec: { name: 'Técnico', text: 'Vai bem na chuva e ajuda a equipe a desenvolver o carro.' },
@@ -54,7 +55,7 @@ let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
 let undoStack = []; // estados anteriores (só em memória); o estado é imutável, então desfazer é trocar de referência
 const UNDO_MAX = 30;
-let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '', contact: '', status: '' }, end: { rating: null, text: '', include: true, status: '', msg: '' }, autoSingle: true, simStop: false, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', style: 'con', seed: '' } };
+let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '', contact: '', status: '' }, end: { rating: null, text: '', include: true, status: '', msg: '' }, autoSingle: true, simStop: false, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', age: 15, style: 'con', seed: '' } };
 let lastKey = '';
 
 // --- util -------------------------------------------------------------------
@@ -209,7 +210,7 @@ function aboutPanel() {
       <p style="margin-top:6px">${esc(stats)}</p>
       <p style="margin-top:6px">As fontes do texto vêm do Google Fonts, então o Google vê o endereço IP de quem abre o site.</p>
       <p style="margin-top:6px">${esc(feedback)}</p></details>
-    <details open><summary>Código e licença</summary><p style="margin-top:6px">O código está visível em <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">${REPO_URL.replace('https://', '')}</a>, com todos os direitos reservados. As bandeiras são do projeto <a href="https://github.com/lipis/flag-icons" target="_blank" rel="noopener noreferrer">flag-icons</a> (licença MIT).</p></details></section>`;
+    <details open><summary>Código e licença</summary><p style="margin-top:6px">O código está visível em <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">${REPO_URL.replace('https://', '')}</a>, com todos os direitos reservados. As bandeiras são do projeto <a href="https://github.com/lipis/flag-icons" target="_blank" rel="noopener noreferrer">flag-icons</a> (licença MIT) e os traçados das pistas, do <a href="https://github.com/bacinger/f1-circuits" target="_blank" rel="noopener noreferrer">f1-circuits</a> (licença MIT, projeto não oficial).</p></details></section>`;
 }
 
 const anyModal = () => ui.aboutOpen || ui.helpOpen || ui.fb.open;
@@ -499,6 +500,14 @@ function attributes(p) {
   </div>`;
 }
 
+// Carreira separada por categoria (kart, F4, F3, F2, F1). Linhas só das categorias já disputadas.
+function categoryTable(rows) {
+  if (!rows?.length) return '';
+  const body = rows.map((r) => `<tr><th scope="row">${esc(r.name)}</th><td>${r.seasons}</td><td>${r.gp}</td><td>${r.wins}</td><td>${r.podiums}</td><td>${r.poles}</td><td>${r.titles ? `<b class="title-cell">${r.titles}</b>` : '–'}</td></tr>`).join('');
+  return `<details class="by-cat" open><summary>Por categoria</summary>
+    <div class="scroll-x"><table class="cat-table"><thead><tr><th></th><th title="Temporadas">Temp.</th><th>GP</th><th title="Vitórias">Vit.</th><th title="Pódios">Pód.</th><th>Poles</th><th title="Títulos">Tít.</th></tr></thead><tbody>${body}</tbody></table></div></details>`;
+}
+
 // Quanto falta para o topo da faixa de potencial (vira "no teto" quando já chegou).
 const margin = (p) => { const g = p.potentialBand[1] - Math.round(p.skill); return g > 0 ? `+${g}` : 'no limite'; };
 
@@ -554,6 +563,7 @@ function ficha(view) {
     <div class="tiles">${stat('Idade', p.age)}${stat('Potencial', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}${stat('Margem', margin(p))}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
     ${team}
     <div class="counters">${stat('GP', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Poles', c.poles)}</div>
+    ${categoryTable(p.byCategory)}
     <div class="vitrine"><small class="mute">SALA DE TROFÉUS</small> ${trophies.length ? trophies.join(' ') : '<span class="mute small">vazia por enquanto</span>'}</div>
     ${f1Extra}
     <p class="mute small">Potencial é o palpite dos olheiros de até onde você chega.</p>
@@ -652,14 +662,15 @@ function screenCreate() {
     <div class="grid2">
       <label class="field">Sobrenome<input type="text" id="f-surname" maxlength="18" value="${esc(d.surname)}" placeholder="Ex.: Senna"></label>
       <label class="field">Número do carro (1-99)<input type="number" id="f-number" min="1" max="99" value="${esc(d.number)}" placeholder="Ex.: 12"></label>
-      <label class="field">Bandeira<select id="f-flag">${FLAGS.map((f) => `<option value="${f}" ${f === d.flag ? 'selected' : ''}>${esc(COUNTRY[f] ?? f)}</option>`).join('')}</select></label>
+      <label class="field">País (bandeira)<select id="f-flag">${FLAGS.map((f) => `<option value="${f}" ${f === d.flag ? 'selected' : ''}>${esc(COUNTRY[f] ?? f)}</option>`).join('')}</select></label>
+      <label class="field">Idade inicial<select id="f-age">${[12, 13, 14, 15, 16].map((a) => `<option value="${a}" ${a === Number(d.age) ? 'selected' : ''}>${a} anos</option>`).join('')}</select></label>
       <label class="field">Seed (opcional, repete uma carreira)<input type="text" id="f-seed" inputmode="numeric" value="${esc(d.seed)}" placeholder="vazio = aleatória"></label>
       ${slotField}
     </div>
     <h3>Estilo de pilotagem</h3>
     <div class="grid2">${Object.entries(STYLES).map(([id, s]) =>
       `<button type="button" class="opt ${d.style === id ? 'on' : ''}" data-act="style" data-id="${id}"><strong>${esc(s.name)}</strong><span>${esc(s.text)}</span></button>`).join('')}</div>
-    <p class="mute" style="font-size:14px">Idade inicial sorteada entre 14 e 16 anos: mais novo começa menos pronto, mas tem potencial de evolução maior.</p>
+    <p class="mute" style="font-size:14px">Quem começa mais novo tem mais potencial de evolução, mas fica mais anos no kart: como no automobilismo de verdade, só dá para subir à F4 aos 15, à F3 aos 16, à F2 aos 17 e à F1 aos 18.</p>
     ${noSlots ? '<div class="note">Os 3 slots estão ocupados. Apague uma carreira acima para começar outra.</div>' : ''}
     ${ui.error ? `<div class="note err">${esc(ui.error)}</div>` : ''}
     <div class="row"><button class="btn" type="submit" data-act="create" ${noSlots ? 'disabled' : ''}>Começar carreira</button></div>
@@ -735,12 +746,20 @@ function lastEventCard(f1) {
   return f1.lastEvent ? `<section class="card"><h3>${esc(f1.lastEvent.title)}</h3><p>${esc(f1.lastEvent.text)}</p></section>` : '';
 }
 
+// Contorno da pista (decorativo): linha do traçado e um ponto na linha de largada.
+function trackSvg(c) {
+  const t = TRACKS[c.id];
+  if (!t) return '';
+  return `<svg class="track" viewBox="0 0 ${TRACK_BOX.w} ${TRACK_BOX.h}" role="img" aria-label="Traçado de ${esc(c.venue)}">
+    <path class="track-line" d="${t.d}"/><circle class="track-start" cx="${t.start[0]}" cy="${t.start[1]}" r="5"/></svg>`;
+}
+
 // Cartão da pista da etapa: nome do GP, local, características e chance de chuva.
 function circuitCard(c) {
   if (!c) return '';
   const chips = [...c.tags.map((t) => `<span class="chip">${esc(t)}</span>`), `<span class="chip">${c.rain >= 20 ? '🌧 ' : ''}chuva ${esc(c.rain)}%</span>`];
-  return `<section class="card circuit"><div class="circuit-flag" aria-hidden="true">${flagImg(c.flag, { alt: false, h: 36 })}</div>
-    <div><h2>${esc(c.gp)}</h2><p class="mute small">${esc(c.venue)}</p><div class="chips-row">${chips.join('')}</div>
+  return `<section class="card circuit">${trackSvg(c)}
+    <div><h2>${flagImg(c.flag, { alt: false, h: 20 })} ${esc(c.gp)}</h2><p class="mute small">${esc(c.venue)}</p><div class="chips-row">${chips.join('')}</div>
     ${c.hints?.length ? `<p class="mute small" style="margin-top:6px">${esc(c.hints.join(' '))}</p>` : ''}</div></section>`;
 }
 
@@ -895,7 +914,7 @@ function render() {
 
 function readDraft() {
   const g = (id) => document.getElementById(id)?.value ?? '';
-  ui.draft = { ...ui.draft, surname: g('f-surname'), number: g('f-number'), flag: g('f-flag') || 'BR', seed: g('f-seed'), slot: g('f-slot') || ui.draft.slot };
+  ui.draft = { ...ui.draft, surname: g('f-surname'), number: g('f-number'), flag: g('f-flag') || 'BR', age: Number(g('f-age')) || 15, seed: g('f-seed'), slot: g('f-slot') || ui.draft.slot };
 }
 
 function startCareer() {
@@ -909,7 +928,7 @@ function startCareer() {
       slot = Number(d.slot) || saves.firstEmpty();
       if (slot == null || saves.list()[slot - 1].status !== 'empty') throw new Error('Escolha um slot livre (apague uma carreira antes, se estiverem todos ocupados).');
     }
-    state = createCareer({ surname: d.surname.trim(), number: Number(d.number), flag: d.flag, style: d.style, seed });
+    state = createCareer({ surname: d.surname.trim(), number: Number(d.number), flag: d.flag, age: Number(d.age) || 15, style: d.style, seed });
     activeSlot = slot;
     undoStack = [];
     track('carreira-iniciada');

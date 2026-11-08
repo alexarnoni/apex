@@ -290,6 +290,14 @@ h2::before { display: none; }
 .tower tr:nth-child(even) td { background: none; }
 .tower tr.you td { background: color-mix(in srgb, var(--signal) 14%, var(--panel)); box-shadow: none; }
 .tower tr.you td:first-child { border-radius: 8px 0 0 8px; } .tower tr.you td:last-child { border-radius: 0 8px 8px 0; }
+.by-cat { border-top: 0; padding-top: 0; }
+.by-cat summary { font-family: var(--f-display); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 14px; color: var(--mute); }
+.cat-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
+.cat-table th, .cat-table td { padding: 4px 3px; text-align: right; font-family: var(--f-mono); }
+.cat-table thead th { font-size: 10px; color: var(--mute); font-weight: 500; text-transform: uppercase; }
+.cat-table tbody th { text-align: left; font-family: var(--f-body); font-weight: 600; white-space: nowrap; }
+.cat-table tbody tr + tr th, .cat-table tbody tr + tr td { border-top: 1px solid var(--line); }
+.title-cell { color: var(--amber); }
 .dial { position: relative; width: 116px; flex: none; display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .dial svg { width: 96px; height: 96px; display: block; }
 .dial-track { stroke: color-mix(in srgb, var(--mute) 28%, var(--panel2)); }
@@ -301,6 +309,10 @@ h2::before { display: none; }
 .dial-pot { font-family: var(--f-mono); font-size: 10.5px; color: var(--mute); white-space: nowrap; }
 .card.circuit { flex-direction: row; align-items: center; gap: 14px; }
 .circuit-flag { line-height: 0; flex: none; }
+.track { width: 120px; height: 84px; flex: none; }
+.track-line { fill: none; stroke: var(--signal); stroke-width: 5; stroke-linejoin: round; stroke-linecap: round; }
+.track-start { fill: var(--pink); stroke: var(--panel); stroke-width: 2; }
+@media (max-width: 480px) { .track { width: 96px; height: 67px; } }
 .flag { display: inline-block; vertical-align: -2px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .18); object-fit: cover; }
 .flag-code { font-family: var(--f-mono); font-size: 11px; }
 .card.circuit h2 { font-size: 22px; }
