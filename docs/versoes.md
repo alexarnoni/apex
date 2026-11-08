@@ -22,7 +22,7 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 | v0.8 | Criação e ficha: idade, nacionalidade, estatísticas por categoria, traçado das pistas | 2026-11-07/08 | sim |
 | v0.9 | Corrida em momentos, declínio previsível, veteranos, nomes por país e mercado | 2026-11-08 | sim (commit `4b9add0`) |
 | v0.9.1 | Talento de berço e dedicação no lugar do corte de potencial | 2026-11-08 | sim (commit `f35795c`) |
-| v0.9.2 | Perfil da equipe nas ofertas: pressão x desenvolvimento | 2026-11-08 | **não (em preparo)** |
+| v0.9.2 | Perfil da equipe nas ofertas: pressão x desenvolvimento | 2026-11-08 | sim (commit `659b46a`) |
 
 ---
 
@@ -129,7 +129,9 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 
 ---
 
-### v0.9.2: perfil da equipe nas ofertas *(em preparo, ainda não publicada)*
+### v0.9.2: perfil da equipe nas ofertas
+
+*Commit `659b46a`, 2026-11-08; 148 testes passando.*
 
 - As ofertas de subida e de contrato mostram o **perfil da equipe**: ponta (muita pressão, desenvolve rápido se você for bem), meio (pouca pressão, desenvolvimento normal) e fundo (sem pressão, desenvolvimento lento, mais visibilidade a quem se destaca num carro fraco).
 - **Pressão:** só cobrança; ficar abaixo do esperado para o carro custa nota de scouting na base e confiança na F1.

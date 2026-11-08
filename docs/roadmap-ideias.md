@@ -5,7 +5,7 @@ Itens já registrados como dívida no README estão marcados com (README).
 
 ## Resumo do estado (atualizado em 2026-11-08)
 
-O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, 137 testes; última publicação: commit `f35795c`). Esta seção é o ponto de partida para retomar; os detalhes de cada item estão nas seções abaixo.
+O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, 148 testes; última publicação: commit `659b46a`). Esta seção é o ponto de partida para retomar; os detalhes de cada item estão nas seções abaixo.
 
 ### Feito (neste ciclo)
 
@@ -40,6 +40,7 @@ O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnon
 
 ### Limites conhecidos
 
+- A taxa de títulos do jogador depende de treinar e das escolhas de oferta: nas simulações de 400 carreiras, nunca treina 5% e a política mista (treina todo ano na F1) 20%. A média do talento de berço (84,5) foi ajustada para compensar o empurrão dos perfis de equipe.
 - Numa das três sementes do balanceamento a maior dinastia chegou a 9 títulos seguidos (alvo < 9).
 - Saves antigos guardam textos e dados antigos de uma decisão pendente (abordagens, pista, evento sem `safe`) e pilotos gerados com nomes antigos ("Almeida II") e sem nacionalidade; o potencial do jogador salvo continua o antigo e só passa a subir com o treino daqui para frente. Carreiras novas já saem certas.
 - A taxa de títulos depende de a pessoa treinar (5% a 26% nas simulações); o jogador comum fica no meio. O "talento" ainda não aparece de forma legível na ficha (só a faixa de potencial).
