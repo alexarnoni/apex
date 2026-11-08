@@ -3,9 +3,9 @@
 Lista consolidada de tudo que surgiu até agora, ordenada pelo custo de implementar. Esforço é uma estimativa de trabalho de código + teste + calibração (P = horas, M = alguns dias, G = semanas).
 Itens já registrados como dívida no README estão marcados com (README).
 
-## Resumo do estado (atualizado em 2026-11-07)
+## Resumo do estado (atualizado em 2026-11-08)
 
-O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, 103 testes). Esta seção é o ponto de partida para retomar; os detalhes de cada item estão nas seções abaixo.
+O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, 109 testes). Esta seção é o ponto de partida para retomar; os detalhes de cada item estão nas seções abaixo.
 
 ### Feito (neste ciclo)
 
@@ -17,19 +17,24 @@ O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnon
 - **Calendário da F1:** 24 pistas reais com nome, local, chance de chuva e traços (rua, potência, técnica) que mexem na corrida; cartão da pista antes de cada etapa.
 - **Bandeiras em SVG** (flag-icons, MIT) na ficha, nas pistas e na lista de etapas; seletor de país com nomes.
 - **Simulação de corridas corrigida:** resolve eventos sozinha com a opção cautelosa, obedece ordens de equipe, conta o que decidiu, e há caixa para parar nas decisões.
-- **Criação e ficha:** idade inicial de 12 a 16 com idade mínima por categoria, bandeiras de 255 países, tabela de estatísticas por categoria e traçado das pistas no cartão da etapa.
+- **Criação e ficha:** idade inicial de 12 a 16 com idade mínima por categoria (F4 15, F3 16, F1 18 confirmadas; F2 17 é convenção do jogo), campo "Nacionalidade" com 255 países e a bandeira dentro da caixa, tabela de estatísticas por categoria e traçado das pistas no cartão da etapa.
 - **Realismo do campeão:** grid que não decai (novatos melhores), regulamento com mais peso de orçamento, peso do carro 0,60 e teto de potencial do jogador 88; teste de regressão em `tests/realism.test.js`.
 
-### Falta (na ordem que combinamos)
+### Falta, por ordem de importância (critério: o que mais muda a experiência de quem joga, depois o que protege o projeto)
 
-1. **Declínio previsível do piloto do jogador (D.6):** curva fixa por idade, sem sorteio, com início que depende do estilo e atraso por treino e preparação; a ficha mostra a previsão. Os pilotos controlados pelo jogo seguem com variação.
-2. **Nomes dos pilotos genéricos por país (D.7):** nome e sobrenome por nacionalidade, sem repetição ("II"), com bandeira em todas as tabelas (hoje são 40 sobrenomes repetidos).
-3. **Mercado de pilotos inteligente (D.8):** fidelidade (só sai com oferta bem melhor), perfil de cada equipe, ligação de academia e boatos de mercado no meio do ano. Hoje a equipe de melhor carro simplesmente escolhe primeiro o melhor piloto livre, e o Max pode cair na McLaren.
-4. **Corrida em momentos na F1 (D.2) e narrativa da corrida (D.4):** classificação e corrida em telas curtas, com decisões de pneus, parada e ataque ou defesa, e relato do que aconteceu.
-5. **Mini calendário na base (D.3)** e **metas e tensão de temporada (D.5).**
-6. **Pendências do lançamento e segurança:** GoatCounter (você cria o site), verificar o domínio no GitHub (S.5), Rate Limiting do Worker (S.6), 2FA (S.7), cabeçalhos HTTP via Cloudflare (S.8), e-mail "noreply" nos commits (S.9), definir o subdomínio do Worker, 5 PRs do Dependabot esperando decisão.
-7. **Identidade:** trocar os contadores GP/Vitórias/Pódios/Poles (R.16), ficha em faixa horizontal (R.17, salvo para depois), ofertas com estrelas (R.7), tela própria de criação de piloto (R.8), fontes hospedadas (R.9), renomear o repositório (R.10), conferir marca e domínio (R.11, é com você).
-8. **Revisão de textos dos eventos (1.3):** você precisa ler `docs/textos-eventos.md` e dizer o que mudar.
+1. **Corrida em momentos e narrativa da corrida (D.2 e D.4).** É a queixa principal ("na F1 fica chato"): hoje cada etapa é a mesma escolha de três botões. Classificação e corrida em telas curtas, decisões de pneus, parada, ataque e defesa, e um relato do que aconteceu.
+2. **Declínio previsível do piloto do jogador (D.6).** Pequeno e fácil de testar; dá sentido ao tempo na carreira. Curva fixa por idade, início por estilo, atraso por treino, previsão na ficha.
+3. **Mercado de pilotos inteligente (D.8).** Fidelidade, perfil de cada equipe, ligação de academia e boatos no meio do ano; evita o Max na McLaren à toa. É a base da **silly season** (D.14).
+4. **Nomes dos pilotos genéricos por país, com nacionalidade e bandeira nas tabelas (D.7).** Tira o "II" e dá cara de mundo real; usa as bandeiras que já existem.
+5. **Mini calendário na base (D.3) e metas e tensão de temporada (D.5).** Faz a base deixar de ser uma decisão por ano.
+6. **Efeitos sonoros (D.15).** Barato e dá muita sensação de jogo; ver o item para as decisões de projeto.
+7. **Rivais persistentes (3.1 e 3.2) e estatísticas da carreira com gráfico (2.1 e 2.2).** Sensação de história por pouco custo.
+8. **Segurança e lançamento (rápidos, vários são com você):** 2FA no GitHub e na Cloudflare (S.7), verificar o domínio no GitHub (S.5), limite de envios do Worker (S.6), GoatCounter (B.5), e-mail "noreply" nos commits (S.9), subdomínio do Worker, 5 PRs do Dependabot.
+9. **Rotas alternativas (3.11).** Cerca de 9% das carreiras caem em "Fim da linha", o maior beco sem saída.
+10. **Qualidade:** teste automático da interface (F.13), migração de saves (B.7), captura de erros (B.9), teste em aparelhos reais (B.11).
+11. **Revisão dos textos dos eventos (1.3):** você lê `docs/textos-eventos.md` e diz o que mudar.
+12. **Identidade e acabamento:** trocar os contadores GP/Vitórias/Pódios/Poles (R.16), lista de países com bandeira em cada linha, ofertas com estrelas (R.7), tela própria de criação (R.8), fontes hospedadas (R.9), ficha em faixa horizontal (R.17), renomear o repositório (R.10), conferir marca e domínio (R.11, é com você).
+13. **Mais para frente:** modo fictício antes de qualquer monetização (B.14), ranking e compartilhamento com servidor (4.1 e 4.2), tradução (F.18), o nível "100% real" (seção 5).
 
 ### Limites conhecidos
 
@@ -215,6 +220,8 @@ Feedback de quem jogou: na F1 cada corrida é a mesma escolha de três botões (
 | D.11 | Estatísticas separadas por categoria | ✅ Feito (2026-11-07). A ficha mostra a tabela "Por categoria" (temporadas, GP, vitórias, pódios, poles e títulos de kart, F4, F3, F2 e F1), somando o total. Carreiras salvas antes não têm o detalhe da base (só os totais). Testes em `tests/bycat.test.js`. |
 | D.12 | Bandeiras de todos os países na criação (255, nome em português pelo navegador) | ✅ Feito (2026-11-07). As 26 mais usadas ficam embutidas; as outras são arquivos em `flags/` no site (flag-icons, MIT, 1,5 MB, carregados só quando aparecem). Lista em `ui/countries.js`, gerada dos arquivos. Ainda falta nacionalidade para os pilotos do mundo (item D.7). |
 | D.13 | Traçado das pistas no cartão da etapa | ✅ Feito (2026-11-07). Contornos das 24 pistas do projeto bacinger/f1-circuits (MIT; inclui a Madring) convertidos em SVG (`data/trackPaths.js`, 20 KB), com o ponto de largada. Crédito no painel "Sobre". |
+| D.14 | Silly season: o mercado de pilotos como evento do ano (boatos, anúncios, contratos que vencem, quem sai de onde) | Ideia sua, **deixada para outra hora**. Depende de D.8 (mercado inteligente) e de D.7 (nomes e nacionalidade). Esboço: no meio do ano, notícias de quem negocia com quem; o seu contrato entra na história; o resultado do mercado aparece antes da pré-temporada. |
+| D.15 | Efeitos sonoros | Ideia sua, **a decidir**. Sugestão técnica: gerar os sons no próprio navegador (Web Audio, sem baixar arquivos, sem mexer na política de segurança do site e sem peso extra), curtos e discretos: clique, confirmação, abandono, pódio, vitória, título, alerta de evento. Botão de som (mudo por padrão ou lembrando a escolha) e respeito a "reduzir movimento". Sons gravados exigiriam baixar arquivos de licença livre (peço permissão antes) e deixam o site mais pesado. Também é o item 2.8. |
 | D.9 | Realismo do campeão e do grid | ✅ Feito (2026-11-07), ver o parágrafo "Realismo do campeão" abaixo. |
 
 Realismo do campeão (corrigido em 2026-11-07, pedido: "o Colapinto campeão com a Racing Bulls"): medi 150 mundos de 25 anos. Dois problemas: (1) o nível do grid caía com o tempo, porque os novatos gerados eram fracos (campeão com habilidade média 93 nos anos 1–7 e 83 nos anos 15–25, 81% dos campeões tardios abaixo de 85); (2) 55% do carro novo, a cada virada de regulamento, era sorteio puro, e equipes de orçamento baixo (Racing Bulls, Haas, Williams) levavam 11% dos títulos. Ajustes em `engine/config.js` e `data/categories.js`: novatos melhores (potencial 78–92, 15% de estrelas), regulamento com mais peso de orçamento (0,45) e menos sorteio (0,25), peso do carro na F1 de 0,75 para 0,60. Resultado: habilidade média do campeão ≈ 90 em qualquer época, equipes pequenas com 6–8% dos títulos; campeões por era 11,3 (alvo 8–13), dinastia média 4,2. O jogador ficou mais difícil, então o teto de potencial na entrada da F1 subiu de 84 para 88, mantendo ~14% das carreiras passivas com título. Teste de regressão em `tests/realism.test.js`. Limite conhecido: numa das três sementes do balanceamento a maior dinastia chegou a 9 títulos seguidos (alvo < 9).
