@@ -146,16 +146,22 @@ O jogo se chamava Apex e usava preto com amarelo, que é a identidade da equipe 
 | # | Item | Estado |
 |---|---|---|
 | R.1 | Nome Bandeirada e slogan "Da largada à bandeirada" | ✅ Feito. Nome internos antigos (`apex.slot`, `app: 'apex'`) ficaram de propósito, para não apagar saves existentes. |
-| R.2 | Paleta roxo de cronometragem, tema claro e escuro | ✅ Feito. O roxo é a cor da volta mais rápida na telemetria; as cores das equipes aparecem só como dado (faixas e bolinhas). |
+| R.2 | Paleta roxo de cronometragem, tema claro e escuro | ✅ Feito. O roxo é a cor da volta mais rápida na telemetria; as cores das equipes aparecem só como dado (faixas e bolinhas). Em 2026-11-07 ganhou um botão de tema no cabeçalho (Auto, Claro, Escuro; Auto segue o sistema), salvo no navegador. |
 | R.3 | Logotipo (bandeira quadriculada 4x3), favicon e cartão de compartilhamento | ✅ Feito. O cartão `ui/assets/og.jpg` foi refeito com a marca nova. |
 | R.4 | Layout em 3 colunas no desktop (ficha, decisão, painel) e decisão primeiro no celular | ✅ Feito. Conferido a 375 px numa carreira inteira, sem estouro horizontal. |
-| R.5 | Ficha do piloto: nível em destaque, dorsal, bandeira, estilo, idade, fama, equipe, GP, vitórias, pódios, poles, vitrine, contrato e confiança | ✅ Feito. A engine entrega os totais da carreira (`career`). |
-| R.6 | Painel da temporada: abas Classificação e Corrida a corrida, pilotos e construtores, setas de variação | ✅ Feito. |
+| R.5 | Ficha do piloto: habilidade em destaque, dorsal, bandeira, estilo, idade, fama, equipe, GP, vitórias, pódios, poles, sala de troféus, contrato e confiança | ✅ Feito. A engine entrega os totais da carreira (`career`). |
+| R.6 | Painel da temporada: abas Tabela e Etapas, pilotos e construtores, setas de variação | ✅ Feito. As abas se chamavam "Classificação" e "Corrida a corrida" (R.15 trocou). |
 | R.7 | Ofertas com estrelas do carro e etiqueta curta de perfil (texto nosso) | Aberto. Hoje as ofertas têm vantagens e riscos. |
 | R.8 | Tela de criação de piloto própria: número com prévia ao vivo, bandeiras em imagem com busca, estilos com arquétipos | Aberto. Exige baixar bandeiras em SVG (licença livre); aviso antes de baixar. |
 | R.9 | Fontes hospedadas no próprio site (junto com B.6) | Aberto. |
 | R.10 | Renomear o repositório do GitHub para `bandeirada` | Aberto, decisão sua: muda o endereço do Pages e os comandos do README. |
 | R.11 | Conferir marca e domínio (INPI, Registro.br, Google e lojas de apps) | Aberto, é com você: não dá para verificar daqui. |
+| R.12 | Logotipo e favicon com número inválido (`x="10,5"`) | ✅ Feito (2026-11-07). O PowerShell em pt-BR escreveu vírgula decimal e 9 dos 12 quadrados sumiram no ar. Corrigido, com testes de regressão no logotipo, no favicon e no build, e conferido no site publicado. |
+| R.13 | Visual mais vivo: cartões arredondados com filete roxo, faixa quadriculada no topo, gradientes e brilho nos botões, cor por categoria na pirâmide, medalhas no top 3, selos verde e vermelho nas variações, contadores em quadradinhos | ✅ Feito (2026-11-07). Pedido: as primeiras cores ficaram "chapadas". A segunda rodada limpou o excesso (fundo neutro, ficha sem banner pesado) para ficar no espírito de um painel de jogo de gestão, sem copiar. |
+| R.14 | Atributos do piloto em barras na ficha: Habilidade (com a faixa do Potencial marcada), Fama em texto (Desconhecido, Promessa, Conhecido, Famoso, Estrela, Lenda) e Estilo com explicação | ✅ Feito (2026-11-07). Nomes escolhidos por você: **Habilidade** (antes "Nível", o overall) e **Potencial** (antes "Teto estimado"). Os cortes da fama (2, 6, 12, 22, 35) são palpite e podem ser calibrados. |
+| R.15 | Diferenciar do F1 Glory nos detalhes: "Vitrine" virou "Sala de troféus", abas viraram "Tabela" e "Etapas", e o quadrado do overall virou um medidor circular (anel da habilidade e arco fino do potencial) | ✅ Feito (2026-11-07). |
+| R.16 | Trocar os quatro contadores (hoje GP, Vitórias, Pódios, Poles, na mesma ordem do F1 Glory), por exemplo para Largadas, Vitórias, Pódios e Voltas mais rápidas | Aberto. Era a sugestão 2 da diferenciação; ficou de fora por ora. |
+| R.17 | Ficha em faixa horizontal no topo e duas colunas embaixo, em vez de três colunas | **Salvo para depois (ideia 4 da diferenciação).** Muda bastante o layout (R.4); fazer só se o resto não bastar para ter identidade própria. |
 ## Pendências de qualidade (transversais)
 
 - Calibrar com jogo real, não com política passiva: taxa de título (hoje 24% passivo), crescimento do jogador na base, frequência de eventos, frequência de `fia_polemica_titulo` e `contrato_vazado` (nunca dispararam em simulação passiva).

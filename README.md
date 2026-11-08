@@ -30,7 +30,9 @@ engine/    módulos puros, isomórficos (Node + navegador), sem dependências
 data/      ponto de partida do mundo e parâmetros por categoria
 tools/     balance.js: simulação em massa com os critérios de validação
 tests/     node:test, sem dependências
-ui/        por enquanto só um console de debug; a UI real é a próxima fase
+ui/        interface do jogo: app.js (telas), shell.html (CSS e tokens, tema claro/escuro),
+           saves.js (3 slots), feedback.js; o build junta tudo em dist/index.html
+worker/    Worker da Cloudflare que recebe o feedback e envia por e-mail
 ```
 
 ## Rodar
@@ -121,7 +123,7 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
    gh repo create apex --public --source . --push
    ```
 2. No GitHub: Settings > Pages > Source: **GitHub Actions** (só na primeira vez).
-3. O jogo fica em `https://<usuario>.github.io/apex/`. O botão "Enviar pelo GitHub" do formulário de feedback abre uma issue nesse repositório (o workflow define `BANDEIRADA_FEEDBACK_URL`).
+3. O jogo fica em `https://bandeirada.alexarnoni.com` (o endereço antigo `alexarnoni.github.io/apex` redireciona). O feedback do jogo vai pelo Worker (`BANDEIRADA_FEEDBACK_ENDPOINT`) para o e-mail do autor; `BANDEIRADA_FEEDBACK_URL` abre uma issue como alternativa.
 
 Alternativa: Cloudflare Pages com build `npm run build` e pasta de saída `dist`. Para testar o botão de envio localmente: `BANDEIRADA_FEEDBACK_URL=https://github.com/usuario/apex/issues/new npm run build`.
 

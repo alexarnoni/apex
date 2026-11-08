@@ -472,9 +472,8 @@ function attributes(p) {
   const gap = hi - skill;
   const room = gap <= 0 ? 'Você já está no topo da faixa estimada.' : `Falta até ${gap} ponto${gap === 1 ? '' : 's'} para o potencial.`;
   return `<div class="attrs">
-    <div class="attr" title="Sua habilidade hoje. A faixa listrada é o potencial que os olheiros estimam.">
+    <div class="attr" title="Sua habilidade hoje. O arco fino por fora do medidor é o potencial que os olheiros estimam.">
       <div class="attr-head"><span>Habilidade</span><b class="num">${skill}</b></div>
-      <div class="meter lg"><i class="fill skill" style="width:${skill}%"></i><i class="band" style="left:${clamp(lo)}%;width:${clamp(hi) - clamp(lo)}%"></i></div>
       <div class="attr-foot mute small">Potencial: <b class="num">${lo}–${hi}</b>. ${esc(room)}</div>
     </div>
     <div class="attr" title="Sobe com resultados e mídia; abre portas no mercado.">
@@ -486,6 +485,27 @@ function attributes(p) {
       <div class="attr-head"><span>Estilo</span><b>${esc(style?.name ?? p.style)}</b></div>
       <div class="attr-foot mute small">${esc(style?.text ?? '')}</div>
     </div>
+  </div>`;
+}
+
+// Medidor circular: anel de dentro = habilidade; arco fino por fora = faixa do potencial estimado.
+function skillDial(p) {
+  const pct = (n) => Math.max(0, Math.min(100, n)) / 100;
+  const skill = Math.round(p.skill);
+  const [lo, hi] = p.potentialBand;
+  const R1 = 31; const C1 = 2 * Math.PI * R1;
+  const R2 = 40; const C2 = 2 * Math.PI * R2;
+  const f = (n) => n.toFixed(2);
+  return `<div class="dial" title="Habilidade: o quanto você é rápido hoje (0 a 100). O arco fino por fora é o potencial estimado: ${lo} a ${hi}.">
+    <svg viewBox="0 0 96 96" aria-hidden="true">
+      <defs><linearGradient id="dialg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0aa5c9"/><stop offset=".5" stop-color="#7b3fe4"/><stop offset="1" stop-color="#ff3d8b"/></linearGradient></defs>
+      <g transform="rotate(-90 48 48)" fill="none">
+        <circle class="dial-track" cx="48" cy="48" r="${R1}" stroke-width="9"/>
+        <circle cx="48" cy="48" r="${R1}" stroke="url(#dialg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${f(C1 * pct(skill))} ${f(C1)}"/>
+        <circle class="dial-band" cx="48" cy="48" r="${R2}" stroke-width="4" stroke-dasharray="${f(C2 * (pct(hi) - pct(lo)))} ${f(C2)}" stroke-dashoffset="${f(-C2 * pct(lo))}"/>
+      </g>
+    </svg>
+    <div class="dial-num"><b>${esc(skill)}</b><small>habilidade</small></div>
   </div>`;
 }
 
@@ -509,7 +529,7 @@ function ficha(view) {
       <div class="bar-meter"><i style="width:${trustPct}%"></i></div></div>` : '';
   return `<section class="card ficha" aria-label="Ficha do piloto">
     <div class="ficha-top">
-      <div class="ovr" title="Habilidade: o quanto você é rápido hoje (0 a 100)"><b>${esc(Math.round(p.skill))}</b><small>habilidade</small></div>
+      ${skillDial(p)}
       <div class="ficha-id">
         <div class="ficha-name">${esc(p.name)}</div>
         <div class="chips-row"><span class="chip">#${esc(p.number)}</span><span class="chip">${esc(p.flag ?? '')}</span><span class="chip">${esc(STYLES[p.style]?.name ?? p.style)}</span></div>
@@ -519,7 +539,7 @@ function ficha(view) {
     <div class="stats">${stat('Idade', p.age)}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
     ${team}
     <div class="counters">${stat('GP', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Poles', c.poles)}</div>
-    <div class="vitrine"><small class="mute">VITRINE</small> ${trophies.length ? trophies.join(' ') : '<span class="mute small">vazia por enquanto</span>'}</div>
+    <div class="vitrine"><small class="mute">SALA DE TROFÉUS</small> ${trophies.length ? trophies.join(' ') : '<span class="mute small">vazia por enquanto</span>'}</div>
     ${f1Extra}
     <p class="mute small">Potencial é o palpite dos olheiros de até onde você chega.</p>
   </section>`;
@@ -570,7 +590,7 @@ function seasonPanel(view) {
     ? racesList(f1)
     : `<div class="tabs sub" role="tablist">${tabBtn('sttab', 'drivers', 'Pilotos', ui.stTab)}${tabBtn('sttab', 'teams', 'Construtores', ui.stTab)}</div>${ui.stTab === 'teams' ? teamsTable(f1) : driversTable(f1)}`;
   return `<section class="card"><h3>${esc(title)}</h3>
-    <div class="tabs" role="tablist">${tabBtn('tab', 'standings', 'Classificação', ui.tab)}${tabBtn('tab', 'races', 'Corrida a corrida', ui.tab)}</div>${body}</section>`;
+    <div class="tabs" role="tablist">${tabBtn('tab', 'standings', 'Tabela', ui.tab)}${tabBtn('tab', 'races', 'Etapas', ui.tab)}</div>${body}</section>`;
 }
 
 // --- telas ------------------------------------------------------------------
