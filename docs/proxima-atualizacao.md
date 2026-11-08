@@ -12,7 +12,19 @@ Código `36bc86f`, em 2026-11-08. Detalhes e limites em `v0.10.md`. Publicação
 - [x] ~~Validar carreira completa, saves e redução de entradas~~ — **Feito**: 167 testes Node, 18 de navegador e comparação de calibração.
 - [x] ~~Novo piloto acima dos saves e laterais da página inicial~~ — **Feito**; laterais apenas no desktop.
 
-## Candidatos seguintes
+## v0.11 proposta — perfis de pilotos e mercado vivo
+
+A conversa posterior ao lançamento definiu uma dependência antes das rotas alternativas: preservar os pilotos sem vaga e dar valor a competências distintas. Escopo recomendado, ainda não implementado:
+
+- [ ] Separar classificação, ritmo de corrida, consistência, chuva e gestão de pneus; overall como resumo, sem somar carro à habilidade pessoal.
+- [ ] Definir critérios das notas iniciais e curvas de evolução/declínio por dimensão. Experiência não é bônus infinito; idade não reduz tudo igualmente.
+- [ ] Preservar no mercado o piloto substituído pelo jogador, em vez de excluí-lo do mundo.
+- [ ] Avaliar vaga em outra equipe, papel de reserva ou aposentadoria por perfil/desempenho/oportunidade, com notícias coerentes e grid no tamanho correto.
+- [ ] Testar envelhecimento, mercado, determinismo e saves; calibrar o conjunto antes de publicar. Usuário aceita começar save novo para testar, mas não apagar saves silenciosamente.
+
+Rotas alternativas jogáveis vêm depois, usando essa estrutura. Não acrescentar WEC/NASCAR apenas como troca de nomes.
+
+## Outros candidatos seguintes
 
 1. **Rotas alternativas jogáveis:** pedido recente do usuário inclui WEC e NASCAR, além de IndyCar/FE/Super Fórmula; especificar ofertas por desempenho/experiência, adaptação, estatísticas e retorno possível à F1. Não implementado.
 2. **Mercado e silly season:** notícias, perfis de contratação e história dos contratos (D.8/D.14).

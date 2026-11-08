@@ -165,7 +165,7 @@ Alternativa: Cloudflare Pages com build `npm run build` e pasta de saída `dist`
 
 ### Endereço próprio e análise de uso (beta)
 
-> **Feito em 2026-11-07:** CNAME criado, domínio ligado no GitHub Pages, certificado aprovado e HTTPS obrigatório. Os passos 1 a 3 abaixo ficam como registro de como foi feito; falta só a análise de uso (passo 4).
+> **Feito em 2026-11-07:** CNAME criado, domínio ligado no GitHub Pages, certificado aprovado e HTTPS obrigatório. Os passos 1 a 3 abaixo ficam como registro de como foi feito; a análise de uso do passo 4 também foi ativada em 2026-11-08 (código `alexarnoni`).
 
 Endereço escolhido: **https://bandeirada.alexarnoni.com** (o domínio `alexarnoni.com` está na Cloudflare, e o site pessoal não roda no GitHub Pages, por isso um subdomínio e não `/apex`).
 
@@ -181,7 +181,7 @@ Endereço escolhido: **https://bandeirada.alexarnoni.com** (o domínio `alexarno
    gh workflow run "Publicar no GitHub Pages"
    ```
    `BANDEIRADA_SITE_URL` vira o `canonical` e o `og:url`/`og:image` do cartão de compartilhamento.
-4. **Análise de uso (GoatCounter, sem cookies):** crie o site em goatcounter.com, escolha o código (a parte antes de `.goatcounter.com`) e rode `gh variable set BANDEIRADA_GOATCOUNTER --body <codigo>` e o `gh workflow run` acima. Sem a variável, nenhuma análise é carregada. Marcos enviados: `carreira-iniciada`, `chegou-na-f1`, `carreira-terminada-*`, `fim-da-linha-na-base`, `ajuda-aberta`, `feedback-aberto`, `save-exportado`. Nunca vão nome, seed ou dados da carreira.
+4. **Análise de uso (GoatCounter, sem cookies):** ativo com código `alexarnoni` desde 2026-11-08; painel em https://alexarnoni.goatcounter.com. Para refazer em outra conta, crie o site em goatcounter.com, escolha o código (a parte antes de `.goatcounter.com`) e rode `gh variable set BANDEIRADA_GOATCOUNTER --body <codigo>` e o `gh workflow run` acima. Sem a variável, nenhuma análise é carregada. Marcos enviados: `carreira-iniciada`, `chegou-na-f1`, `carreira-terminada-*`, `fim-da-linha-na-base`, `ajuda-aberta`, `feedback-aberto`, `save-exportado`. Nunca vão nome, seed ou dados da carreira.
 5. Para testar localmente: `BANDEIRADA_SITE_URL=https://bandeirada.alexarnoni.com BANDEIRADA_GOATCOUNTER=codigo npm run build`.
 
 **Feedback por e-mail:** o botão flutuante "Feedback" e o cartão de fim de carreira enviam para um Worker da Cloudflare (`worker/`), que manda um e-mail para a caixa do autor sem exigir conta do jogador. Publicado e ligado ao jogo (passo a passo para refazer em [worker/README.md](worker/README.md)); o endereço do Worker entra como `BANDEIRADA_FEEDBACK_ENDPOINT`. Sem ele, o jogo só oferece "Copiar".

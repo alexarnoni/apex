@@ -4,8 +4,8 @@ Atualizado em **2026-11-08**, pacote v0.10.0.
 
 ## Estado verificável
 
-- Código v0.10: **`36bc86f`**; documentação no commit seguinte. Repositório `alexarnoni/apex`. Conferir `git log`, branch e pipeline antes de afirmar publicação atual.
-- Site: https://bandeirada.alexarnoni.com. Push na main publica pelo Pages. O usuário autorizou integrar/publicar este pacote ao concluir testes; acompanhar workflow da integração.
+- v0.10 publicada: código **`36bc86f`**, integração **`651f1ef`** na main; repositório `alexarnoni/apex`. Git limpo ao conferir a publicação, antes destas notas de acompanhamento.
+- Site: https://bandeirada.alexarnoni.com. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42524571094); HTTP 200, beta 0.10.0, fluxo contextual, página inicial e hashes CSP conferidos.
 - **167 testes Node e 18 testes Playwright aprovados**, incluindo carreira inteira por cliques em desktop/375 px; build e capturas conferidos.
 - Comparação 120 sementes/cenário com `007b831`: agregados da política antiga iguais; equipe a 22% com título contra 17% antigo, notrain 4,3% contra 5,2%. Denominador só quem chegou à F1; incerteza relevante. Detalhes em `calibracao.md`.
 - Ritmo pareado: 27 temporadas, 648 etapas, 2528 → 994 entradas (−60,7%) com mesmos resultados; não é medida de diversão humana.
@@ -18,11 +18,21 @@ Atualizado em **2026-11-08**, pacote v0.10.0.
 - EngineVersion continua 1; campos aditivos. Saves antigos recebem fallback equilibrado e meta ao preparar a próxima corrida. Chaves Apex preservadas.
 - Organização de contexto enxuto já commitada em `5d8abe9`; global/índice pessoais fora do Git.
 
-## Próximos candidatos (a definir na conversa)
+## Acompanhamento de acessos
 
-Pedido recente: rotas alternativas **WEC, NASCAR, IndyCar, Fórmula E e Super Fórmula**, com ofertas por perfil/desempenho/experiência e possível retorno à F1. Registrado no roadmap, **não implementado**.
+**B.5 ativado em 2026-11-08.** Usuário forneceu código `alexarnoni`; variável `BANDEIRADA_GOATCOUNTER` configurada no GitHub. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42524872452); script, endpoint, marcos e CSP conferidos no site. Painel: https://alexarnoni.goatcounter.com. Recebimento de visitas no painel não foi inspecionado. Sem histórico retroativo pelo contador; notas incluídas no lote de documentação desta publicação.
 
-Também pendentes: mercado/silly season, base dinâmica/metas, sons e corrida por fases (treino/boxes/safety car). Não iniciar todos; `proxima-atualizacao.md` lista os pacotes.
+## Ajuste local dos botões
+
+Ação principal agora é **Avançar até próxima decisão** (roxo, primeiro); secundária **Acompanhar próxima corrida**. Só ordem, estilo e rótulos mudaram; lógica preservada. Na jornada lateral, F1 agora diz **O ápice do automobilismo**, a pedido do usuário. Build aprovado; ajustes incluídos no lote de publicação autorizado desta etapa, a conferir no workflow do commit.
+
+## Próxima atualização proposta: v0.11
+
+**Perfis de pilotos e mercado vivo**, antes das rotas jogáveis: atributos separados (classificação, corrida, consistência, chuva e pneus), evolução/declínio por dimensão, valor da experiência conforme necessidade da equipe e preservação dos pilotos que perdem assento.
+
+Pedido: veteranos não devem piorar em tudo nem desaparecer. Ao jogador substituir Hamilton na Ferrari, manter Hamilton como piloto sem vaga, com possibilidade de outra equipe, reserva ou aposentadoria contextual. Não recuperar retroativamente pilotos apagados sem dados suficientes. O usuário pode testar com save novo.
+
+Depois dessa base, rotas alternativas WEC/NASCAR/IndyCar/FE/Super Fórmula. Ambas as frentes estão **planejadas, não implementadas**. Não começar tudo ao mesmo tempo.
 
 ## Limites
 

@@ -680,7 +680,7 @@ function screenCreate() {
   </div>
   <aside class="card home-aside home-journey" aria-label="Sua jornada no automobilismo">
     <p class="home-kicker">Sua jornada</p><h2>Uma vaga por mérito</h2>
-    <ol class="career-route"><li><b>Kart</b><span>Aprenda e seja notado</span></li><li><b>F4</b><span>Mostre seu potencial</span></li><li><b>F3</b><span>Conquiste uma academia</span></li><li><b>F2</b><span>Dispute uma vaga</span></li><li><b>F1</b><span>Construa seu legado</span></li></ol>
+    <ol class="career-route"><li><b>Kart</b><span>Aprenda e seja notado</span></li><li><b>F4</b><span>Mostre seu potencial</span></li><li><b>F3</b><span>Conquiste uma academia</span></li><li><b>F2</b><span>Dispute uma vaga</span></li><li><b>F1</b><span>O ápice do automobilismo</span></li></ol>
     <p class="mute small">Subir depende de propostas. Sua trajetória e o carro que você recebe fazem diferença.</p>
   </aside>
   <aside class="card home-aside home-guide" aria-label="Como começar">
@@ -887,7 +887,7 @@ function screenF1(view) {
       body = `${circuitCard(pd.payload.circuit)}<section class="card focus"><h2>${pd.payload.out ? 'Acompanhar do box' : 'Plano do fim de semana'}</h2>
         ${planControl(f1, 'race-plan')}
         <p class="mute">A equipe segue este plano nas próximas etapas. Você decide quando houver uma disputa relevante; pode mudar o plano antes de qualquer corrida.</p>
-        <div class="row"><button class="btn" data-act="simnext">Disputar próxima corrida</button><button class="btn ghost" data-act="simimportant">Avançar até decisão importante</button></div>
+        <div class="row"><button class="btn" data-act="simimportant">Avançar até próxima decisão</button><button class="btn ghost" data-act="simnext">Acompanhar próxima corrida</button></div>
         <details><summary>Controles de acompanhamento</summary>
         <div class="row"><button class="btn ghost small" data-act="sim5">Simular 5 corridas</button><button class="btn ghost small" data-act="simrest">Simular o resto da temporada</button></div>
         <label class="row"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho situações sem escolha</label>
