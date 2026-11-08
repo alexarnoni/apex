@@ -8,7 +8,12 @@
     "balance": "node tools/balance.js",
     "build": "node tools/build-ui.js",
     "events": "node tools/export-events.js",
-    "dev": "node tools/build-ui.js && npx serve dist"
+    "dev": "node tools/build-ui.js && npx serve dist",
+    "serve": "node tools/serve.mjs",
+    "calibrate:player": "node tools/calibrate/player.js",
+    "calibrate:champions": "node tools/calibrate/champions.js",
+    "calibrate:veterans": "node tools/calibrate/veterans.js",
+    "calibrate:age": "node tools/calibrate/start-age.js"
   },
   "license": "UNLICENSED",
   "devDependencies": {

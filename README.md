@@ -51,6 +51,10 @@ npm run dev       # serve ui/ e prova a engine no navegador
 - Campeões gerados (✦) dominam a segunda metade da era
 - Jogador médio no 1º ano de kart fica no meio da tabela; título de cara é possível, não comum
 
+## Calibração e ferramentas de medição
+
+Quem for mexer nos números do jogo deve ler [`docs/calibracao.md`](docs/calibracao.md): como rodar as ferramentas de `tools/calibrate/` (`npm run calibrate:player`, `calibrate:champions`, `calibrate:veterans`, `calibrate:age`), as metas atuais, as decisões tomadas e as armadilhas (ruído estatístico, comparar as duas pontas, ablação).
+
 ## Versões do jogo
 
 O histórico de versões (o que cada marco trouxe, compatibilidade de saves e onde está cada documento) fica em [`docs/versoes.md`](docs/versoes.md). O que falta, por ordem de importância, fica em [`docs/roadmap-ideias.md`](docs/roadmap-ideias.md).

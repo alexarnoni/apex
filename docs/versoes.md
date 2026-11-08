@@ -162,5 +162,6 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 | `docs/textos-eventos.md` | Os 28 textos de eventos para revisão (gerado por `npm run events`). |
 | `SECURITY.md` | Como relatar uma vulnerabilidade e o que há para proteger. |
 | `worker/README.md` | Como publicar e configurar o Worker de feedback. |
+| `docs/calibracao.md` | Como medir e calibrar os números do jogo (ferramentas em `tools/calibrate/`), metas, decisões e armadilhas. |
 
 Os documentos originais continuam onde estavam; este arquivo só resume e aponta para eles.
