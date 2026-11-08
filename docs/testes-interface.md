@@ -34,7 +34,7 @@ Configuração: `playwright.config.js`. Cenários: `tests/ui/career.spec.js`.
 
 Capturas de largada/defesa ficam em `test-results/`; falhas também geram captura e trace. `test-results/` e `playwright-report/` são ignorados pelo Git. Para investigar um trace, use `npx playwright show-trace caminho/trace.zip`.
 
-Os workflows de PR e de publicação foram configurados para instalar o Chromium e executar a suite antes de publicar. A configuração foi validada localmente; ainda precisa executar no GitHub após commit/push.
+Os workflows de PR e de publicação foram configurados para instalar o Chromium e executar a suite antes de publicar. A suite passou localmente e no [deploy do commit `007b831`](https://github.com/alexarnoni/apex/actions/runs/42520319063). O workflow de PR também está configurado; esta confirmação é do pipeline de publicação.
 
 ## O que falta
 

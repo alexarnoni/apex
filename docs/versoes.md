@@ -140,15 +140,15 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 
 ## Compatibilidade de saves
 
-### Alteração local após v0.9.2 (ainda não publicada)
+### Alterações após v0.9.2 (publicadas em `007b831`)
 
 - **2026-11-08 — D.2.a:** final de corrida com defesa contra o perseguidor. Disputar pode preservar a posição ou custar até duas por erro; ceder perde uma sem disputa. Prioridade de defesa depende do ritmo relativo; companheiros e abandonos não são selecionados como perseguidores elegíveis.
 - A simulação automática escolhe ceder quando há decisão de defesa. As medições históricas de dificuldade não foram refeitas para esse comportamento.
 - Decisões antigas sem `mode` continuam sendo de ataque; `ENGINE_VERSION` permanece 1.
 - **2026-11-08 — D.2.b:** nova decisão `race_start` após a estratégia: atacar na primeira curva ou largar com margem. O ataque pode render uma posição, custar uma ou causar contato; chuva e pista de rua aumentam risco. Na pole há apenas a opção com margem. Abandono na largada tem causa específica e encerra o relato ali. Simulação e políticas de calibração usam `hold`.
-- Verificado após ambos os incrementos: **158 testes e build local**. Sem novo número de release, commit, push ou deploy nesta etapa. As novas decisões são aditivas; saves em eventos posteriores continuam do ponto salvo.
+- Verificado após ambos os incrementos: **158 testes e build local**. Sem novo número oficial de release. Commit/push `007b831` e [deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42520319063). As novas decisões são aditivas; saves em eventos posteriores continuam do ponto salvo.
 
-- **Validação da interface (2026-11-08):** adicionada suite Playwright com 10 testes de desktop/celular passando, CI configurado, aviso acessível de importação e faixa de feedback no celular para evitar cobrir escolhas. Guia em `testes-interface.md`. Ainda não publicado.
+- **Validação da interface (2026-11-08):** adicionada suite Playwright com 10 testes de desktop/celular passando, CI configurado, aviso acessível de importação e faixa de feedback no celular para evitar cobrir escolhas. Guia em `testes-interface.md`. Publicado em `007b831`.
 
 ### Formato e dados antigos
 
@@ -164,6 +164,8 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 
 | Documento | O que contém |
 |---|---|
+| `docs/DECISIONS.md` | Decisões estáveis e armadilhas. |
+| `docs/contexto-agentes.md` | Rotina enxuta e contexto global/projeto. |
 | `AGENTS.md` | Instruções curtas para agentes. |
 | `docs/INDEX.md` | Entrada e mapa dos documentos. |
 | `docs/HANDOFF.md` | Estado confirmado, limites e próximo trabalho. |

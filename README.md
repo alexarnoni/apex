@@ -4,7 +4,7 @@ Jogo de carreira de Fórmula 1 no navegador, inspirado no F1 Glory: da largada �
 
 ## Retomar o projeto
 
-Leia [`docs/INDEX.md`](docs/INDEX.md) para encontrar os documentos e [`docs/HANDOFF.md`](docs/HANDOFF.md) para o estado confirmado e o próximo trabalho. Regras para agentes em [`AGENTS.md`](AGENTS.md).
+Leia [`docs/INDEX.md`](docs/INDEX.md) para encontrar os documentos e [`docs/HANDOFF.md`](docs/HANDOFF.md) para o estado confirmado e o próximo trabalho. Regras para agentes em [`AGENTS.md`](AGENTS.md). Consulte somente as referências necessárias. Decisões estáveis: [`docs/DECISIONS.md`](docs/DECISIONS.md); organização global/projeto: [`docs/contexto-agentes.md`](docs/contexto-agentes.md).
 
 ## Decisões de design vigentes
 
@@ -77,9 +77,9 @@ Engine, loop de carreira, UI pública, eventos, saves e feedback já estão impl
 
 Próximos passos, conforme `docs/roadmap-ideias.md`: (1) completar o dinamismo e a narrativa da F1; (2) mercado/silly season; (3) mini calendário da base e metas; (4) sons. Ranking e compartilhamento com backend ficam para depois. O site atual usa **GitHub Pages**, com um Worker separado para feedback.
 
-## Alteração local após v0.9.2
+## Alterações publicadas após v0.9.2 (`007b831`)
 
-**D.2.a — defesa no final da corrida:** implementada e testada em 2026-11-08, ainda não publicada. O jogador pode disputar com o perseguidor ou ceder a posição; ritmo relativo afeta a defesa e o relato registra o resultado antes dos pontos. A decisão de **largada (D.2.b)** também está implementada localmente: atacar na primeira curva ou largar com margem, com risco influenciado por chuva e pista de rua. Verificações atuais: **158 testes e build aprovados**. Métricas históricas de calibração não foram refeitas após essa alteração.
+**D.2.a — defesa no final da corrida:** implementada, testada e publicada em 2026-11-08. O jogador pode disputar com o perseguidor ou ceder a posição; ritmo relativo afeta a defesa e o relato registra o resultado antes dos pontos. A decisão de **largada (D.2.b)** também foi publicada: atacar na primeira curva ou largar com margem, com risco influenciado por chuva e pista de rua. Verificações atuais: **158 testes e build aprovados**. Métricas históricas de calibração não foram refeitas após essa alteração.
 
 ## Diário de balanceamento
 

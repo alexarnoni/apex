@@ -1,57 +1,37 @@
-# Retomada do Bandeirada
+# Retomada — Bandeirada
 
-Atualizado em **2026-11-08**, após defesa final, decisão de largada e validação da interface em navegador isolado.
+Atualizado em **2026-11-08**. Leia este arquivo e o índice; abra outras referências conforme a tarefa.
 
-## Estado confirmado localmente
+## Estado confirmado
 
-- Repositório: `alexarnoni/apex`. Site configurado: https://bandeirada.alexarnoni.com.
-- Base de código desta revisão: commit `f0d1f05`; marco de funcionalidades **v0.9.2** (`659b46a`). Esses marcos não são releases oficiais nem a versão do save.
-- `ENGINE_VERSION = 1`; `package.json` ainda usa nome interno `apex` e versão `0.1.0`.
-- Engine pura no cliente, UI empacotada por esbuild, três slots em localStorage e export/import JSON. Chaves internas Apex preservadas por compatibilidade.
-- Verificação local: **158 testes Node e 10 testes de navegador passaram**; build aprovado. Capturas de desktop e celular inspecionadas. Produção e calibração estatística completa não foram reconferidas.
-- Novos recursos locais: **D.2.a, defesa no final de corrida**, e **D.2.b, decisão de largada**, implementados e testados. Não houve commit, push ou publicação nesta etapa.
+- Publicado: **`007b831`**, após o marco v0.9.2. Repositório `alexarnoni/apex`, branch `main`.
+- Site: https://bandeirada.alexarnoni.com. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42520319063); HTTP 200 e hashes CSP conferidos.
+- **158 testes Node + 10 testes Playwright passaram localmente e no pipeline**; build aprovado. Calibração completa não refeita após largada/defesa.
+- Entregue: defesa final (D.2.a), largada (D.2.b), UI desktop/375 px, feedback sem cobrir decisões no celular e aviso acessível de importação.
+- `ENGINE_VERSION = 1`; pacote interno ainda `0.1.0`. Sem ranking online; Worker de feedback separado.
 
-## O que já funciona
+## Trabalho desta etapa
 
-- Base resumida, equipes reais, ofertas, academias simplificadas e idade inicial/nacionalidade selecionáveis.
-- F1 com abordagem, grid/estratégia de pneus, decisão de largada, eventos, ordens de equipe, ataque ou defesa no final e relato; contratos, mercado anual, aposentadoria e legado.
-- Pistas, traçados, bandeiras, estatísticas por categoria, tema claro/escuro, saves, desfazer e simulação automática com escolhas seguras.
-- Talento de berço e treino sem corte fixo de potencial na entrada da F1. Média atual do talento: **84,5**.
-- Perfis de equipe: pressão e desenvolvimento conforme força do carro; bônus de ponta condicionado ao desempenho esperado.
-- Feedback por Worker e proteção CSP no site. Configurações externas e segredos precisam existir nos respectivos serviços; não estão no Git.
-- Ferramentas portáveis em `tools/calibrate/`, documentadas em `calibracao.md`.
-- Suite Playwright em `tests/ui/`, executada por `npm run test:ui`; detalhes em `testes-interface.md`. CI de PR/publicação configurado, ainda sem execução remota desta alteração.
-- Aviso de importação ganhou `role="status"`. No celular, a área rolável termina antes da faixa de feedback; o botão continua visível e não cobre opções. Retorno ao topo ajustado para esse contêiner.
+- Adotado contexto enxuto: global → índice mestre → índice do projeto → handoff.
+- Globais criados: `C:/Users/alexc/.codex/AGENTS.md` e `INDEX.md` (fora do Git). Somente Bandeirada cadastrado.
+- Projeto: leitura seletiva no `AGENTS.md`, mapa em `INDEX.md`, decisões estáveis em `DECISIONS.md`, rotina em `contexto-agentes.md`.
+- Organização documental e plano do próximo pacote preparados para commit nesta etapa; consulte `git log` para o hash. Nenhuma alteração de gameplay ou novos testes nesta etapa. Sem push documental separado.
 
-## Próximo trabalho, conforme o roadmap
+## Próximo trabalho
 
-1. **D.2/D.4: dinamismo da F1.** Defesa final e largada já entraram localmente (D.2.a/D.2.b); faltam treino livre, paradas próprias e acontecimentos coletivos. Ritmo por volta é uma reescrita maior, não pré-requisito a impor automaticamente a toda melhoria pequena.
-2. **D.8/D.14: mercado e silly season.** Lealdade/renovação/notícias anuais existem; rumores, perfis de contratação e história do contrato ainda não.
-3. **D.3/D.5: mini calendário na base e metas.** Hoje a base continua uma decisão por temporada.
-4. **D.15: sons.** Ainda não implementados.
+**Pacote v0.10: fim de semana mais vivo**, planejado em `proxima-atualizacao.md`: treino livre, boxes por fases, safety car coletivo, relato e validação. Ainda não implementado. Começar pelo contrato de fases e treino livre.
 
-O usuário pediu atualizar a documentação e em seguida começar pelo próximo item. Foi iniciada a prioridade D.2, com duas fatias concluídas: defesa e largada. O próximo incremento sugerido é treino livre antes da classificação. A sugestão anterior de começar pela base não substituiu a ordem registrada no roadmap.
+O usuário quer pacotes maiores publicados ao final: trabalhar em branch `codex/`, commits internos menores e um push de integração quando o conjunto estiver pronto e validado. A pergunta desta etapa foi sobre a abordagem; nenhum desenvolvimento do pacote foi iniciado.
 
-## Cuidados e pendências
+Prioridades seguintes: mercado/silly season → mini calendário da base/metas → sons. A base continua uma decisão por temporada.
 
-- Resultados ainda são simulados de uma vez; estratégia/final reordenam posições antes dos pontos. Não descrever como simulação por volta.
-- Na defesa, ceder perde uma posição; defender pode manter, perder uma ou perder até duas por erro, conforme o ritmo. A simulação automática cede nessa situação. Isso muda resultados da política automática; as porcentagens históricas de títulos não foram revalidadas para esta alteração. Ataque antigo sem campo `mode` continua compatível.
-- A largada `race_start` usa `hold` na simulação: não altera a ordem bruta nem consome RNG na escolha. Atacar pode causar contato; esse abandono não oferece eventos posteriores ao jogador. O relato agora usa a decisão em vez da posição de primeira volta inventada; o consumo global do RNG muda, então não presumir resultados iguais aos de versões anteriores. Saves já em etapas posteriores seguem dali, sem repetir a largada.
-- Rotas alternativas continuam terminais. Existe corte de progressão de jogo por idade típica + margem na base, além da regra de temporadas de F2 sem oferta; isso não é idade máxima regulamentar.
-- Idade mínima de F2 em 17 é convenção de jogo; não tratar como regra oficial validada.
-- Percentual de títulos nas ferramentas é calculado **entre carreiras que chegaram à F1**, não entre todas as tentativas. Medições de políticas fixas não comprovam realismo nem descrevem todos os jogadores.
-- Save de formato incompatível não é carregado/importado; não há migração automática. Dados antigos de decisões e pilotos podem permanecer antigos.
-- Texto dos eventos aguarda revisão do usuário (1.3). Segurança externa, métricas de uso e testes em aparelhos reais têm pendências no roadmap; reconfirmar o estado das plataformas antes de afirmá-lo.
-- Para replay confiável futuro, a versão do formato de save não basta: será necessário identificar também a versão do código/regras.
+## Limites
 
-## Conferência rápida ao retomar
+- Corrida ainda simulada de uma vez; decisões alteram o resultado antes dos pontos. Não há modelo por volta.
+- Automático cede na defesa e usa `hold` na largada; métricas antigas de títulos não validam essa versão.
+- Chromium com viewport móvel não substitui aparelhos reais; carreira inteira pela UI continua pendente.
+- Sem migração de saves; rotas alternativas terminais. Regras e armadilhas: `DECISIONS.md`.
 
-```bash
-git status --short
-git log -5 --oneline
-npm test
-npm run build
-npm run test:ui
-```
+## Retomar
 
-Rode testes/build quando for iniciar alterações de código; para revisão exclusivamente textual, confira referências e o diff. Push na `main` dispara Pages. Registre o resultado real de cada verificação, sem assumir deploy concluído apenas por ter enviado o commit.
+Confira `git status --short` e `git log -3 --oneline`. Não repita testes só para confirmar este documento. Para a próxima mudança, consulte comandos em `testes-interface.md`, medições em `calibracao.md` e prioridades no início de `roadmap-ideias.md`.

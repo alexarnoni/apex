@@ -4,14 +4,15 @@ Entrada para retomar o Bandeirada com outro agente ou em outro computador.
 
 ## Leitura inicial
 
-1. [`../AGENTS.md`](../AGENTS.md): regras curtas de trabalho.
-2. [`HANDOFF.md`](HANDOFF.md): estado confirmado e próximo trabalho.
-3. [`roadmap-ideias.md`](roadmap-ideias.md): prioridades, tarefas e limitações.
+Após o [`AGENTS.md`](../AGENTS.md), leia somente [`HANDOFF.md`](HANDOFF.md) para retomar. Use as referências conforme a tarefa; não carregue todos os documentos.
 
 ## Referências
 
 | Documento | Uso |
 |---|---|
+| [`proxima-atualizacao.md`](proxima-atualizacao.md) | Escopo e critérios do próximo pacote, ainda planejado. |
+| [`DECISIONS.md`](DECISIONS.md) | Decisões estáveis e erros a evitar. |
+| [`contexto-agentes.md`](contexto-agentes.md) | Organização global/projeto e transferência entre agentes. |
 | [`../README.md`](../README.md) | Arquitetura, comandos, publicação e diário histórico. |
 | [`versoes.md`](versoes.md) | Marcos de implementação e compatibilidade de saves. |
 | [`calibracao.md`](calibracao.md) | Ferramentas, políticas, métricas e decisões de balanceamento. |
