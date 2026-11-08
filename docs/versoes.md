@@ -2,7 +2,7 @@
 
 Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele reúne o que estava espalhado nos outros `.md` do projeto (README, roadmap, specs, segurança e Worker) e no histórico do git.
 
-**Sobre a numeração.** O jogo ainda não tinha versões numeradas. Os números abaixo (v0.1 a v0.9.1) são marcos que agrupam os commits por assunto, escolhidos na hora de escrever este documento. Eles **não** são a `ENGINE_VERSION` (que é o formato do save e continua em 1; ver "Compatibilidade de saves"). Quando houver uma versão pública de verdade, a numeração oficial começa daqui.
+**Sobre a numeração.** O jogo ainda não tinha versões numeradas. Os números abaixo (v0.1 a v0.9.2) são marcos que agrupam os commits por assunto, escolhidos na hora de escrever este documento. Eles **não** são a `ENGINE_VERSION` (que é o formato do save e continua em 1; ver "Compatibilidade de saves"). Quando houver uma versão pública de verdade, a numeração oficial começa daqui.
 
 **Endereço:** https://bandeirada.alexarnoni.com · **Repositório:** `alexarnoni/apex` · **Deploy:** automático a cada push na `main` (GitHub Pages).
 
@@ -22,6 +22,7 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 | v0.8 | Criação e ficha: idade, nacionalidade, estatísticas por categoria, traçado das pistas | 2026-11-07/08 | sim |
 | v0.9 | Corrida em momentos, declínio previsível, veteranos, nomes por país e mercado | 2026-11-08 | sim (commit `4b9add0`) |
 | v0.9.1 | Talento de berço e dedicação no lugar do corte de potencial | 2026-11-08 | sim (commit `f35795c`) |
+| v0.9.2 | Perfil da equipe nas ofertas: pressão x desenvolvimento | 2026-11-08 | **não (em preparo)** |
 
 ---
 
@@ -128,12 +129,20 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 
 ---
 
+### v0.9.2: perfil da equipe nas ofertas *(em preparo, ainda não publicada)*
+
+- As ofertas de subida e de contrato mostram o **perfil da equipe**: ponta (muita pressão, desenvolve rápido se você for bem), meio (pouca pressão, desenvolvimento normal) e fundo (sem pressão, desenvolvimento lento, mais visibilidade a quem se destaca num carro fraco).
+- **Pressão:** só cobrança; ficar abaixo do esperado para o carro custa nota de scouting na base e confiança na F1.
+- **Desenvolvimento:** acelera ou freia o crescimento de habilidade e o ganho de teto por treino (nunca o declínio).
+- Para manter a taxa de títulos, a média do talento de berço baixou de 85,5 para 84,5. Medido (400 carreiras): nunca treina 5% de títulos, política mista 20%.
+
 ## Compatibilidade de saves
 
 - `ENGINE_VERSION` está em **1** desde o início; um save de outra versão é descartado com aviso. Nada mudou esse número até agora, porque as mudanças foram aditivas.
 - Carreiras salvas antes de cada versão continuam abrindo, com estas diferenças:
   - **v0.7 e v0.8:** a decisão pendente guarda o texto e o cartão da pista daquela época (textos antigos, bandeira em emoji, que a tela converte em imagem); a tabela "Por categoria" só tem os totais da base.
   - **v0.7:** um evento de corrida já pendente não tem a opção cautelosa (`safe`), então a simulação para nele uma vez.
+  - **v0.9.2:** carreiras salvas ganham o perfil na próxima troca de temporada ou de equipe; as ofertas que já estavam na tela (decisão pendente) não mostram o perfil.
   - **v0.9.1:** o potencial já salvo do jogador continua o antigo (que era cortado em 87 na F1) e só sobe com o treino daqui para frente; carreiras novas nascem com o talento sorteado.
   - **v0.9:** pilotos já gerados mantêm os nomes antigos ("Almeida II") e sem nacionalidade; os novos seguem o formato "I. Sobrenome". O declínio do seu piloto passa a valer no próximo envelhecimento.
 

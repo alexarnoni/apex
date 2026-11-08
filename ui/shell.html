@@ -293,6 +293,18 @@ h2::before { display: none; }
 .select-flag { position: relative; display: block; }
 .select-flag .flag-preview { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); line-height: 0; pointer-events: none; }
 .select-flag select { padding-left: 52px; }
+/* Perfil da equipe nas ofertas: pressão x desenvolvimento */
+.opt[data-tier="ponta"] { --oc: var(--pink); }
+.opt[data-tier="meio"] { --oc: var(--cyan); }
+.opt[data-tier="fundo"] { --oc: var(--lime); }
+.profile { display: flex; flex-direction: column; gap: 3px; margin-top: 2px; }
+.profile-label { font-family: var(--f-display); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 15px; color: var(--oc, var(--signal-text)); }
+.profile-row { display: flex; align-items: baseline; gap: 8px; font-size: 13px; color: var(--mute); }
+.profile-row > span:first-child { min-width: 7.6em; }
+.profile-row b { color: var(--fg); font-weight: 600; }
+.pips { font-size: 11px; letter-spacing: 2px; color: var(--oc, var(--signal)); }
+.profile-text { color: var(--fg); font-size: 14px; line-height: 1.35; }
+.opt .why { font-size: 13px; }
 .story { margin: 4px 0 0; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .story li { border-left: 3px solid var(--signal); padding-left: 10px; }
 .story li b { font-family: var(--f-display); text-transform: uppercase; letter-spacing: .04em; margin-right: 4px; }

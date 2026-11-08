@@ -6,6 +6,7 @@ import { CONFIG } from './config.js';
 import { runSeason } from './season.js';
 import { scoutingScore, scoutingBreakdown, offerTier } from './market.js';
 import { makeRookie } from './drivers.js';
+import { tierOf, scoutPressure } from './profile.js';
 import { BASE_TEAMS } from '../data/baseTeams.js';
 
 // Gera o grid NPC de uma categoria de base, incluindo os rivais persistentes.
@@ -78,7 +79,7 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
   const grid = makeBaseGrid(category, rng, names, persistentRivals);
   const drivers = [player, ...grid];
   const teamId = playerTeamId ?? pickTeamByTier(category.id, playerCarTier, rng).id;
-  const { carRank, team } = assignBaseTeams(drivers, player, category, rng, teamId);
+  const { carRank, team, teams } = assignBaseTeams(drivers, player, category, rng, teamId);
   player.teamCar += carBonus;
   player.perfBonus = perfBonus;
 
@@ -86,6 +87,8 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
   player.perfBonus = 0;
   const pos = result.standings.indexOf(player) + 1;
 
+  // Perfil da equipe: a cobrança (pressão) mexe na nota e o carro fraco dá mais visibilidade a quem se destaca.
+  const tier = tierOf(carRank, teams.length);
   const scoutingArgs = {
     championshipPos: pos,
     gridSize: drivers.length,
@@ -94,6 +97,8 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
     typicalMaxAge: category.typicalAge[1],
     hasAcademy,
     fame: (player.fame ?? 0) + scoutingBonus,
+    pressure: scoutPressure(tier, carRank, pos),
+    exposure: CONFIG.teamProfile[tier].exposure,
   };
   const score = scoutingScore(scoutingArgs);
 
@@ -108,6 +113,7 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
     teamName: team.name,
     scouting: score,
     scoutingParts: scoutingBreakdown(scoutingArgs),
+    tier,
     offer: offerTier(score),
     carRank,
   };

@@ -37,6 +37,24 @@ export const CONFIG = {
     finale: { chance: 0.5, pGood: 0.30, pBad: 0.30, perFit: 0.12, fitScale: 4, maxFit: 1.5 },
   },
 
+  // Perfil da equipe (base e F1): cada perfil troca pressão por desenvolvimento (engine/profile.js).
+  //   ponta: muita pressão, mas quem vai bem evolui rápido. meio: pouca pressão, desenvolvimento médio.
+  //   fundo: nenhuma pressão, desenvolvimento mais lento; em troca, quem se destaca num carro fraco chama mais atenção (exposure).
+  // pressure multiplica as penalidades por ficar abaixo do esperado para o carro (nota de scouting na base, confiança na F1);
+  // development multiplica o crescimento de habilidade e o ganho de teto por treino.
+  teamProfile: {
+    ponta: { label: 'Equipe de ponta', pressure: 1.0, development: 1.15, exposure: 1.0 },   // o bônus só vale se você corresponder ao esperado (effectiveDev)
+    meio:  { label: 'Meio do pelotão', pressure: 0.5, development: 1.0, exposure: 1.0 },
+    fundo: { label: 'Fundo do grid', pressure: 0.0, development: 0.85, exposure: 1.4 },
+    seatsPerTeam: 2,            // esperado = 2 x posição do carro + expectedOffset (cada equipe tem 2 pilotos)
+    expectedOffset: 1,
+    scoutPerPosOver: 0,         // base: sem bônus por superar o esperado (o prêmio de ir bem é evoluir mais rápido; com 0,25 a política mista subia de 20% para 27% de carreiras com título)
+    scoutPerPosUnder: 0.5,      // base: nota a menos por posição abaixo do esperado (x pressão)
+    scoutCap: 4,                // limite do ajuste de pressão na nota (em pontos)
+    trustPerPosUnder: -1.0,     // F1: confiança por posição abaixo do esperado no fim do ano (x pressão)
+    trustCap: 6,                // limite de posições contadas
+  },
+
   // Estilos de pilotagem: mexem em média E variância
   styles: {
     agg: { qualiBonus: 2, noiseDelta: 1.5, dnfDelta: 0.04, label: 'Agressivo' },
@@ -186,7 +204,7 @@ export const CONFIG = {
   // Talento do jogador (2026-11-08): potencial de berço sorteado numa curva em sino (a maioria é bom, poucos são geracionais)
   // mais um pequeno bônus por começar cedo; a dedicação eleva o teto: cada escolha de treino soma trainGain ao potencial,
   // com rendimento decrescente (quanto mais alto o potencial, menos cada treino rende: trainFrom e trainSlope).
-  talent: { mean: 85.5, sd: 4.5, min: 74, max: 100, youthPerYear: 1.0, trainGain: 0.30, trainFrom: 80, trainSlope: 30 },
+  talent: { mean: 84.5, sd: 4.5, min: 74, max: 100, youthPerYear: 1.0, trainGain: 0.30, trainFrom: 80, trainSlope: 30 },
 
   // Carreira do jogador na base (spec-loop-jogador)
   base: {

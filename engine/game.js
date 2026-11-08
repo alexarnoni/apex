@@ -13,6 +13,7 @@ import {
 import { createRng } from './rng.js';
 import { applyAging, makeRookie, getRookieCounter, setRookieCounter, declineInfo, raisePotential } from './drivers.js';
 import { createPlayer, runBaseSeasonSummary, pickTeamByTier, teamsByStrength } from './career.js';
+import { tierOf, profileOf, profileView, effectiveDev, expectedPosition } from './profile.js';
 import { BASE_TEAMS } from '../data/baseTeams.js';
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { SURNAMES } from '../data/names.js';
@@ -46,6 +47,21 @@ function log(s, type, text) {
 }
 
 const nextCategoryId = (id) => BASE_LADDER[BASE_LADDER.indexOf(id) + 1] ?? 'f1';
+
+// Perfil (ponta, meio, fundo) de uma equipe de base pela força dela na categoria.
+function baseTierOf(categoryId, teamId) {
+  const sorted = teamsByStrength(categoryId);
+  const rank = sorted.findIndex((t) => t.id === teamId) + 1;
+  return { tier: tierOf(rank || Math.ceil(sorted.length / 2), sorted.length), rank, n: sorted.length };
+}
+
+// Guarda no jogador o perfil da equipe atual: o desenvolvimento acelera ou freia o crescimento dele.
+function syncBaseProfile(s) {
+  const bc = s.baseCareer;
+  const { tier } = baseTierOf(bc.category, bc.teamId);
+  s.player.tier = tier;
+  s.player.devFactor = profileOf(tier).development;
+}
 
 export function createCareer({ surname, number, flag = null, style, seed, age = null } = {}) {
   if (!surname) throw new Error('surname obrigatório');
@@ -95,6 +111,7 @@ export function createCareer({ surname, number, flag = null, style, seed, age = 
       mods: null,
       lastSummary: null,
     };
+    syncBaseProfile(st);
     const startTeam = BASE_TEAMS.kart.find((t) => t.id === st.baseCareer.teamId);
     log(st, 'start', `${surname} #${number} começa no ${kart.name} pela ${startTeam.name}, aos ${player.age} anos.`);
     st.phase = 'BASE_TEMPORADA';
@@ -190,6 +207,8 @@ function resolveBaseChoice(s, rng, answer) {
     if (rival) rival.lastResult = { category: category.id, year: s.year, position: rr.position };
   });
 
+  // Desenvolvimento do ano: na equipe de ponta só acelera quem correspondeu ao esperado para o carro.
+  p.devFactor = effectiveDev(summary.tier, summary.position <= expectedPosition(summary.carRank));
   bc.lastSummary = { ...summary, year: s.year, category: category.id };
   log(s, 'season', `${s.year} ${category.name}: ${summary.position}º (${summary.wins} vitórias, ${summary.points} pts).`);
 
@@ -245,6 +264,7 @@ function openOffers(s, rng) {
     teamName: team.name,
     carRank: rank,
     carLabel: rankLabel(rank, n),
+    profile: profileView(nextId === 'f1' ? tierOf(rank, n, CONFIG.f1.carTierRank) : tierOf(rank, n)),
     academy: !!s.player.academy && (nextId === 'f1' ? team.id === s.player.academy.teamId : team.academy === s.player.academy.teamId),
     label: `Subir para ${CATEGORIES[nextId].name} pela ${team.name}`,
     consequence: null,
@@ -260,7 +280,7 @@ function openOffers(s, rng) {
       tier,
       options: [
         ...ups,
-        { id: 'stay', kind: 'stay', category: bc.category, teamId: bc.teamId, teamName: curTeam.name, label: `Ficar na ${curTeam.name}`, consequence: `Mais um ano em ${curName}.`, why: 'Ficar dá mais um ano para melhorar a nota de scouting.',
+        { id: 'stay', kind: 'stay', category: bc.category, teamId: bc.teamId, teamName: curTeam.name, profile: profileView(baseTierOf(bc.category, bc.teamId).tier), label: `Ficar na ${curTeam.name}`, consequence: `Mais um ano em ${curName}.`, why: 'Ficar dá mais um ano para melhorar a nota de scouting.',
           pros: ['Você já conhece a equipe e o carro.'],
           cons: ['Cada ano a mais na categoria aumenta a pressão de idade na nota de scouting.'] },
       ],
@@ -282,7 +302,8 @@ function upNotes(s, team, rank, n, nextId) {
   const pros = [];
   const cons = ['A categoria de cima tem adversários mais fortes.'];
   if (rank <= 3) pros.push('Carro de ponta: dá para brigar por vitórias e chamar atenção.');
-  if (rank > n - 3) cons.push('Carro do fundo do grid: é difícil impressionar os olheiros.');
+  if (rank > n - 3) cons.push('Carro do fundo do grid: bons resultados são raros.');
+  if (rank <= 3) cons.push('A equipe cobra resultado: ficar abaixo do esperado derruba a sua nota.');
   const ac = s.player.academy?.teamId;
   if (ac && (nextId === 'f1' ? team.id === ac : team.academy === ac)) pros.push('Ligada à sua academia: bônus na nota de scouting.');
   if (nextId === 'f1') pros.push('É a Fórmula 1: o objetivo da carreira de base.');
@@ -330,7 +351,7 @@ function ageEveryone(s, rng) {
   applyAging(s.player, rng);
   // Talento jovem alcança o grid da categoria acima: fecha parte do gap até o potencial.
   const p = s.player;
-  p.skill = Math.min(p.potential, p.skill + (p.potential - p.skill) * CONFIG.base.playerGrowthRate);
+  p.skill = Math.min(p.potential, p.skill + (p.potential - p.skill) * CONFIG.base.playerGrowthRate * (p.devFactor ?? 1));
   for (const r of s.baseCareer.rivals) applyAging(r, rng);
 }
 
@@ -341,6 +362,7 @@ function startNextSeason(s, rng, categoryId, teamId) {
   bc.category = categoryId;
   bc.teamId = teamId;
   bc.mods = null;
+  syncBaseProfile(s);
 
   const limit = CONFIG.base.altRouteAfterNoOfferSeasons;
   const tooOld = s.player.age > CATEGORIES[categoryId].typicalAge[1] + CONFIG.base.altRouteOverAge;
@@ -412,6 +434,7 @@ export function scoutingWhy(sum) {
   const T = CONFIG.scouting.offerThresholds;
   const bits = [`resultado (${sum.position}º) ${signed(pr.result)}`];
   if (pr.weakCar > 0) bits.push(`bateu carros melhores ${signed(pr.weakCar)}`);
+  if (pr.pressure) bits.push(`cobrança da equipe ${signed(pr.pressure)}`);
   if (pr.academy) bits.push(`academia ${signed(pr.academy)}`);
   if (pr.fame) bits.push(`fama ${signed(pr.fame)}`);
   if (pr.age < 0) bits.push(`idade acima do típico ${signed(pr.age)}`);

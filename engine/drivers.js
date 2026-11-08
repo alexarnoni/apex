@@ -19,7 +19,8 @@ export function raisePotential(player, amount = CONFIG.talent.trainGain) {
   const T = CONFIG.talent;
   const factor = Math.max(0.15, Math.min(1, 1 - (player.potential - T.trainFrom) / T.trainSlope));
   const before = player.potential;
-  player.potential = Math.min(T.max, player.potential + amount * factor);
+  // O perfil da equipe (desenvolvimento) acelera ou freia o ganho de teto por treino.
+  player.potential = Math.min(T.max, player.potential + amount * factor * (player.devFactor ?? 1));
   return player.potential - before;
 }
 
@@ -51,7 +52,9 @@ export function applyAging(driver, rng) {
       return;
     }
   }
-  const delta = ageDelta(driver.age, rng);
+  let delta = ageDelta(driver.age, rng);
+  // O desenvolvimento da equipe só acelera ou freia o crescimento do jogador (nunca o declínio).
+  if (delta > 0 && driver.isPlayer) delta *= driver.devFactor ?? 1;
   if (delta > 0) driver.skill = Math.min(driver.potential, driver.skill + delta);
   else driver.skill = Math.max(CONFIG.lifecycle.skillFloor, driver.skill + delta);
 }

@@ -15,6 +15,7 @@ import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeaso
 import { circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
 import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, paceEdge } from './strategy.js';
 import { raisePotential } from './drivers.js';
+import { tierOf, profileOf, profileView, trustPressure, effectiveDev, expectedPosition } from './profile.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
 import { marketScore } from './market.js';
 import { applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
@@ -99,10 +100,20 @@ export function enterF1(s, rng, teamId) {
   startNextYear(s);
 }
 
+// Perfil (ponta, meio, fundo) da equipe atual na F1, pelo carro dela: o desenvolvimento acelera ou freia o crescimento.
+function syncF1Profile(s) {
+  const { world } = s.f1;
+  const p = s.player;
+  const tier = tierOf(carRank(world, p.team), world.teams.length, F1().carTierRank);
+  p.tier = tier;
+  p.devFactor = profileOf(tier).development;
+}
+
 function startNextYear(s) {
   const { world } = s.f1;
   const last = world.history.at(-1)?.champion ?? null;
   assignStatus(world.teams, world.drivers, last);
+  syncF1Profile(s);
   s.f1.season = null;
   s.player.offerBonus = 0;
   s.phase = 'F1_PRE_TEMPORADA';
@@ -572,6 +583,8 @@ function finalizeSeason(s, rng) {
   );
   const pos = result.standings.indexOf(p) + 1;
   const conPos = result.constructors.findIndex((c) => c.id === p.team) + 1;
+  const seasonRank = carRank(world, p.team);
+  const seasonTier = tierOf(seasonRank, world.teams.length, F1().carTierRank);
   const record = {
     year: s.year,
     team: p.team,
@@ -604,13 +617,20 @@ function finalizeSeason(s, rng) {
   else if (pos <= 3) p.fame += F.top3;
   else if (record.points > 0) p.fame += F.points;
 
+  // Pressão da equipe (perfil): ficar abaixo do esperado para o carro custa confiança, e mais em equipe de ponta.
+  const pressureLoss = trustPressure(seasonTier, seasonRank, pos);
+  if (pressureLoss < 0) {
+    p.trust = Math.max(0, (p.trust ?? CONFIG.trust.trustStart) + pressureLoss);
+    log(s, 'trust', `${record.teamName} esperava mais de você nesta temporada (${pressureLoss} de confiança).`);
+  }
   const effects = evaluateTrustEffects(p, null, conPos, rng);
   if (effects.includes('lowTrustRelease')) {
     p.contract = 0;
     p.released = true;
     log(s, 'trust', `A ${record.teamName} perdeu a confiança em você e não vai renovar.`);
   }
-  p.skill = clampSkill(p, p.skill + (p.potential - p.skill) * F1().playerGrowthRate);
+  p.devFactor = effectiveDev(seasonTier, pos <= expectedPosition(seasonRank));
+  p.skill = clampSkill(p, p.skill + (p.potential - p.skill) * F1().playerGrowthRate * (p.devFactor ?? 1));
 
   s.f1.seasons.push(record);
   s.f1.lastSeason = record;
@@ -698,7 +718,7 @@ function openOffers(s) {
         if (o.kind === 'renew') why = 'Seu contrato acabou e a equipe quer renovar.';
         else if (o.kind === 'keep') why = 'Sua cláusula de saída deixa você ficar ou sair; ficar mantém o contrato.';
         else why = `Você vale mais para o mercado que ${weakestMate(world, o.teamId)?.name ?? 'o piloto mais fraco'}, o piloto mais fraco dessa equipe.`;
-        return { ...o, teamName: teamName(world, o.teamId), carRank: rank, carLabel: carLabel(rank), why, ...offerNotes(world, p, o, rank) };
+        return { ...o, teamName: teamName(world, o.teamId), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)), why, ...offerNotes(world, p, o, rank) };
       }),
     },
   };
@@ -712,6 +732,7 @@ export function offerNotes(world, p, o, rank) {
   const T = F1().carTierRank;
   if (rank <= T.top) pros.push('Carro de ponta: dá para brigar por pódios e vitórias.');
   if (rank > T.mid) cons.push('Carro do fundo do grid: pontuar vai ser difícil.');
+  if (rank <= T.top) cons.push('A equipe cobra resultado: ficar abaixo do esperado custa confiança.');
 
   // Companheiro depois da troca: quem sobra na equipe (na troca o jogador toma o lugar do mais fraco).
   let mate = world.drivers.find((d) => d.team === o.teamId && d !== p);
@@ -891,7 +912,7 @@ export function f1View(s) {
   }));
   const isLast = (r) => r && { story: r.story ?? [], n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
   return {
-    team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank) },
+    team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
     races: (season?.races ?? []).map((r) => ({ story: r.story ?? [], n: r.n, circuit: circuitView(r.n), playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),

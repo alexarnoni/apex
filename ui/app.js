@@ -724,7 +724,7 @@ function screenBase(view) {
         : o.consequence;
       const color = o.category === 'f1' && o.kind === 'up' ? TEAM_COLOR[o.teamId] : null;
       const label = color ? `<span class="team"><i style="background:${esc(color)}"></i>${esc(o.label)}</span>` : esc(o.label);
-      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${label}</strong><span>${esc(sub)}</span>${o.why ? `<span>${esc(o.why)}</span>` : ''}${proscons(o)}</button>`;
+      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}" data-tier="${esc(o.profile?.id ?? '')}"><strong>${label}</strong><span>${esc(sub)}</span>${profileBlock(o.profile)}${o.why ? `<span class="why">${esc(o.why)}</span>` : ''}${proscons(o)}</button>`;
     }).join('');
     body = `<section class="card focus"><h2>Ofertas</h2><div class="grid2">${cards}</div></section>`;
   }
@@ -740,6 +740,19 @@ function raceLine(r) {
   return `<p><b>${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 14 })} ${esc(r.circuit.gp)}` : `Corrida ${r.n}`}</b>${r.wet ? ' · <span class="pill">chuva</span>' : ''}: ${mine}</p>
     ${storyList(r.story)}
     <p class="mute" style="font-size:14px">Vitória: ${esc(r.winner ?? '—')} · Pole: ${esc(r.pole)}</p>`;
+}
+
+// Perfil da equipe (ponta, meio, fundo): pressão e desenvolvimento em bolinhas e palavras, mais uma frase.
+// Só <span>: o cartão inteiro é um <button>, que só aceita conteúdo inline.
+function profileBlock(pf) {
+  if (!pf) return '';
+  const pips = (n) => '●'.repeat(n) + '○'.repeat(3 - n);
+  const press = pf.pressure >= 0.9 ? 3 : pf.pressure > 0 ? 2 : 0;
+  const dev = pf.development > 1.1 ? 3 : pf.development >= 0.95 ? 2 : 1;
+  return `<span class="profile"><span class="profile-label">${esc(pf.label)}</span>
+    <span class="profile-row"><span>Pressão</span><span class="pips" aria-hidden="true">${pips(press)}</span><b>${esc(pf.pressureWord)}</b></span>
+    <span class="profile-row"><span>Desenvolvimento</span><span class="pips" aria-hidden="true">${pips(dev)}</span><b>${esc(pf.developmentWord)}</b></span>
+    <span class="profile-text">${esc(pf.text)}</span></span>`;
 }
 
 // Vantagens (+) e riscos (−) de uma oferta, em lista curta.
@@ -890,7 +903,7 @@ function screenOffers(view) {
   } else if (pd.type === 'offer_pick') {
     body = `<section class="card focus"><h2>Mercado de pilotos</h2><div class="grid2">${pd.payload.options.map((o) => {
       const verb = o.kind === 'renew' ? 'Renovar com' : o.kind === 'keep' ? 'Cumprir contrato com' : 'Assinar com';
-      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}"><strong>${verb} ${esc(o.teamName)}</strong><span>Carro: ${esc(o.carLabel)} (#${esc(o.carRank)})${o.mate ? ` · Companheiro: ${esc(o.mate)}` : ''}</span>${o.why ? `<span>${esc(o.why)}</span>` : ''}${proscons(o)}</button>`;
+      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}" data-tier="${esc(o.profile?.id ?? '')}"><strong>${verb} ${esc(o.teamName)}</strong><span>Carro: ${esc(o.carLabel)} (#${esc(o.carRank)})${o.mate ? ` · Companheiro: ${esc(o.mate)}` : ''}</span>${profileBlock(o.profile)}${o.why ? `<span class="why">${esc(o.why)}</span>` : ''}${proscons(o)}</button>`;
     }).join('')}</div></section>`;
   } else if (pd.type === 'contract_terms') {
     const o = pd.payload.options;
