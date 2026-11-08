@@ -502,10 +502,11 @@ function skillDial(p) {
       <g transform="rotate(-90 48 48)" fill="none">
         <circle class="dial-track" cx="48" cy="48" r="${R1}" stroke-width="9"/>
         <circle cx="48" cy="48" r="${R1}" stroke="url(#dialg)" stroke-width="9" stroke-linecap="round" stroke-dasharray="${f(C1 * pct(skill))} ${f(C1)}"/>
-        <circle class="dial-band" cx="48" cy="48" r="${R2}" stroke-width="4" stroke-dasharray="${f(C2 * (pct(hi) - pct(lo)))} ${f(C2)}" stroke-dashoffset="${f(-C2 * pct(lo))}"/>
+        <circle class="dial-band" cx="48" cy="48" r="${R2}" stroke-width="5" stroke-linecap="round" stroke-dasharray="${f(C2 * (pct(hi) - pct(lo)))} ${f(C2)}" stroke-dashoffset="${f(-C2 * pct(lo))}"/>
       </g>
     </svg>
-    <div class="dial-num"><b>${esc(skill)}</b><small>habilidade</small></div>
+    <div class="dial-num"><b>${esc(skill)}</b></div>
+    <div class="dial-cap"><span>habilidade</span><span class="dial-pot">potencial ${lo}–${hi}</span></div>
   </div>`;
 }
 
