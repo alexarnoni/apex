@@ -28,6 +28,7 @@ const out = await build({
   target: 'es2020',
   write: false,
   legalComments: 'none',
+  loader: { '.svg': 'dataurl' },   // bandeiras (ui/assets/flags) embutidas como data: URI; a CSP já libera `data:` em imagens
   define: {
     __FEEDBACK_URL__: JSON.stringify(process.env.BANDEIRADA_FEEDBACK_URL ?? ''),
     __ANALYTICS__: JSON.stringify(!!goatcounter),

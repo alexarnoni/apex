@@ -152,7 +152,7 @@ O jogo se chamava Apex e usava preto com amarelo, que é a identidade da equipe 
 | R.5 | Ficha do piloto: habilidade em destaque, dorsal, bandeira, estilo, idade, fama, equipe, GP, vitórias, pódios, poles, sala de troféus, contrato e confiança | ✅ Feito. A engine entrega os totais da carreira (`career`). |
 | R.6 | Painel da temporada: abas Tabela e Etapas, pilotos e construtores, setas de variação | ✅ Feito. As abas se chamavam "Classificação" e "Corrida a corrida" (R.15 trocou). |
 | R.7 | Ofertas com estrelas do carro e etiqueta curta de perfil (texto nosso) | Aberto. Hoje as ofertas têm vantagens e riscos. |
-| R.8 | Tela de criação de piloto própria: número com prévia ao vivo, bandeiras em imagem com busca, estilos com arquétipos | Aberto. Exige baixar bandeiras em SVG (licença livre); aviso antes de baixar. |
+| R.8 | Tela de criação de piloto própria: número com prévia ao vivo, bandeiras em imagem com busca, estilos com arquétipos | **Parcial.** As bandeiras em SVG já estão no jogo (flag-icons, MIT, 26 países, embutidas; o brasão do México e da Espanha foi removido por peso), na ficha, nas pistas e na lista de etapas, e a lista de países da criação mostra nomes. Faltam prévia ao vivo, busca e arquétipos. |
 | R.9 | Fontes hospedadas no próprio site (junto com B.6) | Aberto. |
 | R.10 | Renomear o repositório do GitHub para `bandeirada` | Aberto, decisão sua: muda o endereço do Pages e os comandos do README. |
 | R.11 | Conferir marca e domínio (INPI, Registro.br, Google e lojas de apps) | Aberto, é com você: não dá para verificar daqui. |
@@ -173,6 +173,8 @@ Feedback de quem jogou: na F1 cada corrida é a mesma escolha de três botões (
 | D.3 | Mini calendário na base: 3 a 5 etapas-chave por temporada, com pista e uma decisão em cada | Aberto. Reaproveita D.1 e D.2 em versão curta; a base ainda não tem pistas. |
 | D.4 | Narrativa da corrida: resumo do que aconteceu (largada, ultrapassagens, safety car, abandonos de rivais) em vez de uma linha | Aberto, sugestão minha; combina com D.2. |
 | D.5 | Metas e tensão de temporada: objetivos da equipe, pressão do contrato, briga de título com o rival | Aberto, sugestão minha. |
+
+Texto para leigos: as descrições com "pp" (ponto percentual) foram reescritas em palavras ("mais risco de abandonar a corrida", "aumenta bastante a chance de uma academia te convidar"). Saves em andamento guardam o texto antigo na decisão pendente; carreiras novas já saem com o novo.
 
 ## Pendências de qualidade (transversais)
 

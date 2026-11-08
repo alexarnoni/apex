@@ -5,6 +5,7 @@ import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '.
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { TEAMS_F1 } from '../data/world2026.js';
 import { createSaves } from './saves.js';
+import { flagImg, COUNTRY } from './flags.js';
 import { buildFeedback, careerSnapshot, sendUrl, feedbackPayload, sendFeedback, FEEDBACK_KINDS } from './feedback.js';
 
 // Destino opcional do feedback (ex.: página "nova issue" de um repositório), definido no build
@@ -208,7 +209,7 @@ function aboutPanel() {
       <p style="margin-top:6px">${esc(stats)}</p>
       <p style="margin-top:6px">As fontes do texto vêm do Google Fonts, então o Google vê o endereço IP de quem abre o site.</p>
       <p style="margin-top:6px">${esc(feedback)}</p></details>
-    <details open><summary>Código e licença</summary><p style="margin-top:6px">O código está visível em <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">${REPO_URL.replace('https://', '')}</a>, com todos os direitos reservados.</p></details></section>`;
+    <details open><summary>Código e licença</summary><p style="margin-top:6px">O código está visível em <a href="${REPO_URL}" target="_blank" rel="noopener noreferrer">${REPO_URL.replace('https://', '')}</a>, com todos os direitos reservados. As bandeiras são do projeto <a href="https://github.com/lipis/flag-icons" target="_blank" rel="noopener noreferrer">flag-icons</a> (licença MIT).</p></details></section>`;
 }
 
 const anyModal = () => ui.aboutOpen || ui.helpOpen || ui.fb.open;
@@ -422,7 +423,7 @@ function header(view) {
   const p = view.player;
   return `<header class="bar">
     ${LOGO}
-    <span class="chip">${esc(p.flag ?? '')} #${esc(p.number)} ${esc(p.name)}</span>
+    <span class="chip">${flagImg(p.flag, { alt: false, h: 12 })} #${esc(p.number)} ${esc(p.name)}</span>
     <span class="chip">${esc(view.year)} · ${esc(p.age)} anos</span>
     <span class="chip" title="Use esta seed na criação para repetir a carreira">seed ${esc(view.seed)}</span>
     <button class="btn ghost small" data-act="undo" ${undoStack.length ? '' : 'disabled'}>Desfazer</button>
@@ -528,7 +529,7 @@ function ficha(view) {
       ${skillDial(p)}
       <div class="ficha-id">
         <div class="ficha-name">${esc(p.name)}</div>
-        <div class="chips-row"><span class="chip">#${esc(p.number)}</span><span class="chip">${esc(p.flag ?? '')}</span><span class="chip">${esc(STYLES[p.style]?.name ?? p.style)}</span></div>
+        <div class="chips-row"><span class="chip">#${esc(p.number)}</span><span class="chip">${flagImg(p.flag, { h: 12 })} ${esc(COUNTRY[p.flag] ?? p.flag ?? '')}</span><span class="chip">${esc(STYLES[p.style]?.name ?? p.style)}</span></div>
       </div>
     </div>
     ${attributes(p)}
@@ -572,7 +573,7 @@ function racesList(f1) {
   if (!f1.races.length) return '<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>';
   const items = [...f1.races].reverse().map((r) => {
     const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? `trophy p${r.playerPos}` : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
-    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${esc(r.circuit.flag)} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}</li>`;
+    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 12 })} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}</li>`;
   }).join('');
   return `<ul class="racelist">${items}</ul>`;
 }
@@ -633,7 +634,7 @@ function screenCreate() {
     <div class="grid2">
       <label class="field">Sobrenome<input type="text" id="f-surname" maxlength="18" value="${esc(d.surname)}" placeholder="Ex.: Senna"></label>
       <label class="field">Número do carro (1-99)<input type="number" id="f-number" min="1" max="99" value="${esc(d.number)}" placeholder="Ex.: 12"></label>
-      <label class="field">Bandeira<select id="f-flag">${FLAGS.map((f) => `<option ${f === d.flag ? 'selected' : ''}>${f}</option>`).join('')}</select></label>
+      <label class="field">Bandeira<select id="f-flag">${FLAGS.map((f) => `<option value="${f}" ${f === d.flag ? 'selected' : ''}>${esc(COUNTRY[f] ?? f)}</option>`).join('')}</select></label>
       <label class="field">Seed (opcional, repete uma carreira)<input type="text" id="f-seed" inputmode="numeric" value="${esc(d.seed)}" placeholder="vazio = aleatória"></label>
       ${slotField}
     </div>
@@ -691,7 +692,7 @@ function screenBase(view) {
 function raceLine(r) {
   if (!r) return '';
   const mine = r.summary ? esc(r.summary) : (r.playerPos ? `Você terminou em <b>P${r.playerPos}</b>.` : '<b class="pill bad">Abandono</b>');
-  return `<p><b>${r.circuit ? `${esc(r.circuit.flag)} ${esc(r.circuit.gp)}` : `Corrida ${r.n}`}</b>${r.wet ? ' · <span class="pill">chuva</span>' : ''}: ${mine}</p>
+  return `<p><b>${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 14 })} ${esc(r.circuit.gp)}` : `Corrida ${r.n}`}</b>${r.wet ? ' · <span class="pill">chuva</span>' : ''}: ${mine}</p>
     <p class="mute" style="font-size:14px">Vitória: ${esc(r.winner ?? '—')} · Pole: ${esc(r.pole)}</p>`;
 }
 
@@ -720,7 +721,7 @@ function lastEventCard(f1) {
 function circuitCard(c) {
   if (!c) return '';
   const chips = [...c.tags.map((t) => `<span class="chip">${esc(t)}</span>`), `<span class="chip">${c.rain >= 20 ? '🌧 ' : ''}chuva ${esc(c.rain)}%</span>`];
-  return `<section class="card circuit"><div class="circuit-flag" aria-hidden="true">${esc(c.flag)}</div>
+  return `<section class="card circuit"><div class="circuit-flag" aria-hidden="true">${flagImg(c.flag, { alt: false, h: 36 })}</div>
     <div><h2>${esc(c.gp)}</h2><p class="mute small">${esc(c.venue)}</p><div class="chips-row">${chips.join('')}</div>
     ${c.hints?.length ? `<p class="mute small" style="margin-top:6px">${esc(c.hints.join(' '))}</p>` : ''}</div></section>`;
 }

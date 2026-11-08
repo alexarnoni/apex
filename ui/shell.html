@@ -300,7 +300,9 @@ h2::before { display: none; }
 .dial-cap span:first-child { font-family: var(--f-display); font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: .08em; }
 .dial-pot { font-family: var(--f-mono); font-size: 10.5px; color: var(--mute); white-space: nowrap; }
 .card.circuit { flex-direction: row; align-items: center; gap: 14px; }
-.circuit-flag { font-size: 40px; line-height: 1; }
+.circuit-flag { line-height: 0; flex: none; }
+.flag { display: inline-block; vertical-align: -2px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, .18); object-fit: cover; }
+.flag-code { font-family: var(--f-mono); font-size: 11px; }
 .card.circuit h2 { font-size: 22px; }
 .tier { font-family: var(--f-display); font-size: 20px; letter-spacing: .02em; color: var(--pink); }
 .attrs { display: flex; flex-direction: column; gap: 12px; }

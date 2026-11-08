@@ -164,7 +164,7 @@ export const CONFIG = {
       },
       f3: {
         A: { label: 'Teste privado', description: '+1 de skill permanente.', skillGain: 1 },
-        B: { label: 'Networking de academias', description: '+15pp de chance de convite de academia.', academyChanceBonus: 0.15 },
+        B: { label: 'Networking de academias', description: 'Você fica bem mais visível: aumenta bastante a chance de uma academia te convidar.', academyChanceBonus: 0.15 },
       },
       f2: {
         A: { label: 'Foco total no título', description: '+1.5 de performance nesta temporada.', perfBonus: 1.5 },
@@ -183,9 +183,9 @@ export const CONFIG = {
       image: { label: 'Trabalhar imagem', description: '+2 de fama.', fameGain: 2 },
     },
     approach: {                           // weekend_approach: uma decisão por corrida
-      risky: { label: 'Arriscado', description: '+2 de performance, +3pp de chance de abandono.', perfBonus: 2, dnfDelta: 0.03 },
+      risky: { label: 'Arriscado', description: 'Mais rápido (+2 de performance), mas com mais risco de abandonar a corrida.', perfBonus: 2, dnfDelta: 0.03 },
       balanced: { label: 'Equilibrado', description: 'Sem ajustes.', perfBonus: 0, dnfDelta: 0 },
-      conservative: { label: 'Conservador', description: '-1 de performance, -2pp de chance de abandono.', perfBonus: -1, dnfDelta: -0.02 },
+      conservative: { label: 'Conservador', description: 'Um pouco mais lento (-1 de performance), mas com menos risco de abandonar a corrida.', perfBonus: -1, dnfDelta: -0.02 },
     },
     fame: { title: 5, top3: 2, points: 0.5 },   // fama por temporada: campeão / top 3 / pontuou
     retireDecisionAge: 30,                // a partir daqui toda offseason pergunta se aposenta
