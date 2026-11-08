@@ -75,6 +75,21 @@ test('criação, temporada de base e retomada após recarregar', async ({ page }
   await expect(page.locator('.layout')).toBeVisible();
 });
 
+test('início prioriza novo piloto e usa laterais somente no desktop', async ({ page }) => {
+  await page.goto('/');
+  const order = await page.locator('#create').evaluate(el => {
+    const saves = [...document.querySelectorAll('section')].find(s => s.querySelector('h2')?.textContent === 'Suas carreiras');
+    return Boolean(el.compareDocumentPosition(saves) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(order).toBe(true);
+  await expect(page.getByRole('heading', { name: 'Novo piloto' })).toBeVisible();
+  if (test.info().project.name === 'desktop') {
+    await expect(page.locator('.home-journey')).toBeVisible();
+    await expect(page.locator('.home-guide')).toBeVisible();
+  } else await expect(page.locator('.home-aside').first()).toBeHidden();
+  await page.screenshot({ path: test.info().outputPath('inicio-v010.png'), fullPage: true });
+});
+
 test('largada responde, desfaz e retoma o save na decisão pendente', async ({ page }) => {
   const state = fixture('race_start', (s) => s.pendingDecision.payload.grid > 1);
   await importCareer(page, state);
@@ -107,11 +122,13 @@ test('defesa mostra perseguidor e ceder entra no relato', async ({ page }) => {
 test('simular cinco e resto resolve largada e defesa até pausa narrativa ou fim', async ({ page }) => {
   const state = fixture('weekend_approach');
   await importCareer(page, state);
+  await page.getByText('Controles de acompanhamento', { exact: true }).click();
   await page.locator('[data-act="sim5"]').click();
   let after = await saved(page);
   expect(after.f1.season.races.length - state.f1.season.races.length).toBe(5);
   expect(after.pendingDecision.type).toBe('weekend_approach');
   await expect(page.getByRole('status')).toContainText('5');
+  await page.getByText('Controles de acompanhamento', { exact: true }).click();
   await page.locator('[data-act="simrest"]').click();
   after = await saved(page);
   expect(after.f1.season.races.length).toBeGreaterThan(5);
@@ -121,8 +138,81 @@ test('simular cinco e resto resolve largada e defesa até pausa narrativa ou fim
 
 test('parar nas decisões interrompe a simulação antes de decidir pneus', async ({ page }) => {
   await importCareer(page, fixture('weekend_approach'));
+  await page.getByText('Controles de acompanhamento', { exact: true }).click();
   await page.locator('#t-stop').check();
   await page.locator('[data-act="sim5"]').click();
   expect((await saved(page)).pendingDecision.type).toBe('race_strategy');
   await expect(page.getByRole('status')).toContainText('estratégia de pneus');
+});
+
+test('plano muda sem gastar etapa, persiste no reload e meta fica visível', async ({ page }) => {
+  const state = fixture('weekend_approach');
+  await importCareer(page, state);
+  await expect(page.locator('.season-pulse')).toContainText('Sua temporada');
+  await page.locator('#race-plan').selectOption('conservative');
+  const after = await saved(page);
+  expect(after.f1.racePlan).toBe('conservative');
+  expect(after.f1.season.raceIndex).toBe(state.f1.season.raceIndex);
+  expect(after.rngState).toBe(state.rngState);
+  await page.reload();
+  await page.locator('[data-act="continue"][data-slot="1"]').click();
+  await expect(page.locator('#race-plan')).toHaveValue('conservative');
+  await page.locator('.focus').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: test.info().outputPath('plano-v010.png'), fullPage: true });
+});
+
+test('avanço contextual mostra motivo e permite delegar a decisão atual', async ({ page }) => {
+  await importCareer(page, fixture('weekend_approach'));
+  await page.locator('[data-act="simimportant"]').click();
+  const after = await saved(page);
+  expect(['race_event', 'race_finale', 'team_order', 'story_event']).toContain(after.pendingDecision.type);
+  if (after.pendingDecision.type !== 'story_event') {
+    await expect(page.locator('.decision-context')).toContainText('Por que decidir agora?');
+    await expect(page.locator('.decision-context')).toContainText('A equipe recomenda');
+    await page.locator('.focus').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: test.info().outputPath('decisao-v010.png'), fullPage: true });
+    await page.locator('[data-act="delegate"]').click();
+    expect((await saved(page)).history.length).toBeGreaterThan(after.history.length);
+  }
+});
+
+test('carreira inteira por cliques: criação, base, temporadas, contratos e legado', async ({ page }) => {
+  test.setTimeout(120_000);
+  await page.goto('/');
+  await page.locator('#f-surname').fill('CarreiraUI');
+  await page.locator('#f-number').fill('7');
+  await page.locator('#f-seed').fill('1');
+  await page.locator('[data-act="create"]').click();
+  let sawContract = false;
+  let sawGoal = false;
+  for (let step = 0; step < 350; step++) {
+    const state = await saved(page);
+    if (state.phase === 'LEGADO') {
+      expect(sawContract).toBe(true);
+      expect(sawGoal).toBe(true);
+      await expect(page.locator('[data-act="copy"]')).toBeVisible();
+      return;
+    }
+    expect(state.phase).not.toBe('ROTA_ALTERNATIVA');
+    const pd = state.pendingDecision;
+    if (!pd) { await page.locator('[data-act="next"]').click(); continue; }
+    const answer = answerFor(state, 'a', { retireAt: 30 });
+    if (pd.type === 'base_choice') {
+      await page.locator('[data-act="pick-base"][data-id="A"]').click();
+      await page.locator('[data-act="run-base"]').click();
+    } else if (pd.type === 'weekend_approach') {
+      sawGoal = true;
+      await expect(page.locator('.season-pulse')).toBeVisible();
+      await page.getByText('Controles de acompanhamento', { exact: true }).click();
+      await page.locator('[data-act="simrest"]').click();
+    } else if (pd.type === 'contract_terms') {
+      sawContract = true;
+      await page.locator('[data-act="terms"]').click();
+    } else {
+      const acts = { academy_invite: 'academy', offer_pick: 'offer', season_focus: 'focus', story_event: 'event', race_event: 'event', retire_or_continue: 'retire', race_strategy: 'strategy', race_start: 'start', race_finale: 'finale', team_order: 'order' };
+      const id = pd.type === 'academy_invite' ? 'yes' : answer.id;
+      await page.locator(`[data-act="${acts[pd.type]}"][data-id="${id}"]`).click();
+    }
+  }
+  throw new Error('carreira não chegou ao legado');
 });

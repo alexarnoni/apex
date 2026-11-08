@@ -16,6 +16,7 @@ import { dirname, join } from 'node:path';
 import { buildCsp, buildHead, normalizeEndpoint, normalizeGoatCounter, normalizeSiteUrl, sha256, TITLE } from './site-head.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+const appVersion = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version;
 const siteUrl = normalizeSiteUrl(process.env.BANDEIRADA_SITE_URL);
 const goatcounter = normalizeGoatCounter(process.env.BANDEIRADA_GOATCOUNTER);
 const feedbackEndpoint = normalizeEndpoint(process.env.BANDEIRADA_FEEDBACK_ENDPOINT);
@@ -30,6 +31,7 @@ const out = await build({
   legalComments: 'none',
   loader: { '.svg': 'dataurl' },   // bandeiras (ui/assets/flags) embutidas como data: URI; a CSP já libera `data:` em imagens
   define: {
+    __APP_VERSION__: JSON.stringify(appVersion),
     __FEEDBACK_URL__: JSON.stringify(process.env.BANDEIRADA_FEEDBACK_URL ?? ''),
     __ANALYTICS__: JSON.stringify(!!goatcounter),
     __FEEDBACK_ENDPOINT__: JSON.stringify(feedbackEndpoint),

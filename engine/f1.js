@@ -15,6 +15,8 @@ import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeaso
 import { circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
 import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, finaleSituation, paceEdge } from './strategy.js';
 import { startOptions, resolveStart } from './start.js';
+import { createSeasonGoal, goalProgress } from './season-goals.js';
+import { racePlan, PLAN_LABELS, raceAdvice } from './race-policy.js';
 import { raisePotential } from './drivers.js';
 import { tierOf, profileOf, profileView, trustPressure, effectiveDev, expectedPosition } from './profile.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
@@ -97,6 +99,7 @@ export function enterF1(s, rng, teamId) {
   world.drivers.push(p);
 
   s.f1 = { world, season: null, seasons: [], lastSeason: null, devBonus: 0, missRaces: 0, lastEvent: null, eventHistory: [] };
+  s.f1.racePlan = 'balanced';
   log(s, 'promotion', `Estreia na F1 pela ${team.name} (${carLabel(carRank(world, team.id))}), no lugar de ${displaced.name}.`);
   startNextYear(s);
 }
@@ -204,6 +207,9 @@ function recordEvent(s, ev, resultText) {
 export function resolveSeasonFocus(s, rng, answer) {
   const f = F1().focus[answer?.id];
   if (!f) throw new Error(`id inválido (use ${Object.keys(F1().focus).join(', ')})`);
+  const plan = answer.plan ?? racePlan(s);
+  if (!Object.hasOwn(F1().approach, plan)) throw new Error('plano de corrida inválido');
+  s.f1.racePlan = plan;
   const p = s.player;
   s.f1.lastEvent = null;
   if (f.skillGain) { raisePotential(p); p.skill = clampSkill(p, p.skill + f.skillGain); }
@@ -240,6 +246,7 @@ function beginSeason(s, rng) {
     lastRace: null,
     focus: s.f1.focus,
     rival: rival.name,
+    goal: createSeasonGoal(world, p),
   };
   s.phase = 'F1_FIM_DE_SEMANA';
   s.pendingDecision = weekendDecision(s);
@@ -278,6 +285,14 @@ const deser = (world, o) => {
 export function resolveWeekendApproach(s, rng, answer) {
   const { world, season } = s.f1;
   const p = s.player;
+  if (answer?.savePlan) {
+    if (!Object.hasOwn(F1().approach, answer.id)) throw new Error('plano de corrida inválido');
+    s.f1.racePlan = answer.id;
+    if (!season.goal) season.goal = createSeasonGoal(world, p);
+    s.pendingDecision = weekendDecision(s);
+    return;
+  }
+  if (!season.goal) season.goal = createSeasonGoal(world, p);
   s.f1.lastEvent = null; // o resultado do evento anterior some quando a próxima corrida começa
   const out = s.f1.missRaces > 0;
   const options = out ? { rest: true } : F1().approach;
@@ -567,6 +582,9 @@ function finishRace(s, rng, w, absent, eventId) {
     playerPos: absent ? null : (pos || null), missed: absent, event: eventId,
     grid: season.cur?.grid ?? null,
   };
+  const mate = world.drivers.find(d => d.name === season.goal?.teammate);
+  race.teammateName = mate?.name ?? null;
+  race.teammatePos = mate && a.classified.includes(mate) ? a.classified.indexOf(mate) + 1 : null;
   const order = season.ordersLog.find((o) => o.race === race.n && (o.p1 === p.name || o.p2 === p.name));
   race.summary = raceSummary(race, season.cur, order, p.name);
   race.story = raceStory(race, season.cur, order, p, w.result.length, carRank(world, p.team), rng);
@@ -606,6 +624,7 @@ function finalizeSeason(s, rng) {
   const conPos = result.constructors.findIndex((c) => c.id === p.team) + 1;
   const seasonRank = carRank(world, p.team);
   const seasonTier = tierOf(seasonRank, world.teams.length, F1().carTierRank);
+  const goal = goalProgress(s);
   const record = {
     year: s.year,
     team: p.team,
@@ -621,6 +640,7 @@ function finalizeSeason(s, rng) {
     status: p.status,
     standings: result.standings.slice(0, 10).map((d, i) => ({ pos: i + 1, name: d.name, team: d.team, points: d.seasonPoints, isPlayer: !!d.isPlayer })),
     ordersLog: season.ordersLog,
+    goal,
   };
   p.seasonChampPos = pos;
 
@@ -639,7 +659,7 @@ function finalizeSeason(s, rng) {
   else if (record.points > 0) p.fame += F.points;
 
   // Pressão da equipe (perfil): ficar abaixo do esperado para o carro custa confiança, e mais em equipe de ponta.
-  const pressureLoss = trustPressure(seasonTier, seasonRank, pos);
+  const pressureLoss = goal?.met ? 0 : trustPressure(goal?.tier ?? seasonTier, goal?.carRank ?? seasonRank, pos);
   if (pressureLoss < 0) {
     p.trust = Math.max(0, (p.trust ?? CONFIG.trust.trustStart) + pressureLoss);
     log(s, 'trust', `${record.teamName} esperava mais de você nesta temporada (${pressureLoss} de confiança).`);
@@ -933,6 +953,10 @@ export function f1View(s) {
   }));
   const isLast = (r) => r && { story: r.story ?? [], n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
   return {
+    plan: racePlan(s),
+    plans: Object.entries(PLAN_LABELS).map(([id, label]) => ({ id, label, description: F1().approach[id].description })),
+    goal: goalProgress(s),
+    advice: raceAdvice(s),
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),

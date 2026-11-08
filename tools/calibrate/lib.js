@@ -9,6 +9,7 @@
 import { createCareer, advance, applyDecision, getView } from '../../engine/game.js';
 import { CONFIG } from '../../engine/config.js';
 import { CATEGORIES } from '../../data/categories.js';
+import { raceAdvice } from '../../engine/race-policy.js';
 
 export { CONFIG, CATEGORIES, getView };
 
@@ -91,12 +92,14 @@ export function answerFor(state, policy = 'a', { retireAt = 34 } = {}) {
 
 // Joga uma carreira inteira (até o legado ou a rota alternativa) com a política escolhida.
 // onState(s) é chamado a cada passo (útil para anotar a idade de entrada em cada categoria).
-export function playCareer({ seed, age = null, policy = 'a', surname = 'Teste', number = 7, flag = 'BR', style = 'con', onState = null }) {
+export function playCareer({ seed, age = null, policy = 'a', surname = 'Teste', number = 7, flag = 'BR', style = 'con', onState = null, driving = 'legacy' }) {
+  if (!['legacy', 'team'].includes(driving)) throw new Error('driving deve ser legacy ou team');
   let s = createCareer({ surname, number, flag, style, seed, age });
   for (let i = 0; i < 20000; i++) {
     if (onState) onState(s);
     if (s.phase === 'LEGADO' || s.phase === 'ROTA_ALTERNATIVA') return s;
-    if (s.pendingDecision) s = applyDecision(s, answerFor(s, policy));
+    if (s.pendingDecision) s = applyDecision(s, driving === 'team' && s.phase === 'F1_FIM_DE_SEMANA' && s.pendingDecision.type !== 'story_event'
+      ? raceAdvice(s)?.answer ?? answerFor(s, policy) : answerFor(s, policy));
     else { const next = advance(s); if (next === s) return s; s = next; }
   }
   throw new Error(`a carreira da seed ${seed} não terminou`);

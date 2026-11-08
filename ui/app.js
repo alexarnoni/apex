@@ -2,6 +2,7 @@
 // Entrada única: createCareer / advance / applyDecision / getView (spec-loop-jogador).
 
 import { createCareer, advance, applyDecision, getView, ENGINE_VERSION } from '../engine/game.js';
+import { advanceRaces } from '../engine/advance-races.js';
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { TEAMS_F1 } from '../data/world2026.js';
 import { createSaves } from './saves.js';
@@ -20,6 +21,7 @@ const FEEDBACK_ENDPOINT = typeof __FEEDBACK_ENDPOINT__ !== 'undefined' ? __FEEDB
 // eslint-disable-next-line no-undef
 const ANALYTICS = typeof __ANALYTICS__ !== 'undefined' ? __ANALYTICS__ : false;
 const REPO_URL = 'https://github.com/alexarnoni/apex';
+const APP_VERSION = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'dev';
 
 // Conta um marco (sem cookies, sem nome, seed ou dados da carreira). Sem análise configurada, não faz nada.
 function track(name) {
@@ -383,53 +385,34 @@ function settle(s) {
   return cur;
 }
 
-const decide = (answer) => run((s) => settle(applyDecision(s, answer)));
+const decide = (answer) => run((s) => {
+  let next = settle(applyDecision(s, answer));
+  // Após uma escolha no modo contextual, não interromper por etapas rotineiras da mesma corrida.
+  if (ui.contextFlow && s.phase === 'F1_FIM_DE_SEMANA' && next.phase === s.phase
+      && next.f1.season.raceIndex === s.f1.season.raceIndex
+      && !['weekend_approach', 'story_event'].includes(next.pendingDecision?.type)) {
+    next = advanceRaces(next, { limit: 1, stop: 'important', autoSingle: ui.autoSingle }).state;
+  }
+  return next;
+});
 
 // Simula até n corridas no modo equilibrado. Para sozinho numa decisão com escolha real
 // (evento, ordem de equipe) ou no fim da temporada, e diz por que parou.
 // Por padrão a simulação decide sozinha os eventos de corrida (opção cautelosa de cada um) e as ordens de
 // equipe (obedece), e diz o que decidiu. Com "Parar nas decisões" marcado, ela para em cada uma.
 // Notícias de temporada com escolha (meio e fim do ano) sempre param: são decisões de carreira.
-function simRaces(n) {
+function simRaces(n, mode = null, delegateCurrent = false) {
+  ui.contextFlow = mode === 'important';
   run((s) => {
     const before = getView(s).f1.races.length;
-    let cur = settle(s);
-    let done = 0;
-    const auto = [];
-    for (let guard = 0; guard < 5000; guard++) {
-      const pd = cur.pendingDecision;
-      if (cur.phase !== 'F1_FIM_DE_SEMANA' || !pd) break;
-      if (pd.type === 'weekend_approach') {
-        if (done >= n) break;
-        cur = settle(applyDecision(cur, { id: pd.payload.out ? 'rest' : 'balanced' }));
-        done += 1;
-      } else if (!ui.simStop && ['race_strategy', 'race_start', 'race_finale'].includes(pd.type)) {
-        cur = settle(applyDecision(cur, { id: pd.payload.safe }));
-      } else if (!ui.simStop && pd.type === 'race_event' && pd.payload.safe) {
-        auto.push(pd.payload.title);
-        cur = settle(applyDecision(cur, { id: pd.payload.safe }));
-      } else if (!ui.simStop && pd.type === 'team_order') {
-        auto.push('ordem de equipe (obedeceu)');
-        cur = settle(applyDecision(cur, { id: 'obey' }));
-      } else break;
-    }
-    const v = getView(cur);
-    const ran = v.f1.races.slice(before);
-    const results = ran.map((r) => (r.missed ? 'fora' : r.playerPos ? `P${r.playerPos}` : 'abandono')).join(' · ');
-    const pd = cur.pendingDecision;
-    let why = '';
-    if (pd?.type === 'team_order') why = ' Parou: ordem de equipe para você decidir.';
-    else if (pd?.type === 'race_strategy') why = ` Parou na etapa ${pd.payload.race}: estratégia de pneus, uma decisão sua.`;
-    else if (pd?.type === 'race_start') why = ` Parou na etapa ${pd.payload.race}: largada, uma decisão sua.`;
-    else if (pd?.type === 'race_finale') why = ` Parou na etapa ${pd.payload.race}: final de corrida, uma decisão sua.`;
-    else if (pd?.type === 'race_event') why = ` Parou na etapa ${pd.payload.race}: ${pd.payload.title}, uma decisão sua.`;
-    else if (pd?.type === 'story_event') why = ' Parou: notícia com escolha.';
-    else if (!pd || cur.phase !== 'F1_FIM_DE_SEMANA') why = ' A temporada terminou.';
-    const decided = auto.length ? ` Decidi sozinho ${auto.length} ${auto.length === 1 ? 'situação' : 'situações'} (${auto.join(', ')}).` : '';
-    ui.notice = ran.length ? `Etapas ${ran[0].n}–${ran.at(-1).n}: ${results}.${decided}${why}` : (why.trim() || null);
-    return cur;
+    const result = advanceRaces(s, { limit: n, stop: mode ?? (ui.simStop ? 'all' : 'none'), autoSingle: ui.autoSingle, delegateCurrent });
+    const ran = getView(result.state).f1.races.slice(before);
+    const positions = ran.map(r => r.missed ? 'fora' : r.playerPos ? `P${r.playerPos}` : 'abandono').join(' · ');
+    const stage = { race_strategy: 'estratégia de pneus', race_start: 'largada', race_finale: 'final de corrida', team_order: 'ordem de equipe', race_event: 'evento de corrida', story_event: 'notícia com escolha' }[result.state.pendingDecision?.type];
+    ui.notice = `${ran.length ? `${ran.length} corrida(s), etapas ${ran[0].n}–${ran.at(-1).n}: ${positions}. ` : ''}${stage ? `Parou: ${stage}. ` : ''}${result.reason}`;
+    return result.state;
   });
-  scrollToTop(); // o aviso do que aconteceu fica no topo da página
+  scrollToTop();
 }
 
 // --- peças ------------------------------------------------------------------
@@ -664,17 +647,13 @@ function screenCreate() {
     : free.length === 0 ? ''
       : `<label class="field">Salvar no slot<select id="f-slot">${free.map((s) => `<option value="${s.slot}" ${String(s.slot) === String(d.slot) ? 'selected' : ''}>Slot ${s.slot}</option>`).join('')}</select></label>`;
   const noSlots = saves.available && free.length === 0;
-  return `<header class="bar">${LOGO}<span class="chip">protótipo</span><button class="btn ghost small" data-act="help-open">Ajuda</button>${themeBtn()}</header>
+  return `<header class="bar">${LOGO}<span class="chip">beta ${esc(APP_VERSION)}</span><button class="btn ghost small" data-act="help-open">Ajuda</button>${themeBtn()}</header>
   <section class="card">
     <h1>Da largada à bandeirada</h1>
-    <p class="mute">Você começa aos 14-16 anos no karting. Cada temporada de base tem uma decisão; quem for bem recebe ofertas e sobe até a Fórmula 1. Uma carreira dura uns 20 minutos.</p>
+    <p class="mute">Do kart à Fórmula 1: escolha seu caminho, conquiste propostas e decida os momentos que podem mudar sua carreira.</p>
   </section>
   ${ui.notice ? `<div class="note" role="status">${esc(ui.notice)}</div>` : ''}
-  ${saves.available ? `<section class="card focus"><h2>Suas carreiras</h2>
-    <p class="mute" style="font-size:14px">O jogo salva sozinho a cada decisão, neste navegador. Para levar a carreira a outro lugar, use "Salvar em arquivo" e importe aqui.</p>
-    ${list.map(slotRow).join('')}
-    <label class="field">Importar de arquivo (.json)<input type="file" id="f-import" accept=".json,application/json"></label></section>`
-    : `<div class="note err">Este navegador bloqueia o salvamento local. Dá para jogar, mas sair da página perde a carreira: use "Salvar em arquivo" durante o jogo.</div>`}
+  <div class="home-layout"><div class="home-main">
   <form class="card" id="create" autocomplete="off">
     <h2>Novo piloto</h2>
     <div class="grid2">
@@ -688,11 +667,30 @@ function screenCreate() {
     <h3>Estilo de pilotagem</h3>
     <div class="grid2">${Object.entries(STYLES).map(([id, s]) =>
       `<button type="button" class="opt ${d.style === id ? 'on' : ''}" data-act="style" data-id="${id}"><strong>${esc(s.name)}</strong><span>${esc(s.text)}</span></button>`).join('')}</div>
-    <p class="mute" style="font-size:14px">Quem começa mais novo tem mais potencial de evolução, mas fica mais anos no kart: como no automobilismo de verdade, só dá para subir à F4 aos 15, à F3 aos 16, à F2 aos 17 e à F1 aos 18.</p>
+    <p class="mute" style="font-size:14px">Quem começa mais novo tem mais potencial de evolução, mas fica mais anos no kart: no jogo, a progressão exige 15 anos na F4, 16 na F3, 17 na F2 e 18 na F1.</p>
     ${noSlots ? '<div class="note">Os 3 slots estão ocupados. Apague uma carreira acima para começar outra.</div>' : ''}
     ${ui.error ? `<div class="note err">${esc(ui.error)}</div>` : ''}
     <div class="row"><button class="btn" type="submit" data-act="create" ${noSlots ? 'disabled' : ''}>Começar carreira</button></div>
-  </form>`;
+  </form>
+  ${saves.available ? `<section class="card focus"><h2>Suas carreiras</h2>
+    <p class="mute" style="font-size:14px">O jogo salva sozinho a cada decisão, neste navegador. Para levar a carreira a outro lugar, use "Salvar em arquivo" e importe aqui.</p>
+    ${list.map(slotRow).join('')}
+    <label class="field">Importar de arquivo (.json)<input type="file" id="f-import" accept=".json,application/json"></label></section>`
+    : `<div class="note err">Este navegador bloqueia o salvamento local. Dá para jogar, mas sair da página perde a carreira: use "Salvar em arquivo" durante o jogo.</div>`}
+  </div>
+  <aside class="card home-aside home-journey" aria-label="Sua jornada no automobilismo">
+    <p class="home-kicker">Sua jornada</p><h2>Uma vaga por mérito</h2>
+    <ol class="career-route"><li><b>Kart</b><span>Aprenda e seja notado</span></li><li><b>F4</b><span>Mostre seu potencial</span></li><li><b>F3</b><span>Conquiste uma academia</span></li><li><b>F2</b><span>Dispute uma vaga</span></li><li><b>F1</b><span>Construa seu legado</span></li></ol>
+    <p class="mute small">Subir depende de propostas. Sua trajetória e o carro que você recebe fazem diferença.</p>
+  </aside>
+  <aside class="card home-aside home-guide" aria-label="Como começar">
+    <p class="home-kicker">Antes da largada</p><h2>Seu próximo capítulo</h2>
+    <h3>Crie seu piloto</h3><p class="mute">Escolha nacionalidade, idade e um estilo que combine com você.</p>
+    <h3>Leia as propostas</h3><p class="mute">Carro, pressão e desenvolvimento mudam de equipe para equipe.</p>
+    <h3>Dê ritmo à carreira</h3><p class="mute">Na F1, defina seu plano e avance até as decisões importantes.</p>
+    <button class="btn ghost small" data-act="help-open">Entender o jogo</button>
+    <p class="small mute">Salvamento automático neste navegador. Exporte um arquivo para levar sua carreira a outro lugar.</p>
+  </aside></div>`;
 }
 function seasonResultCard(view) {
   const ls = view.base?.lastSeason;
@@ -845,6 +843,17 @@ function storyList(story) {
   return `<ol class="story">${story.map((l) => `<li><b>${esc(l.when)}</b> ${esc(l.text)}</li>`).join('')}</ol>`;
 }
 
+function planControl(f1, id) {
+  return `<label class="field">Plano de corrida<select id="${id}">${f1.plans.map(p => `<option value="${esc(p.id)}" ${p.id === f1.plan ? 'selected' : ''}>${esc(p.label)}</option>`).join('')}</select></label>
+    <details class="small"><summary>O que muda no plano?</summary>${f1.plans.map(p => `<p><b>${esc(p.label)}:</b> ${esc(p.description)}</p>`).join('')}</details>`;
+}
+function seasonPulseCard(goal, final = false) {
+  if (!goal) return '';
+  return `<section class="card season-pulse"><h3>${final ? 'Balanço da meta' : 'Sua temporada'}</h3><p><b>${esc(goal.label)}</b></p>
+    <p class="${goal.met ? 'good' : 'mute'}">${esc(goal.progress)} · ${goal.done}/${goal.total} etapas${final ? (goal.met ? ' · Meta cumprida' : ' · Meta não cumprida') : ''}</p>
+    <details><summary>Disputas e cobrança da equipe</summary><ul class="log">${goal.lines.map(line => `<li>${esc(line)}</li>`).join('')}</ul><p class="mute small">${esc(goal.consequence)}</p></details></section>`;
+}
+
 function screenF1(view) {
   const f1 = view.f1;
   const pd = view.decision;
@@ -854,7 +863,7 @@ function screenF1(view) {
   if (view.screen === 'F1_PRE_TEMPORADA') {
     title = `Pré-temporada ${f1.worldSeason + 1}`;
     body = pd.type === 'story_event' ? eventCard(pd)
-      : `${marketCard(f1.marketMoves)}<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${optionCards(pd.payload.options, 'focus')}</section>`;
+      : `${marketCard(f1.marketMoves)}<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${planControl(f1, "season-plan")}${optionCards(pd.payload.options, 'focus')}</section>`;
   } else if (view.screen === 'F1_FIM_DE_SEMANA' && pd) {
     title = r.done >= r.total ? `Temporada ${f1.worldSeason} · fim do campeonato` : `Temporada ${f1.worldSeason} · etapa ${r.done + 1} de ${r.total}${r.circuit ? ` · ${r.circuit.gp}` : ''}`;
     const prog = `<div class="bar-meter"><i style="width:${Math.round((r.done / r.total) * 100)}%"></i></div>`;
@@ -875,25 +884,33 @@ function screenF1(view) {
         <p>Rádio: <b>"${esc(p.p1)} é mais rápido. Deixe-o passar."</b> Você está em P${esc(p.fromPosition)}.</p>
         <div class="grid2">${p.options.map((o) => `<button class="opt" data-act="order" data-id="${o.id}"><strong>${esc(o.label)}</strong><span>${esc(o.description)}</span></button>`).join('')}</div></section>`;
     } else {
-      body = `${circuitCard(pd.payload.circuit)}<section class="card focus"><h2>${pd.payload.out ? 'Você está fora desta corrida' : 'Abordagem do fim de semana'}</h2>${optionCards(pd.payload.options, 'approach')}
+      body = `${circuitCard(pd.payload.circuit)}<section class="card focus"><h2>${pd.payload.out ? 'Acompanhar do box' : 'Plano do fim de semana'}</h2>
+        ${planControl(f1, 'race-plan')}
+        <p class="mute">A equipe segue este plano nas próximas etapas. Você decide quando houver uma disputa relevante; pode mudar o plano antes de qualquer corrida.</p>
+        <div class="row"><button class="btn" data-act="simnext">Disputar próxima corrida</button><button class="btn ghost" data-act="simimportant">Avançar até decisão importante</button></div>
+        <details><summary>Controles de acompanhamento</summary>
         <div class="row"><button class="btn ghost small" data-act="sim5">Simular 5 corridas</button><button class="btn ghost small" data-act="simrest">Simular o resto da temporada</button></div>
-        <label class="row" style="gap:6px;font-size:14px;color:var(--mute)"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho eventos sem escolha</label>
-        <label class="row" style="gap:6px;font-size:14px;color:var(--mute)"><input type="checkbox" id="t-stop" ${ui.simStop ? 'checked' : ''}> Parar a simulação nos eventos de corrida e ordens de equipe</label>
-        <p class="mute" style="font-size:14px">A simulação usa a abordagem equilibrada. Sem a caixa acima marcada, ela resolve sozinha os eventos com a opção cautelosa e obedece às ordens de equipe, e conta o que decidiu.</p></section>`;
+        <label class="row"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho situações sem escolha</label>
+        <label class="row"><input type="checkbox" id="t-stop" ${ui.simStop ? 'checked' : ''}> Acompanhar passo a passo: parar em todas as decisões</label>
+        <p class="mute small">Simular etapas delega as decisões à equipe, com seu plano e as mesmas regras do modo manual. Notícias da carreira sempre pedem sua atenção.</p></details></section>`;
     }
+    const advice = f1.advice;
+    const context = advice && pd.type !== 'weekend_approach' && pd.type !== 'story_event'
+      ? `<aside class="decision-context note"><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar à equipe e seguir</button>` : ''}</aside>` : '';
+    body = body.replace(/(<section class="card focus"><h2>[\s\S]*?<\/h2>)/, `$1${context}`);
     body = `${prog}${body}`;
   }
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
   const last = f1.lastRace && view.screen === 'F1_FIM_DE_SEMANA' ? `<section class="card">${raceLine(f1.lastRace)}</section>` : '';
-  return layout(view, `<h2>${esc(title)}</h2>${lastEventCard(f1)}${body}${last}${dev}`, seasonPanel(view));
+  return layout(view, `<h2>${esc(title)}</h2>${seasonPulseCard(f1.goal)}${lastEventCard(f1)}${body}${last}${dev}`, seasonPanel(view));
 }
 
 function screenEndSeason(view) {
   const ls = view.f1.lastSeason;
   const champ = ls.position === 1;
   const orders = ls.ordersLog.filter((o) => o.p2 === view.player.name || o.p1 === view.player.name);
-  const main = `${lastEventCard(view.f1)}
+  const main = `${seasonPulseCard(ls.goal, true)}${lastEventCard(view.f1)}
     <section class="card focus"><h3>Fim da temporada · ${esc(ls.teamName)}</h3>
       <div class="row" style="align-items:flex-end;gap:24px"><div class="big">${ord(ls.position)}</div>
         <div class="stats">${stat('Pontos', ls.points)}${stat('Vitórias', ls.wins)}${stat('Pódios', ls.podiums)}${stat('Poles', ls.poles)}${stat('Abandonos', ls.dnfs)}</div></div>
@@ -978,7 +995,7 @@ function focusHeading(root) {
 
 function render() {
   const el = $app();
-  el.className = state ? 'wrap wide' : 'wrap';
+  el.className = state ? 'wrap wide' : 'wrap home';
   if (!state) { el.innerHTML = panels() + screenCreate() + footer(); document.body.classList.toggle('modal-open', !!anyModal()); return; }
   const view = getView(state);
   let html;
@@ -1037,6 +1054,7 @@ function startCareer() {
 
 // Volta ao menu sem apagar nada: a carreira já está gravada no slot.
 function toMenu() {
+  ui.contextFlow = false;
   ui.end = freshEnd();
   state = null; activeSlot = null; undoStack = []; ui.confirmNew = false; ui.confirmDel = null; ui.baseOpt = null; ui.error = null; ui.saveWarn = false; lastKey = '';
   render();
@@ -1076,6 +1094,7 @@ document.addEventListener('change', (e) => {
   else if (t.id === 'fb-kind') { ui.fb.kind = t.value; refreshSendLink(); }
   else if (t.id === 'fb-include') { ui.fb.include = t.checked; refreshSendLink(); }
   else if (t.id === 'fb-full') { ui.fb.full = t.checked; refreshSendLink(); }
+  else if (t.id === 'race-plan') decide({ id: t.value, savePlan: true });
   else if (t.id === 't-auto') { ui.autoSingle = t.checked; run((s) => settle(s)); }
   else if (t.id === 't-stop') ui.simStop = t.checked;
   else if (t.id === 'f-flag') { const w = document.getElementById('flag-preview'); if (w) w.innerHTML = flagImg(t.value, { alt: false, h: 18 }); }
@@ -1116,13 +1135,16 @@ document.addEventListener('click', (e) => {
     case 'run-base': { const o = ui.baseOpt; ui.baseOpt = null; return decide({ option: o }); }
     case 'academy': return decide({ accept: id === 'yes' });
     case 'offer': return decide({ id });
-    case 'focus': return decide({ id });
+    case 'focus': return decide({ id, plan: document.getElementById('season-plan')?.value ?? getView(state).f1.plan });
     case 'approach': return decide({ id });
     case 'strategy': return decide({ id });
     case 'finale': return decide({ id });
     case 'start': return decide({ id });
     case 'event': return decide({ id });
     case 'order': return decide({ id });
+    case 'simnext': return simRaces(1, ui.simStop ? 'all' : 'important');
+    case 'simimportant': return simRaces(Infinity, 'important');
+    case 'delegate': return simRaces(1, 'important', true);
     case 'simrest': return simRaces(Infinity);
     case 'sim5': return simRaces(5);
     case 'next': return run((s) => settle(advance(s)));

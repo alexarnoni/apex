@@ -1,6 +1,6 @@
 {
   "name": "apex",
-  "version": "0.1.0",
+  "version": "0.10.0",
   "description": "Jogo de carreira de F1: do karting à glória. Engine de simulação isomórfica (Node + navegador).",
   "type": "module",
   "scripts": {
@@ -14,7 +14,8 @@
     "calibrate:champions": "node tools/calibrate/champions.js",
     "calibrate:veterans": "node tools/calibrate/veterans.js",
     "calibrate:age": "node tools/calibrate/start-age.js",
-    "test:ui": "playwright test"
+    "test:ui": "playwright test",
+    "calibrate:pace": "node tools/calibrate/pace.js"
   },
   "license": "UNLICENSED",
   "devDependencies": {

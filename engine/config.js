@@ -257,6 +257,8 @@ export const CONFIG = {
 
   // Carreira do jogador na F1 (spec-loop-jogador)
   f1: {
+    goals: { pointsFraction: 0.6, midMinPoints: 8, rearScoringRaces: 1, recentRaces: 3 },
+    flow: { opportunityEdge: 2, chaseMargin: 1, preserveRisk: 1.3, attackRisk: 0.8, goalUrgencyRaces: 4 },
     // Sem corte de potencial na entrada da F1 (era potentialCap 84, 88, 87: um remendo de calibração). O teto do jogador agora
     // vem do talento de berço sorteado na criação (CONFIG.talent) e da dedicação ao longo da carreira (treinar eleva o teto).
     // Oferta 'good' = sorteio entre as N melhores equipes; 'bad' = entre as N piores.
