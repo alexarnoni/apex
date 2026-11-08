@@ -20,7 +20,7 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 | v0.6 | Interface viva: tema escuro, ficha com medidor, textos para leigos | 2026-11-07 | sim |
 | v0.7 | Mundo e corrida: pistas, bandeiras, simulação corrigida, realismo do campeão | 2026-11-07 | sim |
 | v0.8 | Criação e ficha: idade, nacionalidade, estatísticas por categoria, traçado das pistas | 2026-11-07/08 | sim |
-| v0.9 | Corrida em momentos, declínio previsível, veteranos, nomes por país e mercado | 2026-11-08 | **não (em preparo)** |
+| v0.9 | Corrida em momentos, declínio previsível, veteranos, nomes por país e mercado | 2026-11-08 | sim (commit `4b9add0`) |
 
 ---
 
@@ -101,9 +101,9 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 - **Estatísticas por categoria** na ficha (kart, F4, F3, F2, F1).
 - **Traçado das 24 pistas** no cartão da etapa (projeto f1-circuits, MIT).
 
-## v0.9: corrida em momentos, declínio e mercado *(em preparo, ainda não publicada)*
+## v0.9: corrida em momentos, declínio e mercado
 
-*Trabalho de 2026-11-08, no repositório local; 137 testes passando.*
+*Commit `4b9add0`, 2026-11-08; 137 testes passando. Um ajuste de calibração posterior baixou o teto de potencial do jogador na entrada da F1 de 88 para 87: com o declínio gentil e os veteranos, 88 deixava 22% das carreiras passivas com título (87 dá 15%, 86 dá 11%; a meta é cerca de 14%).*
 
 - **Corrida em momentos:**
   - Tela de **classificação** com o grid de largada, previsão de chuva, traços da pista e **estratégia de pneus** (aposta de 1 ou 2 posições; a escolha padrão tem efeito médio zero).

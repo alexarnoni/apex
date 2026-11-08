@@ -227,7 +227,7 @@ export const CONFIG = {
 
   // Carreira do jogador na F1 (spec-loop-jogador)
   f1: {
-    entry: { goodPool: 4, badPool: 3, potentialCap: 88 },   // era 84; subiu junto com o grid mais forte (novatos melhores, F1 com carWeight 0.60), mantendo ~14% das carreiras passivas com título. potentialCap: teto de potencial do jogador ao entrar na F1 (calibrado, ver README sessão 4); oferta 'good' = sorteio entre as N melhores equipes; 'bad' = entre as N piores
+    entry: { goodPool: 4, badPool: 3, potentialCap: 87 },   // era 84, depois 88 (grid mais forte e carWeight 0.60); 87 desde o declínio gentil e os veteranos de 2026-11-08 (88 dava 22% de carreiras passivas com título, 87 dá 15%, 86 dá 11%). potentialCap: teto de potencial do jogador ao entrar na F1 (calibrado, ver README sessão 4); oferta 'good' = sorteio entre as N melhores equipes; 'bad' = entre as N piores
     playerGrowthRate: 0.0,                // gap até o potencial fechado por ano na F1, além da curva de idade
     focus: {                              // season_focus: uma decisão por ano
       train: { label: 'Treinar', description: '+1 de skill extra no ano.', skillGain: 1 },
