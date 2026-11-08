@@ -162,6 +162,18 @@ O jogo se chamava Apex e usava preto com amarelo, que é a identidade da equipe 
 | R.15 | Diferenciar do F1 Glory nos detalhes: "Vitrine" virou "Sala de troféus", abas viraram "Tabela" e "Etapas", e o quadrado do overall virou um medidor circular (anel da habilidade e arco fino do potencial) | ✅ Feito (2026-11-07). |
 | R.16 | Trocar os quatro contadores (hoje GP, Vitórias, Pódios, Poles, na mesma ordem do F1 Glory), por exemplo para Largadas, Vitórias, Pódios e Voltas mais rápidas | Aberto. Era a sugestão 2 da diferenciação; ficou de fora por ora. |
 | R.17 | Ficha em faixa horizontal no topo e duas colunas embaixo, em vez de três colunas | **Salvo para depois (ideia 4 da diferenciação).** Muda bastante o layout (R.4); fazer só se o resto não bastar para ter identidade própria. |
+## Dinamismo: o jogo ficou repetitivo (2026-11-07)
+
+Feedback de quem jogou: na F1 cada corrida é a mesma escolha de três botões (Arriscado, Equilibrado, Conservador, com efeito de ±2) e um resultado em uma linha; na base é uma decisão por temporada. Pedido: pistas com nome, F1 mais dinâmica e a base também. Ordem combinada: calendário com pistas, corrida em momentos (F1), mini calendário na base.
+
+| # | Item | Estado |
+|---|---|---|
+| D.1 | Calendário da F1 com 24 pistas reais (`data/circuits.js`): nome do GP, local, bandeira, etiquetas e chance de chuva por pista | ✅ Feito (2026-11-07). Etiquetas mexem no motor (`CONFIG.tracks`): **rua** (largada vale mais, +2pp de abandono), **potência** (o carro pesa +0,04), **técnica** (o piloto pesa mais, −0,04). Chuva por pista, média ≈ 0,14 (antes 0,15 fixo). Balanceamento mantido (12,0 campeões por era, alvo 8–13). A UI mostra o cartão da pista antes de cada corrida, o nome do GP no título, na lista de etapas e no resultado. O calendário real de 2026 caiu para 22 etapas (sem Bahrein e Arábia Saudita); o jogo mantém as 24 originais. Sem mudar o formato do save. |
+| D.2 | Corrida em momentos (F1): treino livre, classificação e corrida viram telas curtas com decisões de verdade (pneus, quando parar, atacar ou defender, chuva) | Aberto. Próximo. Precisa de um novo tipo de `pendingDecision` e de uma simulação da corrida em fases no motor. |
+| D.3 | Mini calendário na base: 3 a 5 etapas-chave por temporada, com pista e uma decisão em cada | Aberto. Reaproveita D.1 e D.2 em versão curta; a base ainda não tem pistas. |
+| D.4 | Narrativa da corrida: resumo do que aconteceu (largada, ultrapassagens, safety car, abandonos de rivais) em vez de uma linha | Aberto, sugestão minha; combina com D.2. |
+| D.5 | Metas e tensão de temporada: objetivos da equipe, pressão do contrato, briga de título com o rival | Aberto, sugestão minha. |
+
 ## Pendências de qualidade (transversais)
 
 - Calibrar com jogo real, não com política passiva: taxa de título (hoje 24% passivo), crescimento do jogador na base, frequência de eventos, frequência de `fia_polemica_titulo` e `contrato_vazado` (nunca dispararam em simulação passiva).

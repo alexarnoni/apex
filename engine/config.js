@@ -14,6 +14,13 @@ export const CONFIG = {
     points: [25, 18, 15, 12, 10, 8, 6, 4, 2, 1],
   },
 
+  // Pistas (só F1 por enquanto): cada etiqueta de data/circuits.js mexe no motor. Os efeitos somam.
+  tracks: {
+    rua:      { gridMult: 1.5, dnfDelta: 0.02 },        // largada vale mais; muro por perto
+    potencia: { carWeightDelta: 0.04 },                 // o carro pesa mais nas retas
+    tecnica:  { carWeightDelta: -0.04 },                // o piloto pesa mais nas curvas lentas
+  },
+
   // Estilos de pilotagem: mexem em média E variância
   styles: {
     agg: { qualiBonus: 2, noiseDelta: 1.5, dnfDelta: 0.04, label: 'Agressivo' },

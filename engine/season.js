@@ -11,6 +11,10 @@
 import { simWeekend } from './race.js';
 import { shouldOrderSwap } from './status.js';
 import { CONFIG } from './config.js';
+import { circuitFor } from '../data/circuits.js';
+
+// Só a F1 tem calendário com pistas por enquanto; as outras categorias seguem sem pista.
+export const trackFor = (category, n) => (category.id === 'f1' ? circuitFor(n) : null);
 
 export function resetSeasonStats(drivers) {
   for (const d of drivers) {
@@ -24,9 +28,9 @@ export function resetSeasonStats(drivers) {
 }
 
 // Simula quali + corrida (sem premiar). Devolve o fim de semana bruto, já com DNFs e poles contados.
-export function startRace(drivers, category, rng, teamsById = null) {
+export function startRace(drivers, category, rng, teamsById = null, track = null) {
   if (teamsById) for (const d of drivers) d.teamCar = teamsById.get(d.team).car;
-  const w = simWeekend(drivers, category, rng);
+  const w = simWeekend(drivers, category, rng, track);
   // w.pointsAwarded é null — premiação acontece em awardRace, após swaps
   w.dnfs.forEach((d) => { d.seasonDnfs += 1; });
   w.pole.seasonPoles += 1; // pole não muda com swap
@@ -125,7 +129,7 @@ export function runSeason(drivers, category, rng, teamsById = null, playerPolicy
   const races = [];
 
   for (let r = 0; r < category.races; r++) {
-    const w = startRace(drivers, category, rng, teamsById);
+    const w = startRace(drivers, category, rng, teamsById, trackFor(category, r + 1));
     applyTeamOrders(w, drivers, category, teamsById, r + 1, { playerPolicy, ordersLog });
     const a = awardRace(w);
     races.push({ wet: a.wet, winner: a.winner, pole: a.pole });

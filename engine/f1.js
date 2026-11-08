@@ -11,7 +11,8 @@
 
 import { CONFIG } from './config.js';
 import { createWorld, beginYear, endYear } from './world.js';
-import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeason } from './season.js';
+import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeason, trackFor } from './season.js';
+import { circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
 import { marketScore } from './market.js';
 import { applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
@@ -231,6 +232,12 @@ function beginSeason(s, rng) {
   s.pendingDecision = weekendDecision(s);
 }
 
+// Pista da etapa n para a UI: nome do GP, local, bandeira, características e chance de chuva.
+export function circuitView(n) {
+  const c = circuitFor(n);
+  return { id: c.id, gp: c.gp, venue: c.venue, flag: c.flag, tags: c.tags.map((t) => TAG_LABEL[t]), hints: c.tags.map((t) => TAG_HINT[t]), rain: Math.round(c.chuva * 100) };
+}
+
 function weekendDecision(s) {
   const { season } = s.f1;
   const out = s.f1.missRaces > 0;
@@ -239,6 +246,7 @@ function weekendDecision(s) {
     payload: {
       race: season.raceIndex + 1,
       total: season.total,
+      circuit: circuitView(season.raceIndex + 1),
       out,
       options: out ? { rest: { label: 'Acompanhar do box', description: 'Você está fora desta corrida.' } } : F1().approach,
     },
@@ -273,7 +281,7 @@ export function resolveWeekendApproach(s, rng, answer) {
     p.dnfDelta = a.dnfDelta;
   }
 
-  const w = startRace(drivers, world.category, rng, teamsById(world));
+  const w = startRace(drivers, world.category, rng, teamsById(world), trackFor(world.category, season.raceIndex + 1));
   // Dados da corrida em curso, para o resumo de fim de corrida (largada, abordagem, evento).
   season.cur = { grid: out ? null : (w.quali.indexOf(p) + 1) || null, approach: out ? 'rest' : answer.id, event: null };
   if (!out) {
@@ -759,16 +767,16 @@ export function f1View(s) {
     pos: i + 1, id: c.id, name: c.name, points: c.points, isYours: c.id === p.team,
     delta: hasDelta ? (season.prevConPos?.[c.id] ?? i + 1) - (i + 1) : 0,
   }));
-  const isLast = (r) => r && { n: r.n, wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
+  const isLast = (r) => r && { n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
   return {
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
-    races: (season?.races ?? []).map((r) => ({ n: r.n, playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
+    races: (season?.races ?? []).map((r) => ({ n: r.n, circuit: circuitView(r.n), playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
     trust: p.trust,
     contract: { years: p.contract, statusClause: p.statusClause, exitClause: p.exitClause },
     worldSeason: world.season,
-    race: season ? { done: season.raceIndex, total: season.total } : null,
+    race: season ? { done: season.raceIndex, total: season.total, circuit: season.raceIndex < season.total ? circuitView(season.raceIndex + 1) : null } : null,
     lastRace: season ? isLast(season.lastRace) : null,
     rival: season?.rival ?? null,
     lastEvent: s.f1.lastEvent,

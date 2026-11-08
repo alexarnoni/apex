@@ -31,9 +31,26 @@ function basePerf(d, car, wet, carWeight) {
 // Simula um fim de semana completo (quali + corrida) para um grid de pilotos.
 // drivers: [{ skill, style, form, teamCar, ... }]  (teamCar = força do carro do piloto)
 // Retorna { wet, quali: [driver...], result: [{driver, dnf}...], pointsAwarded: Map }
-export function simWeekend(drivers, category, rng) {
+// Efeito da pista (tags de data/circuits.js) sobre o motor. Sem pista, nada muda.
+export function trackEffects(track) {
+  const e = { carWeightDelta: 0, gridMult: 1, dnfDelta: 0, wetChance: CONFIG.race.wetChance };
+  if (!track) return e;
+  e.wetChance = track.chuva ?? e.wetChance;
+  for (const tag of track.tags ?? []) {
+    const t = CONFIG.tracks[tag];
+    if (!t) continue;
+    e.carWeightDelta += t.carWeightDelta ?? 0;
+    e.gridMult *= t.gridMult ?? 1;
+    e.dnfDelta += t.dnfDelta ?? 0;
+  }
+  return e;
+}
+
+export function simWeekend(drivers, category, rng, track = null) {
   const R = CONFIG.race;
-  const wet = rng.chance(R.wetChance);
+  const T = trackEffects(track);
+  const carWeight = category.carWeight + T.carWeightDelta;
+  const wet = rng.chance(T.wetChance);
 
   for (const d of drivers) {
     updateForm(d, rng);
@@ -46,7 +63,7 @@ export function simWeekend(drivers, category, rng) {
       const st = CONFIG.styles[d.style] ?? {};
       let sigma = R.noise.quali + (st.noiseDelta ?? 0) + (st.qualiNoiseDelta ?? 0);
       if (wet) sigma += R.noise.wetExtra;
-      const p = basePerf(d, d.teamCar, wet, category.carWeight) + (st.qualiBonus ?? 0) + rng.gauss() * sigma;
+      const p = basePerf(d, d.teamCar, wet, carWeight) + (st.qualiBonus ?? 0) + rng.gauss() * sigma;
       return { d, p };
     })
     .sort((a, b) => b.p - a.p)
@@ -59,13 +76,13 @@ export function simWeekend(drivers, category, rng) {
   const dnfs = [];
   for (const d of drivers) {
     const st = CONFIG.styles[d.style] ?? {};
-    const dnfProb = Math.max(R.dnfMin, reliability(d.teamCar) + (st.dnfDelta ?? 0) + (d.dnfDelta ?? 0));
+    const dnfProb = Math.max(R.dnfMin, reliability(d.teamCar) + (st.dnfDelta ?? 0) + (d.dnfDelta ?? 0) + T.dnfDelta);
     if (rng.chance(dnfProb)) { dnfs.push(d); continue; }
     let sigma = R.noise.race + (st.noiseDelta ?? 0);
     if (wet) sigma += R.noise.wetExtra;
-    let p = basePerf(d, d.teamCar, wet, category.carWeight);
+    let p = basePerf(d, d.teamCar, wet, carWeight);
     p -= st.peakPenalty ?? 0;
-    p += (drivers.length - gridPos.get(d)) * R.gridBonusPerPos;
+    p += (drivers.length - gridPos.get(d)) * R.gridBonusPerPos * T.gridMult;
     // p1 recebe bônus extra de largada
     if (d.status === 'p1') p += (drivers.length - gridPos.get(d)) * CONFIG.status.statusP1GridBonusExtra;
     p += rng.gauss() * sigma;
@@ -76,5 +93,5 @@ export function simWeekend(drivers, category, rng) {
   const result = running.map((x) => x.d).concat(dnfs);
 
   // pointsAwarded NÃO é construído aqui — premiação acontece em runSeason após ordens de equipe
-  return { wet, quali, result, dnfs, pointsAwarded: null, pole: quali[0], winner: running[0]?.d ?? null };
+  return { wet, track: track?.id ?? null, quali, result, dnfs, pointsAwarded: null, pole: quali[0], winner: running[0]?.d ?? null };
 }

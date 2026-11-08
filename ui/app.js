@@ -572,7 +572,7 @@ function racesList(f1) {
   if (!f1.races.length) return '<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>';
   const items = [...f1.races].reverse().map((r) => {
     const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? `trophy p${r.playerPos}` : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
-    return `<li><div class="row" style="gap:8px"><b>C${r.n}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}</li>`;
+    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${esc(r.circuit.flag)} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}</li>`;
   }).join('');
   return `<ul class="racelist">${items}</ul>`;
 }
@@ -691,7 +691,7 @@ function screenBase(view) {
 function raceLine(r) {
   if (!r) return '';
   const mine = r.summary ? esc(r.summary) : (r.playerPos ? `Você terminou em <b>P${r.playerPos}</b>.` : '<b class="pill bad">Abandono</b>');
-  return `<p><b>Corrida ${r.n}</b>${r.wet ? ' · <span class="pill">chuva</span>' : ''}: ${mine}</p>
+  return `<p><b>${r.circuit ? `${esc(r.circuit.flag)} ${esc(r.circuit.gp)}` : `Corrida ${r.n}`}</b>${r.wet ? ' · <span class="pill">chuva</span>' : ''}: ${mine}</p>
     <p class="mute" style="font-size:14px">Vitória: ${esc(r.winner ?? '—')} · Pole: ${esc(r.pole)}</p>`;
 }
 
@@ -716,6 +716,15 @@ function lastEventCard(f1) {
   return f1.lastEvent ? `<section class="card"><h3>${esc(f1.lastEvent.title)}</h3><p>${esc(f1.lastEvent.text)}</p></section>` : '';
 }
 
+// Cartão da pista da etapa: nome do GP, local, características e chance de chuva.
+function circuitCard(c) {
+  if (!c) return '';
+  const chips = [...c.tags.map((t) => `<span class="chip">${esc(t)}</span>`), `<span class="chip">${c.rain >= 20 ? '🌧 ' : ''}chuva ${esc(c.rain)}%</span>`];
+  return `<section class="card circuit"><div class="circuit-flag" aria-hidden="true">${esc(c.flag)}</div>
+    <div><h2>${esc(c.gp)}</h2><p class="mute small">${esc(c.venue)}</p><div class="chips-row">${chips.join('')}</div>
+    ${c.hints?.length ? `<p class="mute small" style="margin-top:6px">${esc(c.hints.join(' '))}</p>` : ''}</div></section>`;
+}
+
 function screenF1(view) {
   const f1 = view.f1;
   const pd = view.decision;
@@ -727,7 +736,7 @@ function screenF1(view) {
     body = pd.type === 'story_event' ? eventCard(pd)
       : `<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${optionCards(pd.payload.options, 'focus')}</section>`;
   } else if (view.screen === 'F1_FIM_DE_SEMANA' && pd) {
-    title = r.done >= r.total ? `Temporada ${f1.worldSeason} · fim do campeonato` : `Temporada ${f1.worldSeason} · corrida ${r.done + 1} de ${r.total}`;
+    title = r.done >= r.total ? `Temporada ${f1.worldSeason} · fim do campeonato` : `Temporada ${f1.worldSeason} · etapa ${r.done + 1} de ${r.total}${r.circuit ? ` · ${r.circuit.gp}` : ''}`;
     const prog = `<div class="bar-meter"><i style="width:${Math.round((r.done / r.total) * 100)}%"></i></div>`;
     if (pd.type === 'story_event' || pd.type === 'race_event') {
       body = eventCard(pd);
@@ -737,7 +746,7 @@ function screenF1(view) {
         <p>Rádio: <b>"${esc(p.p1)} é mais rápido. Deixe-o passar."</b> Você está em P${esc(p.fromPosition)}.</p>
         <div class="grid2">${p.options.map((o) => `<button class="opt" data-act="order" data-id="${o.id}"><strong>${esc(o.label)}</strong><span>${esc(o.description)}</span></button>`).join('')}</div></section>`;
     } else {
-      body = `<section class="card focus"><h2>${pd.payload.out ? 'Você está fora desta corrida' : 'Abordagem do fim de semana'}</h2>${optionCards(pd.payload.options, 'approach')}
+      body = `${circuitCard(pd.payload.circuit)}<section class="card focus"><h2>${pd.payload.out ? 'Você está fora desta corrida' : 'Abordagem do fim de semana'}</h2>${optionCards(pd.payload.options, 'approach')}
         <div class="row"><button class="btn ghost small" data-act="sim5">Simular 5 corridas</button><button class="btn ghost small" data-act="simrest">Simular o resto da temporada</button></div>
         <label class="row" style="gap:6px;font-size:14px;color:var(--mute)"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho eventos sem escolha</label>
         <p class="mute" style="font-size:14px">A simulação usa a abordagem equilibrada e para quando há uma decisão sua.</p></section>`;
