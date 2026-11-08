@@ -2,7 +2,7 @@
 
 Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele reúne o que estava espalhado nos outros `.md` do projeto (README, roadmap, specs, segurança e Worker) e no histórico do git.
 
-**Sobre a numeração.** O jogo ainda não tinha versões numeradas. Os números abaixo (v0.1 a v0.9) são marcos que agrupam os commits por assunto, escolhidos na hora de escrever este documento. Eles **não** são a `ENGINE_VERSION` (que é o formato do save e continua em 1; ver "Compatibilidade de saves"). Quando houver uma versão pública de verdade, a numeração oficial começa daqui.
+**Sobre a numeração.** O jogo ainda não tinha versões numeradas. Os números abaixo (v0.1 a v0.9.1) são marcos que agrupam os commits por assunto, escolhidos na hora de escrever este documento. Eles **não** são a `ENGINE_VERSION` (que é o formato do save e continua em 1; ver "Compatibilidade de saves"). Quando houver uma versão pública de verdade, a numeração oficial começa daqui.
 
 **Endereço:** https://bandeirada.alexarnoni.com · **Repositório:** `alexarnoni/apex` · **Deploy:** automático a cada push na `main` (GitHub Pages).
 
@@ -21,6 +21,7 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 | v0.7 | Mundo e corrida: pistas, bandeiras, simulação corrigida, realismo do campeão | 2026-11-07 | sim |
 | v0.8 | Criação e ficha: idade, nacionalidade, estatísticas por categoria, traçado das pistas | 2026-11-07/08 | sim |
 | v0.9 | Corrida em momentos, declínio previsível, veteranos, nomes por país e mercado | 2026-11-08 | sim (commit `4b9add0`) |
+| v0.9.1 | Talento de berço e dedicação no lugar do corte de potencial | 2026-11-08 | sim (commit `f35795c`) |
 
 ---
 
@@ -105,7 +106,9 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 
 *Commit `4b9add0`, 2026-11-08; 137 testes passando.* O ajuste de calibração `25af201` baixou o corte de potencial na entrada da F1 de 88 para 87 (88 deixava 22% das carreiras passivas com título; 87 dá 15%).
 
-### v0.9.1: talento de berço e dedicação *(em preparo, ainda não publicada)*
+### v0.9.1: talento de berço e dedicação
+
+*Commit `f35795c`, 2026-11-08; 137 testes passando.*
 
 - O corte fixo de potencial na entrada da F1 (87) foi **removido**.
 - **Talento de berço:** o potencial do jogador é sorteado na criação numa curva em sino (média 85,5, poucos geracionais acima de 95), com um pequeno bônus por começar cedo.
@@ -131,6 +134,7 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 - Carreiras salvas antes de cada versão continuam abrindo, com estas diferenças:
   - **v0.7 e v0.8:** a decisão pendente guarda o texto e o cartão da pista daquela época (textos antigos, bandeira em emoji, que a tela converte em imagem); a tabela "Por categoria" só tem os totais da base.
   - **v0.7:** um evento de corrida já pendente não tem a opção cautelosa (`safe`), então a simulação para nele uma vez.
+  - **v0.9.1:** o potencial já salvo do jogador continua o antigo (que era cortado em 87 na F1) e só sobe com o treino daqui para frente; carreiras novas nascem com o talento sorteado.
   - **v0.9:** pilotos já gerados mantêm os nomes antigos ("Almeida II") e sem nacionalidade; os novos seguem o formato "I. Sobrenome". O declínio do seu piloto passa a valer no próximo envelhecimento.
 
 ## Onde está cada coisa (documentos reunidos)

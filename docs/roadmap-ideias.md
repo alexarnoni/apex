@@ -5,7 +5,7 @@ Itens já registrados como dívida no README estão marcados com (README).
 
 ## Resumo do estado (atualizado em 2026-11-08)
 
-O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, 109 testes). Esta seção é o ponto de partida para retomar; os detalhes de cada item estão nas seções abaixo.
+O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, 137 testes; última publicação: commit `f35795c`). Esta seção é o ponto de partida para retomar; os detalhes de cada item estão nas seções abaixo.
 
 ### Feito (neste ciclo)
 
@@ -20,7 +20,8 @@ O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnon
 - **Criação e ficha:** idade inicial de 12 a 16 com idade mínima por categoria (F4 15, F3 16, F1 18 confirmadas; F2 17 é convenção do jogo), campo "Nacionalidade" com 255 países e a bandeira dentro da caixa, tabela de estatísticas por categoria e traçado das pistas no cartão da etapa.
 - **Corrida em momentos (primeira parte + versão enxuta da segunda):** tela de classificação com o grid de largada, previsão de chuva e estratégia de pneus; decisão de final de corrida (atacar ou administrar); relato da corrida com a causa do abandono.
 - **Declínio previsível, veteranos e mercado:** declínio fixo do seu piloto (com a previsão na ficha), veteranos que duram mais e às vezes brigam lá em cima, nomes e nacionalidades por país com bandeira nas tabelas, e mercado com lealdade, equipes irmãs e resumo das trocas na pré-temporada.
-- **Realismo do campeão:** grid que não decai (novatos melhores), regulamento com mais peso de orçamento, peso do carro 0,60 e teto de potencial do jogador 88; teste de regressão em `tests/realism.test.js`.
+- **Realismo do campeão:** grid que não decai (novatos melhores), regulamento com mais peso de orçamento, peso do carro 0,60; teste de regressão em `tests/realism.test.js`.
+- **Talento de berço e dedicação (D.16):** o corte fixo de potencial na entrada da F1 foi removido; o potencial do jogador é sorteado na criação (poucos geracionais) e cada escolha de treino eleva o teto, com rendimento decrescente. Medido: nunca treina 5% de carreiras com título, treina todo ano na F1 20%, sempre treina 26%.
 
 ### Falta, por ordem de importância (critério: o que mais muda a experiência de quem joga, depois o que protege o projeto)
 
@@ -33,13 +34,14 @@ O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnon
 7. **Rotas alternativas (3.11).** Cerca de 9% das carreiras caem em "Fim da linha", o maior beco sem saída.
 8. **Qualidade:** teste automático da interface (F.13), migração de saves (B.7), captura de erros (B.9), teste em aparelhos reais (B.11).
 9. **Revisão dos textos dos eventos (1.3):** você lê `docs/textos-eventos.md` e diz o que mudar.
-10. **Identidade e acabamento:** trocar os contadores GP/Vitórias/Pódios/Poles (R.16), lista de países com bandeira em cada linha, ofertas com estrelas (R.7), tela própria de criação (R.8), fontes hospedadas (R.9), ficha em faixa horizontal (R.17), renomear o repositório (R.10), conferir marca e domínio (R.11, é com você).
+10. **Identidade e acabamento:** mostrar o talento na ficha (hoje só a faixa de potencial), trocar os contadores GP/Vitórias/Pódios/Poles (R.16), lista de países com bandeira em cada linha, ofertas com estrelas (R.7), tela própria de criação (R.8), fontes hospedadas (R.9), ficha em faixa horizontal (R.17), renomear o repositório (R.10), conferir marca e domínio (R.11, é com você).
 11. **Mais para frente:** modo fictício antes de qualquer monetização (B.14), ranking e compartilhamento com servidor (4.1 e 4.2), tradução (F.18), o nível "100% real" (seção 5).
 
 ### Limites conhecidos
 
 - Numa das três sementes do balanceamento a maior dinastia chegou a 9 títulos seguidos (alvo < 9).
-- Saves antigos guardam textos e dados antigos de uma decisão pendente (abordagens, pista, evento sem `safe`); carreiras novas já saem certas.
+- Saves antigos guardam textos e dados antigos de uma decisão pendente (abordagens, pista, evento sem `safe`) e pilotos gerados com nomes antigos ("Almeida II") e sem nacionalidade; o potencial do jogador salvo continua o antigo e só passa a subir com o treino daqui para frente. Carreiras novas já saem certas.
+- A taxa de títulos depende de a pessoa treinar (5% a 26% nas simulações); o jogador comum fica no meio. O "talento" ainda não aparece de forma legível na ficha (só a faixa de potencial).
 - A bandeira em emoji não aparece no Windows; o jogo usa imagens, e códigos de país fora do conjunto embutido caem para o texto do código.
 - O calendário real de 2026 caiu para 22 etapas (sem Bahrein e Arábia Saudita); o jogo mantém 24.
 
