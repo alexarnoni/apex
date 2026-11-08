@@ -662,7 +662,7 @@ function screenCreate() {
     <div class="grid2">
       <label class="field">Sobrenome<input type="text" id="f-surname" maxlength="18" value="${esc(d.surname)}" placeholder="Ex.: Senna"></label>
       <label class="field">Número do carro (1-99)<input type="number" id="f-number" min="1" max="99" value="${esc(d.number)}" placeholder="Ex.: 12"></label>
-      <label class="field">País (bandeira)<select id="f-flag">${FLAGS.map((f) => `<option value="${f}" ${f === d.flag ? 'selected' : ''}>${esc(COUNTRY[f] ?? f)}</option>`).join('')}</select></label>
+      <label class="field">Nacionalidade<span class="select-flag"><span class="flag-preview" id="flag-preview" aria-hidden="true">${flagImg(d.flag, { alt: false, h: 18 })}</span><select id="f-flag">${FLAGS.map((f) => `<option value="${f}" ${f === d.flag ? 'selected' : ''}>${esc(COUNTRY[f] ?? f)}</option>`).join('')}</select></span></label>
       <label class="field">Idade inicial<select id="f-age">${[12, 13, 14, 15, 16].map((a) => `<option value="${a}" ${a === Number(d.age) ? 'selected' : ''}>${a} anos</option>`).join('')}</select></label>
       <label class="field">Seed (opcional, repete uma carreira)<input type="text" id="f-seed" inputmode="numeric" value="${esc(d.seed)}" placeholder="vazio = aleatória"></label>
       ${slotField}
@@ -987,6 +987,7 @@ document.addEventListener('change', (e) => {
   else if (t.id === 'fb-full') { ui.fb.full = t.checked; refreshSendLink(); }
   else if (t.id === 't-auto') { ui.autoSingle = t.checked; run((s) => settle(s)); }
   else if (t.id === 't-stop') ui.simStop = t.checked;
+  else if (t.id === 'f-flag') { const w = document.getElementById('flag-preview'); if (w) w.innerHTML = flagImg(t.value, { alt: false, h: 18 }); }
 });
 
 document.addEventListener('keydown', (e) => {

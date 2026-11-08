@@ -290,6 +290,9 @@ h2::before { display: none; }
 .tower tr:nth-child(even) td { background: none; }
 .tower tr.you td { background: color-mix(in srgb, var(--signal) 14%, var(--panel)); box-shadow: none; }
 .tower tr.you td:first-child { border-radius: 8px 0 0 8px; } .tower tr.you td:last-child { border-radius: 0 8px 8px 0; }
+.select-flag { position: relative; display: block; }
+.select-flag .flag-preview { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); line-height: 0; pointer-events: none; }
+.select-flag select { padding-left: 52px; }
 .by-cat { border-top: 0; padding-top: 0; }
 .by-cat summary { font-family: var(--f-display); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; font-size: 14px; color: var(--mute); }
 .cat-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 6px; }
