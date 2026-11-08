@@ -21,6 +21,22 @@ export const CONFIG = {
     tecnica:  { carWeightDelta: -0.04 },                // o piloto pesa mais nas curvas lentas
   },
 
+  // Estratégia de pneus (F1, engine/strategy.js): aposta que move o jogador 1 ou 2 posições.
+  // Com encaixe (fit) 0 a chance de dar certo e de dar errado é igual, então a média é zero.
+  strategy: {
+    pGood: 0.30, pBad: 0.30,      // chances de bom e de ruim com encaixe 0 (o resto é neutro)
+    perFit: 0.12,                 // cada ponto de encaixe move 12pp de ruim para bom
+    bigShift: 0.25,               // chance de o efeito ser 2 posições em vez de 1
+    slicksBigShift: 0.5,          // a aposta nos slicks é mais extrema
+    fitMatch: 1,                  // a escolha combina com a pista (macios na rua, duros na pista técnica)
+    fitBack: 0.5,                 // bônus para quem larga atrás (precisa arriscar)
+    backGrid: 7, farBackGrid: 12, // a partir de que posição de largada vale o bônus (macios, duros)
+    wetFit: { inters: 2, wait: 0, slicks: -0.5 },
+    // Final de corrida (versão enxuta): atacar o rival à frente ou administrar. Atacar rende +1 ou -1 posição conforme
+    // o ritmo relativo (fit = diferença de desempenho / fitScale, limitada a ±maxFit); administrar não muda nada.
+    finale: { chance: 0.5, pGood: 0.30, pBad: 0.30, perFit: 0.12, fitScale: 4, maxFit: 1.5 },
+  },
+
   // Estilos de pilotagem: mexem em média E variância
   styles: {
     agg: { qualiBonus: 2, noiseDelta: 1.5, dnfDelta: 0.04, label: 'Agressivo' },
@@ -73,11 +89,28 @@ export const CONFIG = {
       { maxAge: 26, min: 0.5, max: 1.5 },
       { maxAge: 30, min: -0.5, max: 0.5 },
       { maxAge: 33, min: -1.5, max: -0.5 },
-      { maxAge: 99, min: -3.0, max: -1.0 },
+      // 2026-11-08: a faixa 34+ era -3 a -1 (média -2) e os veteranos sumiam do grid (0,18 piloto com 38+ por temporada).
+      // Agora o declínio é mais gentil, há "ano bom" de veterano e a elite se aposenta mais tarde.
+      { maxAge: 36, min: -1.4, max: -0.2 },
+      { maxAge: 99, min: -2.0, max: -0.3 },
     ],
+    // Declínio do PILOTO DO JOGADOR: sem sorteio, para ele poder planejar. Começa em startAge (por estilo): no primeiro ano
+    // perde firstYear e a queda cresce perYear a cada ano, até cap. Escolher "Treinar" na pré-temporada corta a queda do
+    // ano em trainShield. Os pilotos controlados pelo jogo seguem com a faixa aleatória de ageCurve.
+    playerDecline: {
+      startAge: { agg: 30, con: 31, tec: 32 },
+      firstYear: -0.5, perYear: -0.2, cap: -1.8,   // por volta dos 38 anos a queda chega a -1,8 por ano
+      trainShield: 0.35,
+    },
+    // Zebra dos veteranos: de vez em quando um piloto mais velho tem um ano bom e quase não perde nada (ou ganha um pouco),
+    // como Alonso e Hamilton depois dos 40. Vale para os pilotos controlados pelo jogo (o jogador segue a curva fixa).
+    veteranGoodYear: { minAge: 34, chance: 0.3, range: [-0.3, 0.8] },
+    // Elite dura mais: acima desta habilidade a chance de aposentar é multiplicada por retireEliteFactor.
+    retireEliteSkill: 86, retireEliteFactor: 0.45,
+    retireHardAge: 47,           // a partir daqui a aposentadoria é certa (o recorde real é por volta dos 44-46)
     skillFloor: 60,
     retireStartAge: 32,
-    retirePerYear: 0.07,
+    retirePerYear: 0.035,        // era 0.07
     retirePerTitle: 0.07,        // +7pp por título CONSECUTIVO sem age gate ("nada mais a provar")
     retireLowSkillBonus: 0.15,   // se skill < limiar, aposenta mais cedo
     retireLowSkillThreshold: 76,
@@ -111,11 +144,19 @@ export const CONFIG = {
     // score = skill*a + margemCrescimento*b - penalidadeIdade*c
     skillWeight: 0.7,
     growthWeight: 0.5,
-    agePenaltyStart: 30,
-    agePenaltyPerYear: 1.5,
+    // Encaixe piloto-equipe (2026-11-08): somado à nota de mercado quando a equipe escolhe.
+    loyaltyBonus: 4,             // a equipe prefere quem já era dela
+    sisterBonus: 3,              // equipe irmã (Red Bull e Racing Bulls, Ferrari e Haas, Mercedes e Williams)
+    starSkill: 92,               // "estrela": habilidade a partir daqui
+    starCarRank: 2,              // duas estrelas na mesma equipe só se o carro for top 2
+    starClashPenalty: 8,
+    // Renovação de quem fora do top 3 termina o contrato: a chance cai do melhor para o pior carro.
+    reSignBest: 0.65, reSignWorst: 0.38, reSignEliteBonus: 0.10,
+    agePenaltyStart: 34,         // era 30 / 1.5 por ano: veterano de elite nunca achava vaga (2026-11-08)
+    agePenaltyPerYear: 0.8,
     // quem fica no mercado sem assento pro ano seguinte
     keepMinSkill: 76,
-    keepMaxAge: 29,
+    keepMaxAge: 42,              // era 29
   },
 
   // Scouting das categorias de base (gera as ofertas de subida)

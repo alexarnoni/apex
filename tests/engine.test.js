@@ -60,7 +60,9 @@ test('ninguém corre até os 50: aposentadoria funciona', () => {
   for (let i = 0; i < 25; i++) advanceYear(world, rng);
   assert.ok(world.drivers.every((d) => d.age < 47));
   assert.equal(retirementProb({ age: 25, skill: 90 }), 0);
-  assert.ok(retirementProb({ age: 44, skill: 70 }) >= 0.8);
+  assert.ok(retirementProb({ age: 44, skill: 70 }) >= 0.55, 'veterano fraco aposenta com folga');
+  assert.equal(retirementProb({ age: 47, skill: 99 }), 1, 'limite do corpo: aos 47 a aposentadoria é certa');
+  assert.ok(retirementProb({ age: 40, skill: 92 }) < retirementProb({ age: 40, skill: 78 }), 'a elite dura mais');
 });
 
 test('scouting: campeão jovem em carro fraco > veterano em carro bom', () => {

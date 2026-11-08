@@ -17,6 +17,8 @@ function answerFor(state) {
     case 'weekend_approach': return { id: pd.payload.out ? 'rest' : 'balanced' };
     case 'story_event':
     case 'race_event': return { id: pd.payload.options[0].id };
+    case 'race_strategy': return { id: pd.payload.safe };
+    case 'race_finale': return { id: pd.payload.safe };
     case 'team_order': return { id: 'obey' };
     case 'contract_terms': return { years: 2, clause: 'none', exitClause: false };
     case 'retire_or_continue': return { id: 'retire' };
@@ -66,9 +68,23 @@ test('a idade mínima de cada categoria é respeitada em qualquer idade inicial'
   }
 });
 
-test('quem começa aos 12 passa anos no kart até ter idade para a F4, sem cair em "sem oferta"', () => {
-  const { s, entries } = entryAges(3, 12);
-  assert.equal(entries.kart, 12);
-  assert.ok(!entries.f4 || entries.f4 >= 15);
-  assert.ok(s.baseCareer === undefined || s.baseCareer === null || s.baseCareer.noOfferStreak < 2, 'o bloqueio por idade não conta como falta de oferta');
+test('quem começa aos 12 passa anos no kart até ter idade para a F4; o bloqueio por idade não conta como "sem oferta"', () => {
+  let blocked = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    let s = createCareer({ ...HERO, seed, age: 12 });
+    assert.equal(s.player.age, 12);
+    for (let i = 0; i < 60 && s.phase !== 'LEGADO' && !s.f1; i++) {
+      const before = s.baseCareer?.noOfferStreak;
+      const beforeYear = s.baseCareer?.lastSummary?.year;
+      if (s.pendingDecision) s = applyDecision(s, answerFor(s));
+      else { const n = advance(s); if (n === s) break; s = n; }
+      const sum = s.baseCareer?.lastSummary;
+      if (sum?.ageBlock && sum.year !== beforeYear) {
+        blocked += 1;
+        assert.equal(s.baseCareer.noOfferStreak, before, 'o bloqueio por idade não aumenta a sequência sem oferta');
+        assert.ok(s.player.age < sum.ageBlock.minAge, 'só bloqueia quem ainda não tem a idade');
+      }
+    }
+  }
+  assert.ok(blocked > 0, 'em 12 carreiras que começam aos 12, algum bloqueio por idade aconteceu');
 });

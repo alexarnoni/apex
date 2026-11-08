@@ -7,11 +7,11 @@
 
 import { CONFIG } from './config.js';
 import {
-  enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveTeamOrder,
+  enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveRaceStrategy, resolveRaceFinale, resolveTeamOrder,
   resolveStoryEvent, resolveRaceEvent, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View,
 } from './f1.js';
 import { createRng } from './rng.js';
-import { applyAging, makeRookie, getRookieCounter, setRookieCounter } from './drivers.js';
+import { applyAging, makeRookie, getRookieCounter, setRookieCounter, declineInfo } from './drivers.js';
 import { createPlayer, runBaseSeasonSummary, pickTeamByTier, teamsByStrength } from './career.js';
 import { BASE_TEAMS } from '../data/baseTeams.js';
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
@@ -136,6 +136,8 @@ function resolveDecision(state, pd, answer) {
       return transition(state, (s, rng) => (pd.payload.scope === 'f1' ? resolveF1Offer : resolveOffer)(s, rng, answer));
     case 'season_focus': return transition(state, (s, rng) => resolveSeasonFocus(s, rng, answer));
     case 'weekend_approach': return transition(state, (s, rng) => resolveWeekendApproach(s, rng, answer));
+    case 'race_strategy': return transition(state, (s, rng) => resolveRaceStrategy(s, rng, answer));
+    case 'race_finale': return transition(state, (s, rng) => resolveRaceFinale(s, rng, answer));
     case 'team_order': return transition(state, (s, rng) => resolveTeamOrder(s, rng, answer));
     case 'story_event': return transition(state, (s, rng) => resolveStoryEvent(s, rng, answer));
     case 'race_event': return transition(state, (s, rng) => resolveRaceEvent(s, rng, answer));
@@ -438,6 +440,7 @@ export function getView(state) {
       potentialBand: potentialBand(p.potential),
       career: careerTotals(state, p),
       byCategory: categoryBreakdown(state, p),
+      decline: declineInfo(p),
     },
     decision: state.pendingDecision,
     log: state.careerLog.slice(-10),

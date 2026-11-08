@@ -402,6 +402,8 @@ function simRaces(n) {
         if (done >= n) break;
         cur = settle(applyDecision(cur, { id: pd.payload.out ? 'rest' : 'balanced' }));
         done += 1;
+      } else if (!ui.simStop && (pd.type === 'race_strategy' || pd.type === 'race_finale')) {
+        cur = settle(applyDecision(cur, { id: pd.payload.safe }));
       } else if (!ui.simStop && pd.type === 'race_event' && pd.payload.safe) {
         auto.push(pd.payload.title);
         cur = settle(applyDecision(cur, { id: pd.payload.safe }));
@@ -416,6 +418,8 @@ function simRaces(n) {
     const pd = cur.pendingDecision;
     let why = '';
     if (pd?.type === 'team_order') why = ' Parou: ordem de equipe para você decidir.';
+    else if (pd?.type === 'race_strategy') why = ` Parou na etapa ${pd.payload.race}: estratégia de pneus, uma decisão sua.`;
+    else if (pd?.type === 'race_finale') why = ` Parou na etapa ${pd.payload.race}: final de corrida, uma decisão sua.`;
     else if (pd?.type === 'race_event') why = ` Parou na etapa ${pd.payload.race}: ${pd.payload.title}, uma decisão sua.`;
     else if (pd?.type === 'story_event') why = ' Parou: notícia com escolha.';
     else if (!pd || cur.phase !== 'F1_FIM_DE_SEMANA') why = ' A temporada terminou.';
@@ -480,6 +484,17 @@ function layout(view, main, aside = '') {
   </div>`;
 }
 
+// Fase da carreira: quando o declínio começa e quanto custa o próximo ano (previsível, sem sorteio).
+function declineLine(d) {
+  if (!d) return '';
+  const fmt = (n) => Math.abs(Math.round(n * 10) / 10).toLocaleString('pt-BR');
+  const text = d.inDecline
+    ? `Em declínio: a habilidade cai cerca de ${fmt(d.next)} no próximo ano (${fmt(d.nextTrained)} se você treinar na pré-temporada).`
+    : `Em alta: o declínio começa aos ${d.startAge} anos, com queda de uns ${fmt(d.next ?? 0.8)} por ano no começo. Treinar na pré-temporada atenua.`;
+  return `<div class="attr"><div class="attr-head"><span>Fase da carreira</span><b>${d.inDecline ? 'Declínio' : 'Em alta'}</b></div>
+    <div class="attr-foot mute small">${esc(text)}</div></div>`;
+}
+
 // Atributos do piloto: fama (barra) e estilo de pilotagem. Habilidade e potencial ficam no medidor e nos quadradinhos.
 function attributes(p) {
   const clamp = (n) => Math.max(0, Math.min(100, n));
@@ -497,6 +512,7 @@ function attributes(p) {
       <div class="attr-head"><span>Estilo</span><b>${esc(style?.name ?? p.style)}</b></div>
       <div class="attr-foot mute small">${esc(style?.text ?? '')}</div>
     </div>
+    ${declineLine(p.decline)}
   </div>`;
 }
 
@@ -584,7 +600,7 @@ function driversTable(f1) {
     prev = r.pos;
     rows.push(`<tr class="${r.isPlayer ? 'you' : ''}"><td class="pos ${r.pos <= 3 ? `p${r.pos}` : ''}">${r.pos}</td>
       <td class="car"><i style="background:${esc(TEAM_COLOR[r.team] ?? 'var(--line)')}"></i></td>
-      <td class="name">${esc(r.name)}</td><td class="dl">${delta(r.delta)}</td><td class="pts">${esc(r.points)}</td></tr>`);
+      <td class="name">${flagImg(r.nat, { alt: false, h: 11 })} ${esc(r.name)}</td><td class="dl">${delta(r.delta)}</td><td class="pts">${esc(r.points)}</td></tr>`);
   }
   return `<div class="scroll-x"><table class="tower" aria-label="Classificação de pilotos"><tbody>${rows.join('')}</tbody></table></div>
     <button class="btn ghost small" data-act="grid" style="align-self:flex-start">${ui.fullGrid ? 'Mostrar só o top 10' : 'Ver grid completo'}</button>`;
@@ -601,7 +617,7 @@ function racesList(f1) {
   if (!f1.races.length) return '<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>';
   const items = [...f1.races].reverse().map((r) => {
     const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? `trophy p${r.playerPos}` : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
-    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 12 })} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}</li>`;
+    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 12 })} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}${r.story?.length ? `<details class="race-story"><summary>Relato da corrida</summary>${storyList(r.story)}</details>` : ''}</li>`;
   }).join('');
   return `<ul class="racelist">${items}</ul>`;
 }
@@ -722,6 +738,7 @@ function raceLine(r) {
   if (!r) return '';
   const mine = r.summary ? esc(r.summary) : (r.playerPos ? `Você terminou em <b>P${r.playerPos}</b>.` : '<b class="pill bad">Abandono</b>');
   return `<p><b>${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 14 })} ${esc(r.circuit.gp)}` : `Corrida ${r.n}`}</b>${r.wet ? ' · <span class="pill">chuva</span>' : ''}: ${mine}</p>
+    ${storyList(r.story)}
     <p class="mute" style="font-size:14px">Vitória: ${esc(r.winner ?? '—')} · Pole: ${esc(r.pole)}</p>`;
 }
 
@@ -763,6 +780,53 @@ function circuitCard(c) {
     ${c.hints?.length ? `<p class="mute small" style="margin-top:6px">${esc(c.hints.join(' '))}</p>` : ''}</div></section>`;
 }
 
+// Classificação feita: grid de largada, clima e a escolha de pneus.
+function strategyCard(p) {
+  const rows = p.gridRows.map((r, i, a) => {
+    const gap = i > 0 && r.pos - a[i - 1].pos > 1 ? '<tr><td colspan="3" class="mute" style="text-align:center">···</td></tr>' : '';
+    return `${gap}<tr class="${r.isPlayer ? 'you' : ''}"><td class="pos ${r.pos <= 3 ? `p${r.pos}` : ''}">${r.pos}</td>
+      <td class="car"><i style="background:${esc(TEAM_COLOR[r.team] ?? 'var(--line)')}"></i></td><td class="name">${flagImg(r.nat, { alt: false, h: 11 })} ${esc(r.name)}</td></tr>`;
+  }).join('');
+  const poleLine = p.grid === 1 ? 'Você larga na pole!' : `Você larga em P${p.grid} de ${p.gridSize}.`;
+  return `${circuitCard(p.circuit)}
+    <section class="card focus"><h2>Classificação</h2>
+      <div class="row"><b>${esc(poleLine)}</b><span class="chip">${p.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span></div>
+      <div class="scroll-x"><table class="tower" aria-label="Grid de largada"><tbody>${rows}</tbody></table></div>
+      <h3>Estratégia de pneus</h3>
+      <p class="mute small">${p.wet ? 'A pista está molhada: decida o que calçar. A equipe recomenda ' + esc(p.options.find((o) => o.id === p.safe)?.label ?? '') + '.' : 'Leia a pista e a sua posição de largada. A escolha segura é ' + esc(p.options.find((o) => o.id === p.safe)?.label ?? '') + ': não ganha nem perde nada de especial.'}</p>
+      ${optionCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'strategy')}
+    </section>`;
+}
+
+// Final de corrida: rival logo à frente; atacar ou administrar.
+function finaleCard(p) {
+  const pace = { faster: 'Você parece mais rápido que ele: o ataque tem boa chance.', slower: 'Ele parece mais rápido que você: atacar é arriscado.', even: 'O ritmo de vocês é parecido: é uma aposta.' }[p.pace];
+  return `${circuitCard(p.circuit)}
+    <section class="card focus"><h2>Últimas voltas</h2>
+      <p>Você está em <b>P${esc(p.pos)}</b>. Logo à frente vem <b>${flagImg(p.rival.nat, { alt: false, h: 14 })} ${esc(p.rival.name)}</b> (${esc(p.rival.teamName)}).</p>
+      <p class="mute">${esc(pace)}</p>
+      ${optionCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'finale')}
+    </section>`;
+}
+
+// Mercado do ano (resumo das trocas) para a pré-temporada.
+function marketCard(moves) {
+  if (!moves?.length) return '';
+  const rows = moves.slice(0, 7).map((m) => {
+    const who = `${flagImg(m.nat, { alt: false, h: 11 })} <b>${esc(m.name)}</b>`;
+    if (m.kind === 'transfer') return `<li>${who}: ${esc(m.from ?? '—')} → <b>${esc(m.to ?? '—')}</b></li>`;
+    if (m.kind === 'rookie') return `<li>${who} estreia na <b>${esc(m.to ?? '—')}</b>${m.origin ? ` <span class="mute small">(${esc(m.origin)})</span>` : ''}</li>`;
+    return `<li>${who} se aposenta${m.from ? ` <span class="mute small">(${esc(m.from)}, ${esc(m.age)} anos)</span>` : ''}</li>`;
+  }).join('');
+  return `<section class="card"><h3>Mercado de pilotos</h3><ul class="log">${rows}</ul></section>`;
+}
+
+// Relato da corrida: o que aconteceu na largada, na estratégia, nos eventos e na chegada.
+function storyList(story) {
+  if (!story?.length) return '';
+  return `<ol class="story">${story.map((l) => `<li><b>${esc(l.when)}</b> ${esc(l.text)}</li>`).join('')}</ol>`;
+}
+
 function screenF1(view) {
   const f1 = view.f1;
   const pd = view.decision;
@@ -772,12 +836,16 @@ function screenF1(view) {
   if (view.screen === 'F1_PRE_TEMPORADA') {
     title = `Pré-temporada ${f1.worldSeason + 1}`;
     body = pd.type === 'story_event' ? eventCard(pd)
-      : `<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${optionCards(pd.payload.options, 'focus')}</section>`;
+      : `${marketCard(f1.marketMoves)}<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${optionCards(pd.payload.options, 'focus')}</section>`;
   } else if (view.screen === 'F1_FIM_DE_SEMANA' && pd) {
     title = r.done >= r.total ? `Temporada ${f1.worldSeason} · fim do campeonato` : `Temporada ${f1.worldSeason} · etapa ${r.done + 1} de ${r.total}${r.circuit ? ` · ${r.circuit.gp}` : ''}`;
     const prog = `<div class="bar-meter"><i style="width:${Math.round((r.done / r.total) * 100)}%"></i></div>`;
     if (pd.type === 'story_event' || pd.type === 'race_event') {
       body = eventCard(pd);
+    } else if (pd.type === 'race_strategy') {
+      body = strategyCard(pd.payload);
+    } else if (pd.type === 'race_finale') {
+      body = finaleCard(pd.payload);
     } else if (pd.type === 'team_order') {
       const p = pd.payload;
       body = `<section class="card focus"><h2>Ordem de equipe</h2>
@@ -1027,6 +1095,8 @@ document.addEventListener('click', (e) => {
     case 'offer': return decide({ id });
     case 'focus': return decide({ id });
     case 'approach': return decide({ id });
+    case 'strategy': return decide({ id });
+    case 'finale': return decide({ id });
     case 'event': return decide({ id });
     case 'order': return decide({ id });
     case 'simrest': return simRaces(Infinity);

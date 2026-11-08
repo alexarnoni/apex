@@ -10,6 +10,7 @@ import { runSeason, resetSeasonStats } from './season.js';
 import { applyAging, retirementProb, makeRookie } from './drivers.js';
 import { fillSeats } from './market.js';
 import { assignStatus } from './status.js';
+import { SISTER_TEAMS } from '../data/world2026.js';
 
 export function createWorld({ teams, drivers, category, names }) {
   return {
@@ -107,30 +108,59 @@ export function endYear(world, rng, result, teamsById, devLog) {
   const finalStandings = result.standings;
   const topDriverNames = new Set(finalStandings.slice(0, CONFIG.retention.standingsCutoff).map((d) => d.name));
 
+  // Posição do carro de cada equipe (1 = melhor): quem está num carro bom renova mais.
+  const carOrder = [...world.teams].sort((a, b) => b.car - a.car).map((t) => t.id);
+  const M = CONFIG.market;
   const staying = [];
+  const retiredNow = [];
+  const prevTeamOf = new Map();
   for (const d of world.drivers) {
+    prevTeamOf.set(d, d.team);
     applyAging(d, rng);
     d.contract -= 1;
     if (d.isPlayer) { staying.push(d); continue; }
-    if (rng.chance(retirementProb(d))) { d.team = null; world.retired.push(d); continue; }
+    if (rng.chance(retirementProb(d))) { d.prevTeam = d.team; d.team = null; world.retired.push(d); retiredNow.push(d); continue; }
     if (d.contract > 0) { staying.push(d); continue; }
-    // Contrato vencido: elite retém com alta probabilidade
-    if (topDriverNames.has(d.name) && rng.chance(CONFIG.retention.prob)) {
+    // Contrato vencido: o top 3 do mundial renova quase sempre; os demais renovam conforme a força do carro
+    // (melhor carro 75%, pior 40%, mais 10 pontos para a elite).
+    const rankPct = carOrder.length > 1 ? carOrder.indexOf(d.team) / (carOrder.length - 1) : 0;
+    const reSign = M.reSignBest - (M.reSignBest - M.reSignWorst) * rankPct + (d.skill >= M.starSkill - 4 ? M.reSignEliteBonus : 0);
+    const keeps = (topDriverNames.has(d.name) && rng.chance(CONFIG.retention.prob)) || rng.chance(reSign);
+    if (keeps) {
       d.contract = rng.int(CONFIG.rookies.contractRange[0], CONFIG.rookies.contractRange[1]);
       staying.push(d);
       continue;
     }
+    d.prevTeam = d.team;
     d.team = null;
     world.market.push(d);
   }
   for (let i = 0; i < CONFIG.rookies.perSeason; i++) {
     world.market.push(makeRookie(world.names, rng, rng.pick(['campeão da F2', 'destaque da F2', 'veio da IndyCar', 'veio da Super Fórmula'])));
   }
-  world.market = fillSeats(world.teams, staying, world.market, rng, () => makeRookie(world.names, rng, 'F2'));
+  world.market = fillSeats(world.teams, staying, world.market, rng, () => makeRookie(world.names, rng, 'F2'), SISTER_TEAMS);
   world.drivers = staying;
+  world.lastMoves = marketMoves(world, prevTeamOf, retiredNow);
 
   // 4. Atribuir status para o próximo ano (após mercado, com grid final)
   assignStatus(world.teams, world.drivers, result.champion);
+}
+
+// Resumo do mercado do ano para a UI: quem trocou de equipe, quem estreou e quem se aposentou, do mais forte ao mais fraco.
+function marketMoves(world, prevTeamOf, retiredNow) {
+  const teamName = (id) => world.teams.find((t) => t.id === id)?.name ?? null;
+  const moves = [];
+  for (const d of world.drivers) {
+    if (d.isPlayer) continue;
+    const from = prevTeamOf.get(d);
+    if (from === undefined) {
+      moves.push({ kind: 'rookie', name: d.name, nat: d.nat ?? null, to: teamName(d.team), origin: d.origin ?? null, skill: d.skill });
+    } else if (from !== d.team) {
+      moves.push({ kind: 'transfer', name: d.name, nat: d.nat ?? null, from: teamName(from), to: teamName(d.team), skill: d.skill });
+    }
+  }
+  for (const d of retiredNow) moves.push({ kind: 'retire', name: d.name, nat: d.nat ?? null, from: teamName(d.prevTeam), age: d.age, skill: d.skill });
+  return moves.sort((a, b) => b.skill - a.skill).map(({ skill, ...m }) => m);
 }
 
 export function advanceYear(world, rng) {

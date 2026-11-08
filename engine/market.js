@@ -13,7 +13,17 @@ export function marketScore(d) {
 // Preenche assentos vagos: equipes em ordem de força de carro escolhem primeiro.
 // seated: pilotos com contrato ativo. market: pool de disponíveis (mutado).
 // makeExtra(): fábrica de novato caso o mercado seque.
-export function fillSeats(teams, seated, market, rng, makeExtra) {
+// Encaixe de um piloto numa vaga: lealdade, equipe irmã e a regra de não juntar duas estrelas em carro mediano.
+export function seatFit(d, team, mates, carRank, sisters = {}) {
+  const M = CONFIG.market;
+  let fit = 0;
+  if (d.prevTeam === team.id) fit += M.loyaltyBonus;
+  else if (d.prevTeam && sisters[d.prevTeam] === team.id) fit += M.sisterBonus;
+  if (d.skill >= M.starSkill && carRank > M.starCarRank && mates.some((m) => m.skill >= M.starSkill)) fit -= M.starClashPenalty;
+  return fit;
+}
+
+export function fillSeats(teams, seated, market, rng, makeExtra, sisters = {}) {
   const openSeats = [];
   const sorted = [...teams].sort((a, b) => b.car - a.car);
   for (const t of sorted) {
@@ -22,7 +32,10 @@ export function fillSeats(teams, seated, market, rng, makeExtra) {
   }
   for (const t of openSeats) {
     if (market.length === 0) market.push(makeExtra());
-    market.sort((a, b) => marketScore(b) - marketScore(a));
+    const mates = seated.filter((d) => d.team === t.id);
+    const rank = sorted.indexOf(t) + 1;
+    const score = (d) => marketScore(d) + seatFit(d, t, mates, rank, sisters);
+    market.sort((a, b) => score(b) - score(a));
     const pick = market.shift();
     pick.team = t.id;
     pick.contract = rng.int(CONFIG.rookies.contractRange[0], CONFIG.rookies.contractRange[1]);

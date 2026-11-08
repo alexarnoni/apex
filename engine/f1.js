@@ -13,6 +13,7 @@ import { CONFIG } from './config.js';
 import { createWorld, beginYear, endYear } from './world.js';
 import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeason, trackFor } from './season.js';
 import { circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
+import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, paceEdge } from './strategy.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
 import { marketScore } from './market.js';
 import { applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
@@ -198,6 +199,7 @@ export function resolveSeasonFocus(s, rng, answer) {
   if (f.fameGain) p.fame += f.fameGain;
   if (f.devBonus) s.f1.devBonus += f.devBonus;
   s.f1.focus = answer.id;
+  p.declineShield = answer.id === 'train';   // treinar atenua a queda de habilidade deste ano (ver playerDeclineDelta)
   // Eventos de início de temporada acontecem ANTES do desenvolvimento (devBonus precisa chegar a tempo).
   if (openStory(s, rng, 'season_start')) return;
   beginSeason(s, rng);
@@ -284,6 +286,42 @@ export function resolveWeekendApproach(s, rng, answer) {
   const w = startRace(drivers, world.category, rng, teamsById(world), trackFor(world.category, season.raceIndex + 1));
   // Dados da corrida em curso, para o resumo de fim de corrida (largada, abordagem, evento).
   season.cur = { grid: out ? null : (w.quali.indexOf(p) + 1) || null, approach: out ? 'rest' : answer.id, event: null };
+  if (!out && !w.dnfs.includes(p)) {
+    // Classificação feita: mostra o grid e pede a estratégia de pneus (a aposta que move algumas posições).
+    const n = season.raceIndex + 1;
+    const circuit = circuitView(n);
+    const sctx = { tags: circuitFor(n).tags, grid: season.cur.grid ?? 10, wet: w.wet };
+    const { options, safe } = strategyOptions(sctx);
+    const rows = w.quali.map((d, i) => ({ pos: i + 1, name: d.name, nat: d.nat ?? d.flag ?? null, team: d.team, isPlayer: d === p }));
+    season.pendingRace = { w: ser(world, w), absent: false, eventId: null, strategyCtx: sctx };
+    s.pendingDecision = {
+      type: 'race_strategy',
+      payload: {
+        race: n, circuit, wet: w.wet, grid: season.cur.grid, gridSize: w.quali.length,
+        gridRows: rows.filter((r) => r.pos <= 6 || r.isPlayer), options, safe,
+      },
+    };
+    return;
+  }
+  openRaceEvent(s, rng, w, out);
+}
+
+// Aposta de pneus: sorteia o efeito, move o jogador e segue para um possível evento de corrida.
+export function resolveRaceStrategy(s, rng, answer) {
+  const { world, season } = s.f1;
+  const pr = season.pendingRace;
+  const { options } = strategyOptions(pr.strategyCtx);
+  if (!options.some((o) => o.id === answer?.id)) throw new Error(`id inválido (use ${options.map((o) => o.id).join(', ')})`);
+  const w = deser(world, pr.w);
+  const result = resolveStrategy(w, s.player, answer.id, pr.strategyCtx, rng);
+  season.cur.strategy = { label: result.label, kind: result.kind, shift: result.shift, text: result.text };
+  season.pendingRace = null;
+  openRaceEvent(s, rng, w, false);
+}
+
+// Sorteia um evento de corrida (se houver, para na decisão); sem evento, segue para as ordens de equipe.
+function openRaceEvent(s, rng, w, out) {
+  const { world, season } = s.f1;
   if (!out) {
     const ctx = raceCtx(s, w);
     const ev = pickRaceEvent(RACE_EVENTS, ctx, rng);
@@ -328,6 +366,7 @@ export function resolveRaceEvent(s, rng, answer) {
   applyEffects(ctx, outcome.effects, rng);
   recordEvent(s, ev, outcomeText(outcome, ctx));
   season.cur.event = ev.title;
+  season.cur.eventText = outcomeText(outcome, ctx);
   season.lastEventRace = season.raceIndex + 1;
   season.pendingRace = null;
   continueToOrders(s, rng, w, pr.absent, ev.id);
@@ -357,7 +396,48 @@ function continueToOrders(s, rng, w, absent, eventId = null) {
     };
     return;
   }
+  openFinale(s, rng, w, absent, eventId);
+}
+
+// Final de corrida (versão enxuta): se há um rival logo à frente, o jogador decide entre atacar e administrar.
+function openFinale(s, rng, w, absent, eventId) {
+  const { world, season } = s.f1;
+  const p = s.player;
+  const F = CONFIG.strategy.finale;
+  if (!absent && !w.dnfs.includes(p)) {
+    const classified = w.result.filter((d) => !w.dnfs.includes(d));
+    const i = classified.indexOf(p);
+    const rival = i > 0 ? classified[i - 1] : null;
+    if (rival && rival.team !== p.team && rng.chance(F.chance)) {
+      const edge = paceEdge(p, rival, world.category.carWeight);
+      const { options, safe } = finaleOptions(rival.name);
+      season.pendingRace = { w: ser(world, w), absent, eventId, finaleRival: rival.name };
+      s.pendingDecision = {
+        type: 'race_finale',
+        payload: {
+          race: season.raceIndex + 1, circuit: circuitView(season.raceIndex + 1), pos: i + 1,
+          rival: { name: rival.name, nat: rival.nat ?? rival.flag ?? null, team: rival.team, teamName: teamName(world, rival.team) },
+          pace: edge >= 2 ? 'faster' : edge <= -2 ? 'slower' : 'even',
+          options, safe,
+        },
+      };
+      return;
+    }
+  }
   finishRace(s, rng, w, absent, eventId);
+}
+
+export function resolveRaceFinale(s, rng, answer) {
+  const { world, season } = s.f1;
+  const pr = season.pendingRace;
+  const rival = world.drivers.find((d) => d.name === pr.finaleRival);
+  const { options } = finaleOptions(pr.finaleRival);
+  if (!options.some((o) => o.id === answer?.id)) throw new Error(`id inválido (use ${options.map((o) => o.id).join(', ')})`);
+  const w = deser(world, pr.w);
+  const result = resolveFinale(w, s.player, rival, answer.id, world.category.carWeight, rng);
+  season.cur.finale = { kind: result.kind, shift: result.shift, text: result.text, label: result.label };
+  season.pendingRace = null;
+  finishRace(s, rng, w, false, pr.eventId);
 }
 
 export function resolveTeamOrder(s, rng, answer) {
@@ -371,7 +451,7 @@ export function resolveTeamOrder(s, rng, answer) {
   });
   applyTrustEvent(s.player, policy === 'obey' ? 'obeyOrder' : 'defyOrder');
   season.pendingRace = null;
-  finishRace(s, rng, w, false, pr.eventId);
+  openFinale(s, rng, w, false, pr.eventId);
 }
 
 // Uma frase sobre o que decidiu a corrida: largada x chegada, chuva, abordagem, evento e ordem de equipe.
@@ -400,6 +480,48 @@ export function raceSummary(race, cur, order, playerName) {
   return bits.join(' ');
 }
 
+const DNF_CAUSES = [
+  { text: 'problema no motor', w: (p, rank) => 0.4 + (rank > 7 ? 0.2 : 0) },
+  { text: 'quebra de suspensão', w: () => 0.2 },
+  { text: 'toque com outro carro', w: (p) => 0.25 + (p.style === 'agg' ? 0.15 : 0) },
+  { text: 'erro de pilotagem', w: (p) => 0.15 + (p.style === 'agg' ? 0.1 : 0) - (p.style === 'con' ? 0.08 : 0) },
+];
+
+// Relato da corrida do jogador: largada, estratégia, evento, ordem de equipe e chegada.
+// O resultado final já está decidido; as posições intermediárias são um caminho plausível entre largada e chegada.
+function raceStory(race, cur, order, p, gridSize, carRankNow, rng) {
+  if (race.missed) return [];
+  const lines = [];
+  const grid = race.grid;
+  const dnf = race.playerPos === null;
+  if (grid) {
+    const target = dnf ? grid + rng.int(0, 2) : race.playerPos;
+    const lap1 = Math.max(1, Math.min(gridSize, Math.round(grid + (target - grid) * 0.35 + rng.gauss())));
+    const d = grid - lap1;
+    lines.push({ when: 'Largada', text: d > 0 ? `Largou em P${grid} e ganhou ${d} ${d === 1 ? 'posição' : 'posições'} na primeira volta (P${lap1}).`
+      : d < 0 ? `Largou em P${grid} e perdeu ${-d} ${d === -1 ? 'posição' : 'posições'} na primeira volta (P${lap1}).`
+        : `Largou em P${grid} e manteve a posição na primeira volta.` });
+  }
+  if (cur?.strategy) lines.push({ when: `Estratégia (${cur.strategy.label})`, text: cur.strategy.text });
+  if (cur?.event) lines.push({ when: cur.event, text: cur.eventText ?? 'Você teve de decidir na pista.' });
+  if (cur?.finale) lines.push({ when: `Final (${cur.finale.label})`, text: cur.finale.text });
+  if (order) {
+    lines.push({ when: 'Rádio', text: order.p2 === p.name ? (order.defied ? 'Você desafiou a ordem de equipe e manteve a posição.' : 'Você cedeu a posição por ordem de equipe.') : 'A equipe mandou o companheiro ceder a posição a você.' });
+  }
+  if (dnf) {
+    const total = DNF_CAUSES.reduce((sum, c) => sum + c.w(p, carRankNow), 0);
+    let r = rng.next() * total;
+    const cause = DNF_CAUSES.find((c) => (r -= c.w(p, carRankNow)) < 0) ?? DNF_CAUSES[0];
+    lines.push({ when: 'Abandono', text: `Sua corrida terminou mais cedo por ${cause.text}.` });
+  } else {
+    const d = grid ? grid - race.playerPos : 0;
+    const gain = d > 0 ? ` (ganhou ${d} em relação ao grid)` : d < 0 ? ` (perdeu ${-d} em relação ao grid)` : '';
+    lines.push({ when: 'Chegada', text: race.playerPos === 1 ? `Vitória! Você cruzou a linha em primeiro${gain}.`
+      : race.playerPos <= 3 ? `Pódio: P${race.playerPos}${gain}.` : `Cruzou a linha em P${race.playerPos}${gain}.` });
+  }
+  return lines;
+}
+
 function finishRace(s, rng, w, absent, eventId) {
   const { world, season } = s.f1;
   const p = s.player;
@@ -416,6 +538,7 @@ function finishRace(s, rng, w, absent, eventId) {
   };
   const order = season.ordersLog.find((o) => o.race === race.n && (o.p1 === p.name || o.p2 === p.name));
   race.summary = raceSummary(race, season.cur, order, p.name);
+  race.story = raceStory(race, season.cur, order, p, w.result.length, carRank(world, p.team), rng);
   season.cur = null;
   season.races.push(race);
   season.lastRace = race;
@@ -760,22 +883,23 @@ export function f1View(s) {
   const hasDelta = !!season?.prevPos && season.raceIndex > 0;
   const standings = driverStandings(world)
     .map((d, i) => ({
-      pos: i + 1, name: d.name, team: d.team, points: d.seasonPoints ?? 0, isPlayer: !!d.isPlayer,
+      pos: i + 1, name: d.name, nat: d.nat ?? d.flag ?? null, team: d.team, points: d.seasonPoints ?? 0, isPlayer: !!d.isPlayer,
       delta: hasDelta ? (season.prevPos[d.name] ?? i + 1) - (i + 1) : 0,
     }));
   const constructors = constructorStandings(world).map((c, i) => ({
     pos: i + 1, id: c.id, name: c.name, points: c.points, isYours: c.id === p.team,
     delta: hasDelta ? (season.prevConPos?.[c.id] ?? i + 1) - (i + 1) : 0,
   }));
-  const isLast = (r) => r && { n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
+  const isLast = (r) => r && { story: r.story ?? [], n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
   return {
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
-    races: (season?.races ?? []).map((r) => ({ n: r.n, circuit: circuitView(r.n), playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
+    races: (season?.races ?? []).map((r) => ({ story: r.story ?? [], n: r.n, circuit: circuitView(r.n), playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
     trust: p.trust,
     contract: { years: p.contract, statusClause: p.statusClause, exitClause: p.exitClause },
     worldSeason: world.season,
+    marketMoves: (world.lastMoves ?? []).slice(0, 12),
     race: season ? { done: season.raceIndex, total: season.total, circuit: season.raceIndex < season.total ? circuitView(season.raceIndex + 1) : null } : null,
     lastRace: season ? isLast(season.lastRace) : null,
     rival: season?.rival ?? null,

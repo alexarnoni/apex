@@ -20,6 +20,8 @@ function answerFor(state, { retireAt = 34, approach = 'balanced', order = 'obey'
     case 'weekend_approach': return { id: pd.payload.out ? 'rest' : approach };
     case 'story_event':
     case 'race_event': return { id: pd.payload.options[0].id };
+    case 'race_strategy': return { id: pd.payload.safe };
+    case 'race_finale': return { id: pd.payload.safe };
     case 'team_order': return { id: order };
     case 'contract_terms': return { years: 2, clause, exitClause: false };
     case 'retire_or_continue': return { id: state.player.age >= retireAt ? 'retire' : 'continue' };
