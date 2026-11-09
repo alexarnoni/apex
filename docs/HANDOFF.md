@@ -11,13 +11,15 @@ Atualizado em **2026-11-08**, pacote v0.11.0.
 - GoatCounter configurado como `alexarnoni`; painel https://alexarnoni.goatcounter.com. Feedback segue pelo Worker. Painel de visitas não foi inspecionado.
 - Reservas não substituem automaticamente por lesão. Sem rotas alternativas jogáveis, rumores ou pré-contratos. Chromium móvel emulado não substitui testes em aparelhos reais.
 
-## v0.12 em validação local
+## v0.12 publicada
+
+- Publicada em `ad8b11b`. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42541834359). HTTP 200 e HTML com versão, ofertas, resultado, posição em pista e GoatCounter conferidos no domínio.
 
 - Prioridade da revisão visual: cartão do GP encerrado com posição, largada, pontos e relato recolhível. A próxima etapa e a fase atual têm identificação própria.
 - Novas carreiras do navegador recebem três propostas de kart. Histórico da base registra temporada por temporada e permite o convite de volta ao kart após um vice, com ausência na abertura da F4.
 - GP de casa nas novas carreiras: escolha de agenda, memória por circuito e destaque em Etapas. Estatísticas agregadas ficam para a ampliação da ficha.
-- Build e 22 testes Playwright aprovados. A suíte Node anterior à última mudança de exibição passou 178 casos, e os três testes específicos de v0.12 passaram após a mudança.
-- Alterações locais. Revisar o pacote antes de publicar. Saves anteriores recebem a nova tela e passam a acumular histórico daqui em diante. A decisão de GP de casa está ativa nas novas carreiras.
+- Build, 181 testes Node e 22 testes Playwright aprovados.
+- Saves anteriores recebem a nova tela e passam a acumular histórico daqui em diante. A decisão de GP de casa está ativa nas novas carreiras.
 
 Próximos candidatos: grid real de 2026 por data de corte e retrospectiva com Antonelli e Mercedes campeões, além das rotas alternativas jogáveis. Ver prioridades em `proxima-atualizacao.md`.
 
