@@ -338,12 +338,12 @@ Direção definida em 2026-11-09: o jogo deve funcionar como um F1 Manager/Footb
 
 **Etapa 1 — tela ilustrativa (só interface).** Usa a ordem por fase que a engine já calcula; não muda regras, saves nem balanceamento.
 
-- [x] ~~Mapa 2D com voltas, ultrapassagens visíveis e pista desenhada (asfalto, zebras, linha de largada).~~ **Feito (2026-11-09), local, sem commit.** Cada trecho entre decisões vira uma volta (duas até a bandeirada), com luzes de largada, chuva e abandonos. Os carros param na pausa da decisão; o espaçamento é fixo, sem distâncias reais.
-- [x] ~~Torre de posições com piloto, cor da equipe e setas de ganho ou perda.~~ **Feito (2026-11-09), local.** Sem diferença em segundos e sem pneu dos rivais enquanto a engine não gerar esses dados. Abandonos aparecem no fim da lista.
-- [x] ~~Narração progressiva.~~ **Feito (2026-11-09), local.** Usa o relato parcial da engine (`map.notes`) e movimentos derivados da troca de ordem. Sem número de volta. Setas e linhas derivadas ficam só na aba: somem ao recarregar ou desfazer.
-- [x] ~~Controles: pausar, 1×, 2×, 4× e pular.~~ **Feito (2026-11-09), local.** Pular leva ao fim do trecho sem responder à decisão. Movimento reduzido mostra a cena parada.
-- [x] ~~Pausa nas decisões existentes, com o recado do engenheiro em balão.~~ **Feito (2026-11-09), local.** A decisão continua disponível durante a cena; nada é bloqueado.
-- [x] ~~Painel do carro do jogador.~~ **Feito (2026-11-09), local.** Posição, pneus, pista, plano e meta; condição estimada só na janela de box.
+- [x] ~~Mapa 2D com voltas, ultrapassagens visíveis e pista desenhada (asfalto, zebras, linha de largada).~~ **Feito e publicado (2026-11-09), commit `e58611c`.** Cada trecho entre decisões vira uma volta (duas até a bandeirada), com luzes de largada, chuva e abandonos. Os carros param na pausa da decisão; o espaçamento é fixo, sem distâncias reais.
+- [x] ~~Torre de posições com piloto, cor da equipe e setas de ganho ou perda.~~ **Feito e publicado (2026-11-09).** Sem diferença em segundos e sem pneu dos rivais enquanto a engine não gerar esses dados. Abandonos aparecem no fim da lista.
+- [x] ~~Narração progressiva.~~ **Feito e publicado (2026-11-09).** Usa o relato parcial da engine (`map.notes`) e movimentos derivados da troca de ordem. Sem número de volta. Setas e linhas derivadas ficam só na aba: somem ao recarregar ou desfazer.
+- [x] ~~Controles: pausar, 1×, 2×, 4× e pular.~~ **Feito e publicado (2026-11-09).** Pular leva ao fim do trecho sem responder à decisão. Movimento reduzido mostra a cena parada.
+- [x] ~~Pausa nas decisões existentes, com o recado do engenheiro em balão.~~ **Feito e publicado (2026-11-09).** A decisão continua disponível durante a cena; nada é bloqueado.
+- [x] ~~Painel do carro do jogador.~~ **Feito e publicado (2026-11-09).** Posição, pneus, pista, plano e meta; condição estimada só na janela de box.
 
 Limites da etapa 1: ao simular várias etapas, só a última bandeirada é animada. Celular conferido apenas em emulação. Nesta máquina o Playwright rodou com o Chrome instalado (`channel: 'chrome'`), porque o navegador do Playwright não estava baixado.
 
