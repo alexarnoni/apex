@@ -167,9 +167,11 @@ h1:focus, h2:focus { outline: none; }
 .linkbtn:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 a { color: var(--signal-text); }
 .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
-.pc { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; font-size: 13px; }
-.pc .pro { color: var(--good); }
-.pc .con { color: var(--bad); }
+.pc { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; font-size: 13px; width: 100%; }
+.pc-group { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border-radius: 8px; border-inline-start: 4px solid var(--pc); background: color-mix(in srgb, var(--pc) 9%, var(--panel)); color: var(--fg); }
+.pc-group.pro { --pc: var(--good); } .pc-group.con { --pc: var(--bad); }
+.pc-title { font-family: var(--f-display); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--pc); }
+.pc-line { display: flex; gap: 6px; } .pc-line b { color: var(--pc); flex: none; }
 .pc b { font-family: var(--f-mono); }
 details { border-top: 1px solid var(--line); padding-top: 8px; }
 details summary { font-weight: 600; color: var(--fg); min-height: 32px; display: flex; align-items: center; }
@@ -461,9 +463,9 @@ h2::before { display: none; }
 .opt.kart-offer {
   --kart-color: color-mix(in srgb, var(--offer-team) 42%, var(--fg));
   display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
-  background: color-mix(in srgb, var(--offer-team) 10%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--offer-team) 52%, var(--line));
-  border-top: 4px solid var(--offer-team);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-top: 6px solid var(--offer-team);
   color: var(--fg); padding: 14px;
 }
 .opt.kart-offer .kart-project {
@@ -477,12 +479,12 @@ h2::before { display: none; }
 .opt.kart-offer .kart-cta { margin-top: auto; padding-top: 6px; color: var(--kart-color); font-weight: 700; }
 .opt.kart-offer:focus-visible { outline: 3px solid var(--kart-color); outline-offset: 3px; }
 .career-offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr)); gap: 14px; }
-.career-offer .profile { width: 100%; padding: 10px; background: var(--panel); border-radius: 8px; }
-.career-offer .profile-label { color: var(--kart-color); }
+.career-offer .profile { width: 100%; padding: 10px; background: var(--panel2); border-radius: 8px; }
+.career-offer .profile-label { color: var(--fg); }
 .career-offer .why, .career-offer .pc { color: var(--fg); font-size: .9rem; }
-.career-offer .pc :is(.pro, .con) { color: var(--fg); }
-.career-offer .pc .pro b { color: var(--good); }
-.career-offer .pc .con b { color: var(--bad); }
+.career-offer .kart-cta { color: var(--signal-text); }
+.offer-team { display: flex; align-items: center; gap: 8px; }
+.offer-team i { flex: none; width: .55em; height: .9em; border-radius: 2px; background: var(--offer-team); }
 .wrap.wide.race-page { max-width: 1920px; }
 .race-dashboard { border-top-color: var(--signal); gap: 10px; }
 .race-dashboard-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }

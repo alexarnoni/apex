@@ -880,7 +880,7 @@ const WEEKEND_STAGE = {
 function careerOfferCard(o, action, summary) {
   return `<button class="opt kart-offer career-offer" data-act="offer" data-id="${esc(o.id)}" data-tier="${esc(o.profile?.id ?? '')}" data-kind="${esc(o.kind)}" style="--offer-team:${esc(offerTeamColor(o.teamId))}">
     <span class="kart-project">${esc(action)}</span>
-    <strong>${esc(o.teamName ?? o.label)}</strong>
+    <strong class="offer-team"><i aria-hidden="true"></i>${esc(o.teamName ?? o.label)}</strong>
     <span class="kart-traits">${esc(summary)}</span>
     ${profileBlock(o.profile)}
     ${o.why ? `<span class="why">${esc(o.why)}</span>` : ''}
@@ -903,9 +903,11 @@ function profileBlock(pf) {
 // Vantagens (+) e riscos (−) de uma oferta, em lista curta.
 function proscons(o) {
   // <span> e não <ul>: o cartão inteiro é um <button>, que só aceita conteúdo inline.
-  const line = (sign, t, cls) => `<span class="${cls}"><b aria-hidden="true">${sign}</b> <span class="sr-only">${cls === 'pro' ? 'Vantagem:' : 'Risco:'}</span> ${esc(t)}</span>`;
-  const items = [...(o.pros ?? []).map((t) => line('+', t, 'pro')), ...(o.cons ?? []).map((t) => line('−', t, 'con'))];
-  return items.length ? `<span class="pc">${items.join('')}</span>` : '';
+  // Blocos separados e com título: o sentido não depende da cor, que no cartão já identifica a equipe.
+  const group = (title, sign, list, cls) => list?.length
+    ? `<span class="pc-group ${cls}"><span class="pc-title">${title}</span>${list.map((t) => `<span class="pc-line"><b aria-hidden="true">${sign}</b> ${esc(t)}</span>`).join('')}</span>` : '';
+  const groups = group('Vantagens', '+', o.pros, 'pro') + group('Riscos', '−', o.cons, 'con');
+  return groups ? `<span class="pc">${groups}</span>` : '';
 }
 
 
