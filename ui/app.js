@@ -484,7 +484,7 @@ function podiumCard(map) {
     <span class="podium-team" style="--podium-team:${esc(TEAM_COLOR[car.team] ?? 'var(--line)')}"><b>${esc(car.name)}</b>${car.isPlayer ? ' · Você' : ''}</span>
   </li>`).join('');
   const result = position ? `P${position}` : map.missed ? 'Não disputou' : 'Abandono';
-  return `<section class="card race-podium" aria-label="Pódio da corrida">
+  return `<section class="card race-podium" ${sceneModel?.playing ? 'hidden data-finish-reveal' : ''} aria-label="Pódio da corrida">
     <h3>Pódio · ${esc(map.circuit.gp)}</h3>
     ${podium ? `<ol>${podium}</ol>` : '<p>Sem classificados.</p>'}
     <div class="podium-your-result"><span>Seu resultado</span><strong>${esc(result)}</strong></div>
@@ -532,7 +532,7 @@ function raceTower(map) {
   }).join('');
   const gone = out.map(car => `<li class="out ${car.isPlayer ? 'you' : ''}"><span class="pos">—</span><i style="background:${colour(car)}"></i>
     <span class="name">${esc(car.name)}</span><span class="delta">ABD</span></li>`).join('');
-  const title = map.phase === 'finish' ? 'Classificação final' : ['race_strategy', 'race_start'].includes(map.phase) ? 'Grid de largada' : 'Posições na pista';
+  const title = map.phase === 'finish' ? (sceneModel?.playing ? '<span data-finish-reveal hidden>Classificação final</span><span data-finish-pending>Bandeirada em andamento</span>' : 'Classificação final') : ['race_strategy', 'race_start'].includes(map.phase) ? 'Grid de largada' : 'Posições na pista';
   return `<section class="card race-tower-card" aria-label="Torre de posições"><h3>${title}</h3>
     <ol class="race-tower">${rows}${gone}</ol>
     ${Object.keys(deltas).length ? '<p class="small mute">Setas: posições ganhas ou perdidas no último trecho.</p>' : ''}
@@ -864,7 +864,7 @@ function raceResultCard(r) {
   const position = r.missed ? 'Não disputou' : r.playerPos ? `P${r.playerPos}` : 'Abandono';
   const delta = r.grid && r.playerPos ? r.grid - r.playerPos : 0;
   const movement = delta ? ` · ${Math.abs(delta)} ${Math.abs(delta) === 1 ? 'posição' : 'posições'} ${delta > 0 ? 'a mais' : 'a menos'}` : '';
-  return `<section class="card race-result" aria-labelledby="race-result-title">
+  return `<section class="card race-result" ${sceneModel?.playing && sceneModel.finishing ? 'hidden data-finish-reveal' : ''} aria-labelledby="race-result-title">
     <div class="row"><span class="pill good">Corrida encerrada</span><span class="mute small">Etapa ${esc(r.n)}</span></div>
     <h2 id="race-result-title">${esc(r.circuit?.gp ?? 'Resultado da corrida')}</h2>
     <div class="row"><strong class="race-position">${esc(position)}</strong>
@@ -1069,7 +1069,8 @@ function screenF1(view) {
         ${optionCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'start')}</section>`;
     } else if (pd.type === 'race_pit') {
       const p = pd.payload;
-      body = `<section class="card focus"><h2>Janela de box</h2>
+      const title = p.interruption === 'red_flag' ? 'Bandeira vermelha' : p.interruption === 'safety_car' ? 'Safety car' : 'Janela de box';
+      body = `<section class="card focus"><h2>${title}</h2>
         <p><strong>Posição atual · P${esc(p.position)}</strong> · ${esc(p.tyre)} · condição estimada ${esc(p.condition)}%</p>
         <p>${p.wet ? 'Pista molhada.' : 'Pista seca.'} ${p.changes ? 'A condição da pista mudou desde a largada.' : p.clearAir ? 'Seu ritmo favorece ficar na pista.' : 'Parar cedo pode ajudar a superar o tráfego.'} ${p.rival ? `À frente: ${esc(p.rival)}.` : ''}</p>
         ${optionCards(Object.fromEntries(p.options.map(o => [o.id, o])), 'pit')}</section>`;
@@ -1085,6 +1086,9 @@ function screenF1(view) {
       body = `<section class="card focus"><h2>${pd.payload.out ? 'Acompanhar do box' : 'Plano do fim de semana'}</h2>
         ${planControl(f1, 'race-plan')}
         <p class="mute">A equipe segue este plano nas próximas etapas. Você decide quando houver uma disputa relevante; pode mudar o plano antes de qualquer corrida.</p>
+        ${pd.payload.out ? '' : `<label class="field">Treino livre desta etapa
+          <select id="race-practice">${Object.entries({ none: 'Programa padrão', setup: 'Trabalhar no acerto · melhora o ritmo', tyres: 'Testar pneus · melhora a condição na janela de box' }).map(([id, label]) => `<option value="${id}" ${pd.payload.practice === id ? 'selected' : ''}>${label}</option>`).join('')}</select>
+        </label>`}
         <div class="row"><button class="btn" data-act="simnext">Acompanhar etapa</button><button class="btn ghost" data-act="simimportant">Só decisões importantes</button></div>
         <p class="mute small">Acompanhar etapa pausa em cada escolha. Só decisões importantes delega a rotina e para na próxima escolha relevante ou na bandeirada. Os dois botões avançam no máximo uma etapa.</p>
         <details><summary>Controles de acompanhamento</summary>
@@ -1302,6 +1306,7 @@ document.addEventListener('change', (e) => {
   else if (t.id === 'fb-kind') { ui.fb.kind = t.value; refreshSendLink(); }
   else if (t.id === 'fb-include') { ui.fb.include = t.checked; refreshSendLink(); }
   else if (t.id === 'fb-full') { ui.fb.full = t.checked; refreshSendLink(); }
+  else if (t.id === 'race-practice') decide({ id: t.value, savePractice: true });
   else if (t.id === 'race-plan') decide({ id: t.value, savePlan: true });
   else if (t.id === 'roster-driver') {
     ui.rosterOpen = t.closest('details').open;

@@ -26,9 +26,11 @@ export function raceAdvice(state) {
     // Clima fixo: pneus recomendados não justificam uma interrupção a cada etapa.
     reason = p.wet ? 'Pista molhada: a equipe recomenda pneus de chuva.' : 'Pneus definidos pelo plano e pelas características da pista.';
   } else if (pd.type === 'race_pit') {
-    id = p.changes && plan === 'risky' && !p.wet && p.clearAir ? 'extend' : p.safe;
-    important = p.changes || !!p.rival;
-    reason = p.changes ? 'A pista mudou. É hora de decidir se você troca de composto.' : 'O desgaste abriu uma janela para trocar pneus.';
+    id = !p.interruption && p.changes && plan === 'risky' && !p.wet && p.clearAir ? 'extend' : p.safe;
+    important = !!p.interruption || p.changes || !!p.rival;
+    reason = p.interruption === 'red_flag' ? 'A prova foi suspensa. Você pode trocar pneus sem perder posição.'
+      : p.interruption === 'safety_car' ? 'O pelotão está agrupado. Avalie a troca antes da relargada.'
+      : p.changes ? 'A pista mudou. É hora de decidir se você troca de composto.' : 'O desgaste abriu uma janela para trocar pneus.';
   } else if (pd.type === 'race_start') {
     const street = state.f1.season.pendingRace?.startCtx?.tags.includes('rua');
     id = plan === 'risky' && !p.wet && !street && p.options.some(o => o.id === 'attack') ? 'attack' : 'hold';

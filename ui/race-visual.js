@@ -35,7 +35,7 @@ export function raceScene(map, key, animate) {
   const before = sameRace ? scene.cars : [];
   const previousPhase = sameRace ? scene.phase : null;
   const racing = names.length > 0 && !PRE_START.includes(map.phase);
-  const play = animate && racing && !reduced();
+  const play = animate && racing && !reduced() && map.interruption !== 'red_flag';
   const lines = [];
   if (!sameRace || !animate) Object.assign(scene, { out: [], feed: [] });
   scene.deltas = {};
@@ -87,7 +87,7 @@ export function raceScene(map, key, animate) {
 }
 
 function model() {
-  return { deltas: scene.deltas, out: scene.out, feed: scene.feed, fresh: scene.segment ? scene.fresh : 0, playing: !!scene.segment, speed: scene.speed };
+  return { deltas: scene.deltas, out: scene.out, feed: scene.feed, fresh: scene.segment ? scene.fresh : 0, playing: !!scene.segment, finishing: scene.phase === 'finish', speed: scene.speed };
 }
 
 function lookup(id, path) {
@@ -194,7 +194,10 @@ export function paintRaceScene(root, map, colors) {
       const rank = car.from + (car.index - car.from) * t;
       const pass = moving ? Math.sin(Math.PI * t) * 2.1 * Math.sign(car.from - car.index) : 0;
       const stagger = grid * (car.from % 2 ? 1.5 : -1.5);
-      const spot = put(car.node, lap - (rank + 1) * GAP, pass + stagger, car.player ? 1 : .68);
+      const gap = map.interruption === 'safety_car' ? GAP * .55 : GAP;
+      const distance = lap - (rank + 1) * gap;
+      const crossing = map.phase === 'finish' && segment ? Math.min(distance + cars.length * gap * progress ** 4, segment.laps + .006 + (cars.length - car.index) * gap * .35) : distance;
+      const spot = put(car.node, crossing, pass + stagger, car.player ? 1 : .68);
       if (car.player) { halo.setAttribute('cx', spot.x.toFixed(2)); halo.setAttribute('cy', spot.y.toFixed(2)); }
     }
     for (const { driver, node } of outCars) {
@@ -213,8 +216,12 @@ export function paintRaceScene(root, map, colors) {
     for (const { node } of outCars) node.remove();
     lights.setAttribute('hidden', '');
     if (controls) controls.hidden = true;
-    if (status) status.textContent = STATUS[map.phase] ?? (map.cars.length ? 'Corrida pausada: a decisão é sua.' : '');
+    if (status) status.textContent = map.interruption === 'red_flag' ? 'Prova suspensa. Escolha os pneus para a retomada.'
+      : map.interruption === 'safety_car' ? 'Pelotão agrupado atrás do safety car.'
+      : STATUS[map.phase] ?? (map.cars.length ? 'Corrida pausada: a decisão é sua.' : '');
     panel.classList.toggle('flag', map.phase === 'finish');
+    root.querySelectorAll('[data-finish-pending]').forEach(node => { node.hidden = true; });
+    root.querySelectorAll('[data-finish-reveal]').forEach(node => { node.hidden = false; });
   };
   if (!segment) return idle();
 

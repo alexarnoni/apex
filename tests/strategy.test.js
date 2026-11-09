@@ -105,6 +105,7 @@ test('o relato da corrida registra largada, estratégia e chegada (ou a causa do
     if (pd.type === 'weekend_approach') s = applyDecision(s, { id: 'balanced' });
     else if (pd.type === 'race_start') s = applyDecision(s, { id: pd.payload.safe });
     else if (pd.type === 'race_strategy') s = applyDecision(s, { id: pd.payload.safe });
+    else if (pd.type === 'race_pit') s = applyDecision(s, { id: pd.payload.safe });
     else if (pd.type === 'race_finale') s = applyDecision(s, { id: pd.payload.safe });
     else if (pd.type === 'race_event') s = applyDecision(s, { id: pd.payload.options[0].id });
     else if (pd.type === 'team_order') s = applyDecision(s, { id: 'obey' });
@@ -119,4 +120,32 @@ test('o relato da corrida registra largada, estratégia e chegada (ou a causa do
     assert.ok(whens.includes('Chegada') || whens.includes('Abandono'), 'termina em chegada ou abandono');
     if (r.playerPos !== null) assert.ok(r.story.at(-1).text.includes(`P${r.playerPos}`) || r.playerPos === 1);
   }
+});
+
+
+test('treino vale só para a etapa e uma neutralização pode ser delegada após reabrir o save', () => {
+  let s = toFirstWeekend(6);
+  s = applyDecision(s, { id: 'tyres', savePractice: true });
+  assert.equal(s.pendingDecision.payload.practice, 'tyres');
+  assert.equal(s.f1.season.raceIndex, 0);
+
+  const seen = new Set();
+  for (let guard = 0; guard < 140 && s.phase === 'F1_FIM_DE_SEMANA'; guard++) {
+    const pd = s.pendingDecision;
+    const advice = getView(s).f1.advice;
+    if (pd.type === 'race_pit' && pd.payload.interruption) {
+      assert.ok(advice.important);
+      const restored = JSON.parse(JSON.stringify(s));
+      const next = applyDecision(restored, advice.answer);
+      assert.deepEqual(next, applyDecision(s, advice.answer));
+      const text = next.f1.season.cur?.pit?.text ?? next.f1.season.lastRace.story.find(line => line.when === 'Janela de box').text;
+      assert.match(text, /retomada em P/);
+      seen.add(pd.payload.interruption);
+    }
+    s = applyDecision(s, advice?.answer ?? { id: pd.payload.options[0].id });
+    if (s.f1.season.raceIndex === 0) assert.equal(s.f1.season.cur.practice, 'tyres');
+    if (s.pendingDecision?.type === 'weekend_approach') assert.equal(s.pendingDecision.payload.practice, 'none');
+  }
+  assert.ok(seen.has('safety_car'));
+  assert.ok(seen.has('red_flag'));
 });

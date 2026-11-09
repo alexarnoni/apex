@@ -44,11 +44,14 @@ O mapa lateral acompanha **Acompanhar próxima corrida** e **Avançar até próx
 - **Consequência na pista.** Mostrar a saída dos boxes e o efeito da escolha. No seco, testar a vantagem de parar antes do rival ou de ficar na pista com ritmo e ar livre. Com mudança de clima, decidir quando trocar o composto.
 - **Modo rápido.** A equipe usa as mesmas regras e o plano de corrida para decidir quando o jogador delega. O relato e a bandeirada mostram o que aconteceu.
 
-## v0.14 proposta — treino e neutralizações
+## v0.14 — treino e neutralizações (implementada localmente)
 
-- **Treino livre.** Escolher entre testar pneus ou trabalhar no acerto e levar os dados para a classificação e a estratégia.
-- **Safety car.** Compactar o pelotão, abrir oportunidade de pit stop e decidir na relargada.
-- **Bandeira vermelha.** Suspender a prova e definir os pneus antes da retomada.
+- **Treino livre.** Programa opcional por GP. Acerto melhora o ritmo na classificação e na corrida. Teste de pneus melhora a condição estimada na janela de box.
+- **Safety car.** Agrupa os carros no mapa. Escolha entre parar com custo reduzido ou manter os pneus para a relargada.
+- **Bandeira vermelha.** Suspende a cena. A troca na suspensão preserva a posição.
+- **Bandeirada.** Os carros passam pela linha antes de revelar o resultado e o pódio. Pular a animação ou usar movimento reduzido revela o resultado imediatamente.
+
+As neutralizações são decisões por fase. O desgaste dos rivais, as diferenças em segundos e a relargada volta a volta continuam no pacote de simulação.
 
 As três fases se apoiam no fluxo de corrida e na janela de box da v0.13. O ritmo volta a volta completo segue no item D.2 do roadmap.
 
@@ -68,6 +71,12 @@ As três fases se apoiam no fluxo de corrida e na janela de box da v0.13. O ritm
 6. **Grid e histórico real de 2026.** Revisar titulares e reservas e registrar os campeões reais no ponto de partida. Ver [escopo no roadmap](roadmap-ideias.md#atualizar-o-grid-inicial-da-f1-em-2026).
 
 A ordem dos próximos pacotes deve ser fechada na conversa. Não começar todos ao mesmo tempo.
+
+## Experiência no celular
+
+Critério para as próximas versões de corrida. Na tela estreita, priorizar fase, posição, decisão e botões de ação. Manter o mapa compacto e recolher a torre para mostrar os três primeiros e o jogador, com opção de abrir o grid. Conferir largada, box, bandeirada e retomada de save em tela estreita e validar a legibilidade e os toques em aparelho real quando disponível.
+
+Usar o recorte por tamanho de tela do GoatCounter para medir onde as visitas acontecem. Acessos e partidas jogadas são métricas diferentes.
 
 ## Forma de entrega
 

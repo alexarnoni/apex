@@ -293,6 +293,7 @@ function weekendDecision(s) {
       total: season.total,
       circuit,
       out,
+      practice: season.practice ?? 'none',
       options: out ? { rest: { label: 'Acompanhar do box', description: 'Você está fora desta corrida.' } } : F1().approach,
     },
   };
@@ -318,6 +319,12 @@ const deser = (world, o) => {
 export function resolveWeekendApproach(s, rng, answer) {
   const { world, season } = s.f1;
   const p = s.player;
+  if (answer?.savePractice) {
+    if (s.f1.missRaces > 0 || !['none', 'setup', 'tyres'].includes(answer.id)) throw new Error('Programa de treino inválido.');
+    season.practice = answer.id;
+    s.pendingDecision = weekendDecision(s);
+    return;
+  }
   if (answer?.savePlan) {
     if (!Object.hasOwn(F1().approach, answer.id)) throw new Error('plano de corrida inválido');
     s.f1.racePlan = answer.id;
@@ -338,7 +345,7 @@ export function resolveWeekendApproach(s, rng, answer) {
   } else {
     const a = F1().approach[answer.id];
     const buff = (p.buffs ?? []).reduce((sum, b) => sum + b.value, 0);
-    p.perfBonus = a.perfBonus + buff;
+    p.perfBonus = a.perfBonus + buff + (season.practice === 'setup' ? CONFIG.strategy.practice.setupBonus : 0);
     const home = season.homeChoice;
     p.dnfDelta = a.dnfDelta - (home?.race === season.raceIndex + 1 && home.id === 'prepare' ? F1().homeRace.prepDnfReduction : 0);
   }
@@ -346,6 +353,8 @@ export function resolveWeekendApproach(s, rng, answer) {
   const w = startRace(drivers, world.category, rng, teamsById(world), trackFor(world.category, season.raceIndex + 1));
   // Dados da corrida em curso, para o resumo de fim de corrida (largada, abordagem, evento).
   season.cur = { grid: out ? null : (w.quali.indexOf(p) + 1) || null, approach: out ? 'rest' : answer.id, event: null };
+  if (!out && season.practice) season.cur.practice = season.practice;
+  delete season.practice;
   if (!out && !w.dnfs.includes(p)) {
     // Classificação feita: mostra o grid e pede a estratégia de pneus (a aposta que move algumas posições).
     const n = season.raceIndex + 1;
@@ -453,9 +462,15 @@ function openPitWindow(s, rng, w, absent, eventId = null) {
   if (absent || !tyre?.id || w.dnfs.includes(s.player)) return continueToOrders(s, rng, w, absent, eventId);
   const cfg = CONFIG.strategy.pit;
   const circuit = circuitFor(season.raceIndex + 1);
-  const condition = 100 - Math.round(cfg.window * (100 - cfg.life[tyre.id]) / 100);
+  const life = cfg.life[tyre.id] + (season.cur.practice === 'tyres' ? CONFIG.strategy.practice.tyreLifeBonus : 0);
+  const condition = 100 - Math.round(cfg.window * (100 - life) / 100);
+  const neutral = CONFIG.strategy.neutralization;
+  const chance = rng.next();
+  const scale = w.wet ? neutral.wetMultiplier : 1;
+  const interruption = chance < neutral.redFlag * scale ? 'red_flag'
+    : chance < (neutral.redFlag + neutral.safetyCar) * scale ? 'safety_car' : null;
   const changes = rng.chance(w.wet ? cfg.wetChange : circuit.chuva * cfg.dryChangeFactor);
-  if (!changes && condition > cfg.worn) return continueToOrders(s, rng, w, absent, eventId);
+  if (!interruption && !changes && condition > cfg.worn) return continueToOrders(s, rng, w, absent, eventId);
   const classified = w.result.filter(d => !w.dnfs.includes(d));
   const index = classified.indexOf(s.player);
   const rival = classified[index - 1];
@@ -464,9 +479,13 @@ function openPitWindow(s, rng, w, absent, eventId = null) {
   season.pendingRace = { w: ser(world, w), absent, eventId };
   s.pendingDecision = { type: 'race_pit', payload: {
     position: index + 1, tyre: tyre.id === 'slicks' ? 'Pneus de pista seca' : tyre.id === 'wait' ? 'Composto mantido' : tyre.label,
-    condition, wet, changes, rival: rival?.name ?? null,
-    clearAir, safe: changes || !clearAir ? 'pit' : 'extend',
-    options: [
+    condition, wet, changes, interruption, rival: rival?.name ?? null,
+    clearAir, safe: interruption || changes || !clearAir ? 'pit' : 'extend',
+    options: interruption ? [
+      { id: 'pit', label: interruption === 'red_flag' ? 'Trocar pneus na suspensão' : 'Parar sob safety car',
+        description: interruption === 'red_flag' ? 'Troque sem perder posição e relargue com pneus adequados à pista.' : 'Aproveite o pelotão em ritmo reduzido. A parada pode custar uma posição.' },
+      { id: 'extend', label: 'Manter os pneus', description: 'Preserve a posição. Se os pneus estiverem gastos ou inadequados, você pode perder terreno na relargada.' },
+    ] : [
       { id: 'pit', label: 'Parar agora', description: changes ? 'Trocar para pneus adequados à nova condição da pista.' : 'Trocar pneus cedo para tentar ganhar tempo antes dos rivais.' },
       { id: 'extend', label: 'Estender o stint', description: changes ? 'Ficar com o composto atual enquanto avalia a pista.' : 'Adiar a troca e aproveitar o ritmo em pista livre.' },
     ],
@@ -479,14 +498,21 @@ export function resolveRacePit(s, rng, answer) {
   const p = s.pendingDecision.payload;
   if (!p.options.some(o => o.id === answer?.id)) throw new Error('Escolha uma estratégia de parada.');
   const w = deser(world, snapshot);
-  w.wet ||= p.wet;
+  w.wet = p.wet;
   const pit = answer.id === 'pit';
-  const edge = p.changes ? (pit ? 1 : -2) : pit ? (p.clearAir ? 0 : 1) : (p.clearAir ? 1 : -1);
+  const worn = p.condition <= CONFIG.strategy.pit.worn;
+  const edge = p.interruption === 'red_flag' ? (pit ? 0 : p.changes || worn ? -1 : 0)
+    : p.interruption === 'safety_car' ? (pit ? (p.changes || worn ? 0 : -1) : p.changes || worn ? -2 : 0)
+    : p.changes ? (pit ? 1 : -2) : pit ? (p.clearAir ? 0 : 1) : (p.clearAir ? 1 : -1);
   EFFECTS.shift({ w, player: s.player }, edge);
   const position = w.result.indexOf(s.player) + 1;
   const compound = p.wet ? 'pneus de chuva' : 'pneus de pista seca';
-  const detail = pit ? `Você parou, colocou ${compound} e voltou em P${position}.` : `Você estendeu o stint e ficou em P${position} após a janela de paradas.`;
-  season.cur.pit = { id: answer.id, text: detail };
+  const detail = p.interruption === 'red_flag' && pit ? `Você colocou ${compound} durante a suspensão.`
+    : p.interruption && !pit ? 'Você manteve os pneus.'
+    : pit ? `Você parou, colocou ${compound} e voltou em P${position}.`
+    : `Você estendeu o stint e ficou em P${position} após a janela de paradas.`;
+  const restart = p.interruption ? ` ${p.interruption === 'red_flag' ? 'Bandeira vermelha' : 'Safety car'}: retomada em P${position}.` : '';
+  season.cur.pit = { id: answer.id, text: detail + restart };
   season.pendingRace = null;
   return continueToOrders(s, rng, w, absent, eventId);
 }
@@ -1071,7 +1097,7 @@ export function f1View(s) {
   const map = !season ? null : pending ? {
     circuit: circuitView(round), phase: decision.type,
     cars: preStart ? (season.cur?.mapGrid ?? decision.payload.gridRows ?? []) : mapDrivers(pending.result.filter(i => !pending.dnfs.includes(i))),
-    wet: !!pending.wet, tyre: cur?.strategy?.label ?? null, notes,
+    interruption: decision?.payload.interruption ?? null, wet: !!(decision?.payload.wet ?? pending.wet), tyre: cur?.strategy?.label ?? null, notes,
   } : season.lastRace?.mapOrder ? {
     circuit: circuitView(season.lastRace.n), phase: 'finish', cars: season.lastRace.mapOrder,
     missed: season.lastRace.missed, wet: !!season.lastRace.wet, tyre: null, notes: season.lastRace.story ?? [],

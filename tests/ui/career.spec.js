@@ -124,6 +124,8 @@ test('defesa mostra perseguidor e ceder entra no relato', async ({ page }) => {
   expect(after.f1.season.lastRace.playerPos).toBe(state.pendingDecision.payload.pos + 1);
   expect(after.f1.season.lastRace.story.some((line) => line.when === 'Final (Ceder)')).toBe(true);
   const result = page.locator('.race-result');
+  const skip = page.getByRole('button', { name: 'Pular animação' });
+  if (await skip.isVisible()) await skip.click();
   await expect(result.getByText('Corrida encerrada')).toBeVisible();
   await expect(result.locator('.race-position')).toHaveText(`P${after.f1.season.lastRace.playerPos}`);
   await expect(result).toContainText(`${after.f1.season.lastRace.points} ponto`);
@@ -188,7 +190,7 @@ test('acompanhamento visual permite pular a cena sem responder à decisão', asy
 });
 
 test('janela de box retoma após reload e registra a parada na corrida', async ({ page }) => {
-  const state = fixture('race_pit');
+  const state = fixture('race_pit', s => !s.pendingDecision.payload.interruption);
   await importCareer(page, state);
   await expect(page.getByRole('heading', { name: 'Janela de box', exact: true })).toBeVisible();
   await expect(page.locator('.focus')).toContainText(`Posição atual · P${state.pendingDecision.payload.position}`);
@@ -245,6 +247,8 @@ test('modo de decisões importantes para na bandeirada quando a etapa não tem e
   await importCareer(page, start);
   await page.getByRole('button', { name: 'Só decisões importantes' }).click();
   expect((await saved(page)).f1.season.raceIndex).toBe(start.f1.season.raceIndex + 1);
+  await expect(page.locator('.race-result')).toBeHidden();
+  await page.getByRole('button', { name: 'Velocidade 4×' }).click();
   await expect(page.locator('.race-result')).toBeVisible();
   const podium = page.getByRole('region', { name: 'Pódio da corrida' });
   await expect(podium.getByText('Seu resultado')).toBeVisible();

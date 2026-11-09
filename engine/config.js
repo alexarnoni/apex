@@ -24,6 +24,8 @@ export const CONFIG = {
   // Estratégia de pneus (F1, engine/strategy.js): aposta que move o jogador 1 ou 2 posições.
   // Com encaixe (fit) 0 a chance de dar certo e de dar errado é igual, então a média é zero.
   strategy: {
+    practice: { setupBonus: 0.8, tyreLifeBonus: 12 },
+    neutralization: { safetyCar: 0.18, redFlag: 0.05, wetMultiplier: 1.5 },
     pit: { life: { soft: 30, medium: 55, hard: 75, inters: 55, wait: 55, slicks: 55 }, window: 55, worn: 65, wetChange: 0.18, dryChangeFactor: 0.35 },
     pGood: 0.30, pBad: 0.30,      // chances de bom e de ruim com encaixe 0 (o resto é neutro)
     perFit: 0.12,                 // cada ponto de encaixe move 12pp de ruim para bom
