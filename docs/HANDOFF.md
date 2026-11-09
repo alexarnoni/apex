@@ -21,6 +21,6 @@ Atualizado em **2026-11-08**, pacote v0.11.0.
 
 Próximos candidatos: grid real de 2026 por data de corte e retrospectiva com Antonelli e Mercedes campeões, além das rotas alternativas jogáveis. Ver prioridades em `proxima-atualizacao.md`.
 
-Feedback de teste: texto de estratégia usa “rádio” e “equipe”. Corrida visual com pausas nas decisões entrou no roadmap como protótipo futuro.
+Feedback de teste: texto de estratégia usa “rádio” e “equipe”. Relargada e demais eventos na pista mostram a posição atual. Corrida visual com pausas nas decisões entrou no roadmap como protótipo para v0.13.
 
 Confira `git status --short` e `git log -3 --oneline`. Referências: `v0.11.md`, `proxima-atualizacao.md`, `roadmap-ideias.md` e `DECISIONS.md`.

@@ -178,6 +178,9 @@ test('avanço contextual mostra motivo e permite delegar a decisão atual', asyn
   const after = await saved(page);
   expect(['race_event', 'race_finale', 'team_order', 'story_event']).toContain(after.pendingDecision.type);
   if (after.pendingDecision.type !== 'story_event') {
+    if (after.pendingDecision.type === 'race_event') {
+      await expect(page.getByText(`Posição atual · P${after.pendingDecision.payload.position}`, { exact: true })).toBeVisible();
+    }
     await expect(page.locator('.decision-context')).toContainText('Por que decidir agora?');
     await expect(page.locator('.decision-context')).toContainText('A equipe recomenda');
     await page.locator('.focus').scrollIntoViewIfNeeded();

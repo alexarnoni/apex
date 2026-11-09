@@ -800,12 +800,12 @@ function proscons(o) {
 }
 
 
-function eventCard(pd) {
+function eventCard(pd, position = null) {
   const p = pd.payload;
-  const act = pd.type === 'race_event' ? 'event' : 'event';
   return `<section class="card focus"><h3>${pd.type === 'race_event' ? 'Na pista' : 'Notícia'}</h3><h2>${esc(p.title)}</h2>
+    ${position ? `<p class="chip"><strong>Posição atual · P${esc(position)}</strong></p>` : ''}
     <p>${esc(p.text)}</p>
-    <div class="grid2">${p.options.map((o) => `<button class="opt" data-act="${act}" data-id="${esc(o.id)}"><strong>${esc(o.label)}</strong>${o.description ? `<span>${esc(o.description)}</span>` : ''}</button>`).join('')}</div></section>`;
+    <div class="grid2">${p.options.map((o) => `<button class="opt" data-act="event" data-id="${esc(o.id)}"><strong>${esc(o.label)}</strong>${o.description ? `<span>${esc(o.description)}</span>` : ''}</button>`).join('')}</div></section>`;
 }
 
 function lastEventCard(f1) {
@@ -931,7 +931,7 @@ function screenF1(view) {
     if (pd.type === 'home_race') {
       body = circuitCard(pd.payload.circuit) + eventCard(pd);
     } else if (pd.type === 'story_event' || pd.type === 'race_event') {
-      body = eventCard(pd);
+      body = eventCard(pd, f1.eventPosition);
     } else if (pd.type === 'race_strategy') {
       body = strategyCard(pd.payload);
     } else if (pd.type === 'race_start') {

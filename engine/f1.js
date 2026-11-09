@@ -404,7 +404,7 @@ function openRaceEvent(s, rng, w, out) {
       s.pendingDecision = {
         type: 'race_event',
         payload: {
-          race: season.raceIndex + 1, eventId: ev.id, title: ev.title, text: ev.text(ctx), safe: ev.safe ?? null,
+          race: season.raceIndex + 1, position: ctx.pos, eventId: ev.id, title: ev.title, text: ev.text(ctx), safe: ev.safe ?? null,
           options: ev.options.map((o) => ({ id: o.id, label: o.label, description: o.description })),
         },
       };
@@ -984,6 +984,10 @@ export function statusWhy(world, p) {
 export function f1View(s) {
   const { world, season } = s.f1;
   const p = s.player;
+  const decision = s.pendingDecision;
+  const eventPosition = decision?.type === 'race_event'
+    ? decision.payload.position ?? (season?.pendingRace?.w ? raceCtx(s, deser(world, season.pendingRace.w)).pos : null)
+    : null;
   const rank = carRank(world, p.team);
   // Variação de posição (positivo = subiu) em relação à classificação antes da última corrida.
   const hasDelta = !!season?.prevPos && season.raceIndex > 0;
@@ -1011,6 +1015,7 @@ export function f1View(s) {
     plans: Object.entries(PLAN_LABELS).map(([id, label]) => ({ id, label, description: F1().approach[id].description })),
     goal: goalProgress(s),
     advice: raceAdvice(s),
+    eventPosition,
     homeRounds: CIRCUITS.flatMap((c, i) => c.flag === p.flag ? [{ round: i + 1, gp: c.gp }] : []),
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)) },
     status: p.status ?? null,

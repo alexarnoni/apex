@@ -25,6 +25,8 @@ Detalhes, calibração e limitações em `v0.11.md`. **Feito em 2026-11-08:**
 
 ## v0.12 — corrida legível e histórias da carreira
 
+- [x] ~~Mostrar a posição atual na relargada e em outros eventos de pista.~~ **Feito (2026-11-08).** A posição vem da ordem da corrida após a largada e exclui quem abandonou.
+
 - [x] ~~Deixar claro quando a corrida começa e termina~~ — **Feito localmente (2026-11-08).** Fase da corrida no cabeçalho. Resultado do GP anterior com posição, largada, pontos e relato antes da próxima etapa.
 - [x] ~~Três propostas de estreia no kart~~ — **Feito localmente (2026-11-08).** Projeto vencedor, equilibrado e de formação com efeitos próprios.
 - [x] ~~Histórico da base e primeiro evento que o consulta~~ — **Feito localmente (2026-11-08).** Vice do kart pode disputar prova de convidados e perder a abertura da F4.
