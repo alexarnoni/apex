@@ -262,7 +262,8 @@ export function paintRaceScene(root, map, colors) {
     lights.toggleAttribute('hidden', !waiting);
     if (waiting) lamps.forEach((lamp, i) => lamp.classList.toggle('on', segment.elapsed > (i + 1) * segment.hold / 6));
     place(progress);
-    reveal(waiting ? 1 : 1 + Math.floor(progress * feed.length));
+    // A última linha só aparece no fim do trecho, quando os carros chegam.
+    reveal(waiting ? 1 : 1 + Math.floor(progress * (feed.length - 1)));
     if (status) status.textContent = scene.paused ? 'Cena pausada.' : waiting ? 'Luzes de largada…' : map.phase === 'finish' ? 'Últimas voltas…' : 'Corrida em andamento…';
     if (progress >= 1) finish();
     else frame = requestAnimationFrame(step);

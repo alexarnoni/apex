@@ -498,19 +498,24 @@ function raceSceneCard(map) {
   const phase = map.phase === 'waiting' ? 'Antes da corrida' : map.phase === 'finish' ? 'Bandeirada' : WEEKEND_STAGE[map.phase];
   const { feed, fresh, speed } = sceneModel ?? { feed: [], fresh: 0, speed: 1 };
   const lines = feed.map((line, i) => `<li class="${i >= feed.length - fresh ? 'fresh' : ''}"><b>${esc(line.when)}</b> ${esc(line.text)}</li>`).reverse().join('');
-  return `<section class="card race-visual" aria-label="Mapa da corrida">
+  // Mapa compacto à esquerda; estado, controles e narração à direita. No celular, um abaixo do outro.
+  return `<section class="card race-visual${map.cars.length ? '' : ' solo'}" aria-label="Mapa da corrida">
     <div class="scene-head"><h3>${esc(map.circuit.gp)}</h3>
       <span class="chip">${esc(phase)}${position ? ` · P${position}` : ''}</span>
       ${map.cars.length ? `<span class="chip">${map.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span>` : ''}</div>
-    <svg role="img" aria-label="Traçado com carros nas cores das equipes"></svg>
-    <div class="scene-foot"><p class="small mute scene-status" aria-live="polite"></p>
-      <div class="map-controls" hidden>
-        <button class="btn ghost small" data-scene="pause" aria-pressed="false">Pausar</button>
-        ${[1, 2, 4].map(n => `<button class="btn ghost small" data-scene-speed="${n}" aria-pressed="${n === speed}" aria-label="Velocidade ${n}×">${n}×</button>`).join('')}
-        <button class="btn ghost small" data-scene="skip">Pular animação</button>
-      </div></div>
-    ${map.cars.length ? '<p class="small mute">Anel branco: seu carro. A cena ilustra o trecho entre decisões, sem tempos reais.</p>' : ''}
-    ${lines ? `<h3>Narração</h3><ol class="race-feed" aria-label="Narração da corrida">${lines}</ol>` : ''}
+    <div class="scene-body">
+      <svg role="img" aria-label="Traçado com carros nas cores das equipes"></svg>
+      <div class="scene-side">
+        <p class="scene-status" aria-live="polite"></p>
+        <div class="map-controls" hidden>
+          <button class="btn ghost small" data-scene="pause" aria-pressed="false">Pausar</button>
+          ${[1, 2, 4].map(n => `<button class="btn ghost small" data-scene-speed="${n}" aria-pressed="${n === speed}" aria-label="Velocidade ${n}×">${n}×</button>`).join('')}
+          <button class="btn ghost small" data-scene="skip">Pular animação</button>
+        </div>
+        ${lines ? `<h3>Narração</h3><ol class="race-feed" aria-label="Narração da corrida">${lines}</ol>` : ''}
+        ${map.cars.length ? '<p class="small mute scene-note">Anel branco: seu carro. Cena ilustrativa, sem tempos reais.</p>' : ''}
+      </div>
+    </div>
   </section>`;
 }
 

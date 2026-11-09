@@ -409,7 +409,16 @@ h2::before { display: none; }
 }
 .race-visual { gap: 6px; --road: #3b3848; --kerb: #f4f2fa; }
 .race-visual h3, .race-visual p { margin: 0; }
-.race-visual svg { display: block; width: 100%; max-height: 40vh; background: color-mix(in srgb, var(--good) 9%, var(--panel2)); border-radius: 10px; }
+.scene-body { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+.scene-side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.scene-status { font-weight: 600; }
+.scene-note { margin-top: auto !important; }
+.race-visual.solo svg { max-width: 420px; margin-inline: auto; }
+@media (min-width: 700px) {
+  .race-visual:not(.solo) .scene-body { grid-template-columns: minmax(0, 11fr) minmax(0, 10fr); align-items: stretch; }
+  .race-visual:not(.solo) .race-feed { max-height: none; flex: 1 1 0; min-height: 5rem; }
+}
+.race-visual svg { display: block; width: 100%; aspect-ratio: 10 / 7; max-height: 300px; background: color-mix(in srgb, var(--good) 9%, var(--panel2)); border-radius: 10px; }
 .race-visual svg.wet { --road: #2b3346; background: color-mix(in srgb, var(--cyan) 12%, var(--panel2)); }
 .race-visual svg path, .race-visual svg line { stroke-linejoin: round; stroke-linecap: round; }
 .race-visual svg .track-kerb { stroke: var(--kerb); stroke-width: 7.6; }
@@ -433,13 +442,12 @@ h2::before { display: none; }
 .start-lights circle.on { fill: #ff3b30; }
 .scene-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
 .scene-head h3 { margin-inline-end: auto; }
-.scene-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-height: 2.2rem; }
 .map-controls { display: flex; flex-wrap: wrap; gap: 6px; }
 .map-controls[hidden] { display: none; }
 .map-controls [aria-pressed="true"] { background: var(--signal); color: var(--signal-ink); border-color: var(--signal); }
 .race-visual.flag .scene-status { color: var(--fg); font-weight: 700; }
 .race-visual.flag .scene-status::before { content: "🏁 "; }
-.race-feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 9.5rem; overflow-y: auto; font-size: .92rem; }
+.race-feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; align-content: start; max-height: 7rem; overflow-y: auto; font-size: .92rem; }
 .race-feed li { padding: 4px 8px; border-inline-start: 3px solid var(--line); background: var(--panel2); border-radius: 0 6px 6px 0; }
 .race-feed li:first-child { border-inline-start-color: var(--signal); }
 .race-feed li.fresh { display: none; }
