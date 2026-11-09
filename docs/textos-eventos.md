@@ -266,7 +266,7 @@ Quando: race (chance 8% por corrida) · peso 3
   - (50%) O motor aguenta, por enquanto.
   - (50%) Fumaça branca na reta. O motor quebrou.
 
-### Estratégia no muro  `chamada_estrategia`
+### Estratégia pelo rádio  `chamada_estrategia`
 
 Quando: race · peso 2
 
@@ -275,8 +275,8 @@ Quando: race · peso 2
 - **Confiar na equipe**: +5 de confiança, resultado neutro.
   - Você obedece e a equipe agradece.
 - **Fazer do seu jeito**: 50% de +2 posições, 50% de -2; -5 de confiança nos dois casos.
-  - (50%) Seu instinto acerta, mas o muro não gostou da desobediência.
-  - (50%) Deu errado, e o muro lembra de quem decidiu.
+  - (50%) Você ganha posições, mas a equipe não gostou de ser contrariada.
+  - (50%) Você perde posições, e a equipe questiona sua decisão.
 
 ### Pressão nas últimas voltas  `defesa_agressiva`
 

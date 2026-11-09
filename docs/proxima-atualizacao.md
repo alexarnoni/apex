@@ -23,6 +23,19 @@ Detalhes, calibração e limitações em `v0.11.md`. **Feito em 2026-11-08:**
 - [x] ~~Consulta de perfis, cores, largura desktop e histórico recente~~ — **Feito**, com dados registrados.
 - [x] ~~Testar e calibrar pacote~~ — **Feito**: 178 Node, 22 Playwright; limites quantitativos em `calibracao.md`.
 
+## v0.12 — corrida legível e histórias da carreira
+
+- [x] ~~Deixar claro quando a corrida começa e termina~~ — **Feito localmente (2026-11-08).** Fase da corrida no cabeçalho. Resultado do GP anterior com posição, largada, pontos e relato antes da próxima etapa.
+- [x] ~~Três propostas de estreia no kart~~ — **Feito localmente (2026-11-08).** Projeto vencedor, equilibrado e de formação com efeitos próprios.
+- [x] ~~Histórico da base e primeiro evento que o consulta~~ — **Feito localmente (2026-11-08).** Vice do kart pode disputar prova de convidados e perder a abertura da F4.
+- [x] ~~Primeiro GP de casa~~ — **Feito localmente (2026-11-08).** Destaque no calendário, agenda da torcida ou preparação, e chamada que lembra resultado no save. Estatísticas agregadas ficam para a ampliação da ficha.
+
+## v0.13 proposta — corrida visual
+
+**Corrida visual interativa.** Prototipar uma volta no traçado com a câmera no jogador, pausas nas decisões existentes e transição clara para a bandeirada. [Escopo no roadmap](roadmap-ideias.md#corrida-visual-interativa).
+
+Começar pelo botão **Acompanhar próxima corrida**, com opção de acelerar ou pular. O valor de rejogar vem das escolhas, equipes e consequências diferentes em cada carreira.
+
 ## Outros candidatos seguintes
 
 1. **Rotas alternativas jogáveis:** pedido recente do usuário inclui WEC e NASCAR, além de IndyCar/FE/Super Fórmula; especificar ofertas por desempenho/experiência, adaptação, estatísticas e retorno possível à F1. Não implementado.
@@ -30,6 +43,7 @@ Detalhes, calibração e limitações em `v0.11.md`. **Feito em 2026-11-08:**
 3. **Base dinâmica:** etapas-chave e metas (D.3/D.5).
 4. **Corrida por fases:** treino, boxes e safety car coletivo, quando houver estado que sustente escolhas interessantes (D.2). Não acrescentar telas obrigatórias apenas para aumentar cliques.
 5. **Sons:** acabamento discreto e opcional (D.15).
+6. **Grid e histórico real de 2026.** Revisar titulares e reservas e registrar os campeões reais no ponto de partida. Ver [escopo no roadmap](roadmap-ideias.md#atualizar-o-grid-inicial-da-f1-em-2026).
 
 A ordem dos próximos pacotes deve ser fechada na conversa. Não começar todos ao mesmo tempo.
 

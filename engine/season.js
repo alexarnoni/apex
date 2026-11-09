@@ -122,14 +122,15 @@ export function summarizeSeason(drivers, teamsById, races, ordersLog) {
 
 // drivers precisam ter teamCar atualizado antes (feito pelo world ou pelo career).
 // playerPolicy: 'obey' | 'defy' | null (null = sem jogador, só NPCs)
-export function runSeason(drivers, category, rng, teamsById = null, playerPolicy = null) {
+export function runSeason(drivers, category, rng, teamsById = null, playerPolicy = null, playerMissesOpening = false) {
   resetSeasonStats(drivers);
 
   const ordersLog = [];   // { race, team, p1, p2, defied }
   const races = [];
 
   for (let r = 0; r < category.races; r++) {
-    const w = startRace(drivers, category, rng, teamsById, trackFor(category, r + 1));
+    const starters = r === 0 && playerMissesOpening ? drivers.filter(d => !d.isPlayer) : drivers;
+    const w = startRace(starters, category, rng, teamsById, trackFor(category, r + 1));
     applyTeamOrders(w, drivers, category, teamsById, r + 1, { playerPolicy, ordersLog });
     const a = awardRace(w);
     races.push({ wet: a.wet, winner: a.winner, pole: a.pole });

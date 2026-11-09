@@ -284,13 +284,13 @@ export const RACE_EVENTS = [
   {
     id: 'chamada_estrategia', phase: 'race', safe: 'confiar', weight: 2,
     cond: (c) => c.pos !== null,
-    title: 'Estratégia no muro',
+    title: 'Estratégia pelo rádio',
     text: (c) => `Rádio: "${c.player.name}, temos uma estratégia alternativa. Confia na gente ou vai do seu jeito?"`,
     options: [
       { id: 'confiar', label: 'Confiar na equipe', description: '+5 de confiança, resultado neutro.', outcomes: [{ p: 1, effects: { trust: 5 }, text: 'Você obedece e a equipe agradece.' }] },
       { id: 'seu_jeito', label: 'Fazer do seu jeito', description: '50% de +2 posições, 50% de -2; -5 de confiança nos dois casos.', outcomes: [
-        { p: 0.5, effects: { shift: 2, trust: -5 }, text: 'Seu instinto acerta, mas o muro não gostou da desobediência.' },
-        { p: 0.5, effects: { shift: -2, trust: -5 }, text: 'Deu errado, e o muro lembra de quem decidiu.' },
+        { p: 0.5, effects: { shift: 2, trust: -5 }, text: 'Você ganha posições, mas a equipe não gostou de ser contrariada.' },
+        { p: 0.5, effects: { shift: -2, trust: -5 }, text: 'Você perde posições, e a equipe questiona sua decisão.' },
       ] },
     ],
   },

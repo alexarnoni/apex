@@ -76,7 +76,7 @@ export function assignBaseTeams(drivers, player, category, rng, playerTeamId) {
 // Modificadores de pré-temporada (decisão base_choice): carBonus e perfBonus valem só neste ano;
 // scoutingBonus soma na nota.
 // A equipe do jogador vem de playerTeamId; sem ele, sorteia uma do tier playerCarTier ('mid' por padrão).
-export function runBaseSeasonSummary({ player, category, rng, names, persistentRivals = [], playerTeamId = null, playerCarTier = 'mid', hasAcademy = false, carBonus = 0, perfBonus = 0, scoutingBonus = 0 }) {
+export function runBaseSeasonSummary({ player, category, rng, names, persistentRivals = [], playerTeamId = null, playerCarTier = 'mid', hasAcademy = false, carBonus = 0, perfBonus = 0, scoutingBonus = 0, playerMissesOpening = false }) {
   const grid = makeBaseGrid(category, rng, names, persistentRivals);
   const drivers = [player, ...grid];
   const teamId = playerTeamId ?? pickTeamByTier(category.id, playerCarTier, rng).id;
@@ -84,7 +84,7 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
   player.teamCar += carBonus;
   player.perfBonus = perfBonus;
 
-  const result = runSeason(drivers, category, rng, null);
+  const result = runSeason(drivers, category, rng, null, null, playerMissesOpening);
   player.perfBonus = 0;
   const pos = result.standings.indexOf(player) + 1;
 

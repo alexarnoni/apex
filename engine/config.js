@@ -235,6 +235,8 @@ export const CONFIG = {
 
   // Carreira do jogador na base (spec-loop-jogador)
   base: {
+    kartFormation: { winner: 1.2, balanced: 1, development: 1.2 },
+    kartReturnFame: 1,
     startYear: 2026,
     // Idade inicial escolhida na criação (12 a 16). calibratedFrom: a fórmula de habilidade e teto foi calibrada
     // para 14-16; abaixo disso a habilidade perde skillLossPerYearUnder por ano (criança menos pronta).
@@ -277,6 +279,7 @@ export const CONFIG = {
 
   // Carreira do jogador na F1 (spec-loop-jogador)
   f1: {
+    homeRace: { fanFame: 1, prepDnfReduction: 0.01 },
     goals: { pointsFraction: 0.6, midMinPoints: 8, rearScoringRaces: 1, recentRaces: 3 },
     flow: { opportunityEdge: 2, chaseMargin: 1, preserveRisk: 1.3, attackRisk: 0.8, goalUrgencyRaces: 4 },
     // Sem corte de potencial na entrada da F1 (era potentialCap 84, 88, 87: um remendo de calibração). O teto do jogador agora

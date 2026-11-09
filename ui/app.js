@@ -390,7 +390,7 @@ const decide = (answer) => run((s) => {
   // Após uma escolha no modo contextual, não interromper por etapas rotineiras da mesma corrida.
   if (ui.contextFlow && s.phase === 'F1_FIM_DE_SEMANA' && next.phase === s.phase
       && next.f1.season.raceIndex === s.f1.season.raceIndex
-      && !['weekend_approach', 'story_event'].includes(next.pendingDecision?.type)) {
+      && !['weekend_approach', 'story_event', 'home_race'].includes(next.pendingDecision?.type)) {
     next = advanceRaces(next, { limit: 1, stop: 'important', autoSingle: ui.autoSingle }).state;
   }
   return next;
@@ -408,7 +408,7 @@ function simRaces(n, mode = null, delegateCurrent = false) {
     const result = advanceRaces(s, { limit: n, stop: mode ?? (ui.simStop ? 'all' : 'none'), autoSingle: ui.autoSingle, delegateCurrent });
     const ran = getView(result.state).f1.races.slice(before);
     const positions = ran.map(r => r.missed ? 'fora' : r.playerPos ? `P${r.playerPos}` : 'abandono').join(' · ');
-    const stage = { race_strategy: 'estratégia de pneus', race_start: 'largada', race_finale: 'final de corrida', team_order: 'ordem de equipe', race_event: 'evento de corrida', story_event: 'notícia com escolha' }[result.state.pendingDecision?.type];
+    const stage = { race_strategy: 'estratégia de pneus', race_start: 'largada', race_finale: 'final de corrida', team_order: 'ordem de equipe', race_event: 'evento de corrida', story_event: 'notícia com escolha', home_race: 'decisão do GP de casa' }[result.state.pendingDecision?.type];
     ui.notice = `${ran.length ? `${ran.length} corrida(s), etapas ${ran[0].n}–${ran.at(-1).n}: ${positions}. ` : ''}${stage ? `Parou: ${stage}. ` : ''}${result.reason}`;
     return result.state;
   });
@@ -600,12 +600,13 @@ function teamsTable(f1) {
 }
 
 function racesList(f1) {
-  if (!f1.races.length) return '<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>';
+  const home = f1.homeRounds.map(r => `<p class="small"><span class="pill trophy p1">GP de casa</span> Etapa ${r.round} · ${esc(r.gp)}</p>`).join('');
+  if (!f1.races.length) return `${home}<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>`;
   const items = [...f1.races].reverse().map((r) => {
     const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? `trophy p${r.playerPos}` : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
     return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 12 })} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}${r.story?.length ? `<details class="race-story"><summary>Relato da corrida</summary>${storyList(r.story)}</details>` : ''}</li>`;
   }).join('');
-  return `<ul class="racelist">${items}</ul>`;
+  return `${home}<ul class="racelist">${items}</ul>`;
 }
 
 // Painel da temporada (coluna da direita): classificação de pilotos e construtores, ou corrida a corrida.
@@ -709,9 +710,16 @@ function seasonResultCard(view) {
 function screenBase(view) {
   const pd = view.decision;
   let body = '';
-  if (pd?.type === 'base_choice') {
+  if (pd?.type === 'kart_offer') {
+    const cards = pd.payload.options.map(o => `<button class="opt" data-act="kart-offer" data-id="${esc(o.id)}"><strong>${esc(o.teamName)}</strong><span class="pill">${esc(o.label)}</span><span>${esc(o.car)}</span><span>${esc(o.description)}</span></button>`).join('');
+    return layout(view, `<section class="card focus"><h2>Seu primeiro kart</h2><p>Três equipes querem você para a estreia. Escolha onde correr e como se desenvolver.</p><div class="grid2">${cards}</div></section>`);
+  }
+  if (pd?.type === 'kart_return') {
+    body = eventCard(pd);
+  } else if (pd?.type === 'base_choice') {
     const opts = pd.payload.options;
     body = `<section class="card focus"><h2>Pré-temporada</h2><p class="mute">Uma decisão antes de correr: presente ou futuro.</p>
+      ${view.base.kartReturn ? `<p class="note">Volta ao kart: ${esc(view.base.kartReturn.finish)}. Você fica fora da abertura da F4.</p>` : ''}
       ${optionCards(opts, 'pick-base', ui.baseOpt)}
       <div class="row"><button class="btn" data-act="run-base" ${ui.baseOpt ? '' : 'disabled'}>Disputar temporada</button></div></section>`;
   } else if (pd?.type === 'academy_invite') {
@@ -732,7 +740,13 @@ function screenBase(view) {
   const rivals = view.base.rivals.length
     ? `<section class="card"><h3>Seus rivais</h3><ul class="log">${view.base.rivals.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></section>` : '';
   const head = `<section class="card"><div class="row"><h2>${esc(view.base.category)}</h2><span class="chip">${esc(view.base.team)}</span><span class="chip">temporada ${esc(view.base.seasonInCategory)} na categoria</span></div></section>`;
-  return layout(view, `${head}${seasonResultCard(view)}${body}`, rivals);
+  return layout(view, `${head}${seasonResultCard(view)}${body}`, `${rivals}${baseHistory(view)}`);
+}
+
+function baseHistory(view) {
+  if (!view.baseHistory.length) return '';
+  const rows = [...view.baseHistory].reverse().map(s => `<li><strong>${esc(s.year)} · ${esc(s.category)} · ${esc(s.team)}</strong><br><span class="mute">${esc(s.position)}º · ${esc(s.points)} pts · ${esc(s.wins)} vit. · ${esc(s.podiums)} pódios</span></li>`).join('');
+  return `<details class="card"><summary>Histórico da base</summary><ul class="log">${rows}</ul></details>`;
 }
 
 function raceLine(r) {
@@ -742,6 +756,27 @@ function raceLine(r) {
     ${storyList(r.story)}
     <p class="mute" style="font-size:14px">Vitória: ${esc(r.winner ?? '—')} · Pole: ${esc(r.pole)}</p>`;
 }
+
+function raceResultCard(r) {
+  if (!r) return '';
+  const position = r.missed ? 'Não disputou' : r.playerPos ? `P${r.playerPos}` : 'Abandono';
+  const delta = r.grid && r.playerPos ? r.grid - r.playerPos : 0;
+  const movement = delta ? ` · ${Math.abs(delta)} ${Math.abs(delta) === 1 ? 'posição' : 'posições'} ${delta > 0 ? 'a mais' : 'a menos'}` : '';
+  return `<section class="card race-result" aria-labelledby="race-result-title">
+    <div class="row"><span class="pill good">Corrida encerrada</span><span class="mute small">Etapa ${esc(r.n)}</span></div>
+    <h2 id="race-result-title">${esc(r.circuit?.gp ?? 'Resultado da corrida')}</h2>
+    <div class="row"><strong class="race-position">${esc(position)}</strong>
+    <span>${r.grid ? `Largou em P${esc(r.grid)}${esc(movement)}` : ''}${r.points != null ? `${r.grid ? ' · ' : ''}${esc(r.points)} ${r.points === 1 ? 'ponto' : 'pontos'}` : ''}</span></div>
+    <details><summary>Ver relato da corrida</summary>${raceLine(r)}</details>
+  </section>`;
+}
+
+const WEEKEND_STAGE = {
+  weekend_approach: 'Antes da corrida', home_race: 'Antes da corrida',
+  race_strategy: 'Classificação encerrada', race_start: 'Largada',
+  race_event: 'Corrida em andamento', team_order: 'Corrida em andamento',
+  race_finale: 'Voltas finais', story_event: 'Entre corridas',
+};
 
 // Perfil da equipe (ponta, meio, fundo): pressão e desenvolvimento em bolinhas e palavras, mais uma frase.
 // Só <span>: o cartão inteiro é um <button>, que só aceita conteúdo inline.
@@ -789,6 +824,7 @@ function trackSvg(c) {
 function circuitCard(c) {
   if (!c) return '';
   const chips = [...c.tags.map((t) => `<span class="chip">${esc(t)}</span>`), `<span class="chip">${c.rain >= 20 ? '🌧 ' : ''}chuva ${esc(c.rain)}%</span>`];
+  if (c.home) chips.unshift('<span class="pill trophy p1">GP de casa</span>');
   return `<section class="card circuit">${trackSvg(c)}
     <div><h2>${flagImg(c.flag, { alt: false, h: 20 })} ${esc(c.gp)}</h2><p class="mute small">${esc(c.venue)}</p><div class="chips-row">${chips.join('')}</div>
     ${c.hints?.length ? `<p class="mute small" style="margin-top:6px">${esc(c.hints.join(' '))}</p>` : ''}</div></section>`;
@@ -887,9 +923,14 @@ function screenF1(view) {
     body = pd.type === 'story_event' ? eventCard(pd)
       : `${marketCard(f1.marketMoves)}<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${planControl(f1, "season-plan")}<label class="field">Área de treino (se escolher Treinar)<select id="training-focus">${f1.trainingOptions.map(t => `<option value="${esc(t.id)}" ${t.id === f1.trainingFocus ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}</select></label>${optionCards(pd.payload.options, 'focus')}</section>`;
   } else if (view.screen === 'F1_FIM_DE_SEMANA' && pd) {
-    title = r.done >= r.total ? `Temporada ${f1.worldSeason} · fim do campeonato` : `Temporada ${f1.worldSeason} · etapa ${r.done + 1} de ${r.total}${r.circuit ? ` · ${r.circuit.gp}` : ''}`;
+    const stage = WEEKEND_STAGE[pd.type] ?? 'Fim de semana';
+    const upcoming = ['weekend_approach', 'home_race'].includes(pd.type);
+    const circuit = r.circuit && pd.type !== 'story_event' ? ` · ${r.circuit.gp}` : '';
+    title = r.done >= r.total ? 'Fim do campeonato' : `${upcoming ? 'Próxima etapa' : stage}${circuit}`;
     const prog = `<div class="bar-meter"><i style="width:${Math.round((r.done / r.total) * 100)}%"></i></div>`;
-    if (pd.type === 'story_event' || pd.type === 'race_event') {
+    if (pd.type === 'home_race') {
+      body = circuitCard(pd.payload.circuit) + eventCard(pd);
+    } else if (pd.type === 'story_event' || pd.type === 'race_event') {
       body = eventCard(pd);
     } else if (pd.type === 'race_strategy') {
       body = strategyCard(pd.payload);
@@ -920,19 +961,22 @@ function screenF1(view) {
     const context = advice && pd.type !== 'weekend_approach' && pd.type !== 'story_event'
       ? `<aside class="decision-context note"><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar à equipe e seguir</button>` : ''}</aside>` : '';
     body = body.replace(/(<section class="card focus">[\s\S]*?<\/h2>)/, `$1${context}`);
-    body = `${prog}${body}`;
+    body = `<div class="row weekend-stage"><span class="pill">${esc(stage)}</span><span class="mute small">Temporada ${esc(f1.worldSeason)} · ${esc(r.done)} de ${esc(r.total)} etapas concluídas</span></div>${prog}${body}`;
   }
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
-  const last = f1.lastRace && view.screen === 'F1_FIM_DE_SEMANA' ? `<section class="card">${raceLine(f1.lastRace)}</section>` : '';
-  return layout(view, `<h2>${esc(title)}</h2>${seasonPulseCard(f1.goal)}${lastEventCard(f1)}${body}${last}${dev}${recentCareer(f1)}`, seasonPanel(view));
+  const weekend = view.screen === 'F1_FIM_DE_SEMANA';
+  const last = weekend ? raceResultCard(f1.lastRace) : '';
+  const betweenRaces = ['weekend_approach', 'home_race', 'story_event'].includes(pd?.type);
+  const event = lastEventCard(f1);
+  return layout(view, `${betweenRaces ? last : ''}<h2>${esc(title)}</h2>${body}${event}${weekend && !betweenRaces ? last : ''}${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`, seasonPanel(view));
 }
 
 function screenEndSeason(view) {
   const ls = view.f1.lastSeason;
   const champ = ls.position === 1;
   const orders = ls.ordersLog.filter((o) => o.p2 === view.player.name || o.p1 === view.player.name);
-  const main = `${seasonPulseCard(ls.goal, true)}${lastEventCard(view.f1)}
+  const main = `${raceResultCard(view.f1.lastRace)}${seasonPulseCard(ls.goal, true)}${lastEventCard(view.f1)}
     <section class="card focus"><h3>Fim da temporada · ${esc(ls.teamName)}</h3>
       <div class="row" style="align-items:flex-end;gap:24px"><div class="big">${ord(ls.position)}</div>
         <div class="stats">${stat('Pontos', ls.points)}${stat('Vitórias', ls.wins)}${stat('Pódios', ls.podiums)}${stat('Poles', ls.poles)}${stat('Abandonos', ls.dnfs)}</div></div>
@@ -1058,7 +1102,7 @@ function startCareer() {
       slot = Number(d.slot) || saves.firstEmpty();
       if (slot == null || saves.list()[slot - 1].status !== 'empty') throw new Error('Escolha um slot livre (apague uma carreira antes, se estiverem todos ocupados).');
     }
-    state = createCareer({ surname: d.surname.trim(), number: Number(d.number), flag: d.flag, age: Number(d.age) || 15, style: d.style, seed });
+    state = createCareer({ surname: d.surname.trim(), number: Number(d.number), flag: d.flag, age: Number(d.age) || 15, style: d.style, seed, kartOffers: true });
     activeSlot = slot;
     undoStack = [];
     track('carreira-iniciada');
@@ -1117,7 +1161,11 @@ document.addEventListener('change', (e) => {
   else if (t.id === 'fb-include') { ui.fb.include = t.checked; refreshSendLink(); }
   else if (t.id === 'fb-full') { ui.fb.full = t.checked; refreshSendLink(); }
   else if (t.id === 'race-plan') decide({ id: t.value, savePlan: true });
-  else if (t.id === 'roster-driver') { ui.profileDriver = t.value; render(); }
+  else if (t.id === 'roster-driver') {
+    ui.rosterOpen = t.closest('details').open;
+    ui.profileDriver = t.value;
+    render();
+  }
   else if (t.id === 't-auto') { ui.autoSingle = t.checked; run((s) => settle(s)); }
   else if (t.id === 't-stop') ui.simStop = t.checked;
   else if (t.id === 'f-flag') { const w = document.getElementById('flag-preview'); if (w) w.innerHTML = flagImg(t.value, { alt: false, h: 18 }); }
@@ -1161,6 +1209,7 @@ document.addEventListener('click', (e) => {
     case 'pick-base': ui.baseOpt = id; return render();
     case 'run-base': { const o = ui.baseOpt; ui.baseOpt = null; return decide({ option: o }); }
     case 'academy': return decide({ accept: id === 'yes' });
+    case 'kart-offer': return decide({ id });
     case 'offer': return decide({ id });
     case 'focus': return decide({ id, plan: document.getElementById('season-plan')?.value ?? getView(state).f1.plan, training: document.getElementById('training-focus')?.value ?? 'balanced' });
     case 'approach': return decide({ id });

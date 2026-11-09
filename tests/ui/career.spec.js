@@ -66,6 +66,10 @@ test('criação, temporada de base e retomada após recarregar', async ({ page }
   await page.locator('#f-number').fill('7');
   await page.locator('#f-seed').fill('5');
   await page.locator('[data-act="create"]').click();
+  await expect(page.locator('[data-act="kart-offer"]')).toHaveCount(3);
+  await page.reload();
+  await page.locator('[data-act="continue"][data-slot="1"]').click();
+  await page.locator('[data-act="kart-offer"][data-id="balanced"]').click();
   await expect(page.getByRole('heading', { name: 'Pré-temporada', exact: true })).toBeVisible();
   await page.locator('[data-act="pick-base"][data-id="A"]').click();
   await page.locator('[data-act="run-base"]').click();
@@ -118,7 +122,12 @@ test('defesa mostra perseguidor e ceder entra no relato', async ({ page }) => {
   const after = await saved(page);
   expect(after.f1.season.lastRace.playerPos).toBe(state.pendingDecision.payload.pos + 1);
   expect(after.f1.season.lastRace.story.some((line) => line.when === 'Final (Ceder)')).toBe(true);
-  await expect(page.locator('#app')).toContainText('cedeu a posição');
+  const result = page.locator('.race-result');
+  await expect(result.getByText('Corrida encerrada')).toBeVisible();
+  await expect(result.locator('.race-position')).toHaveText(`P${after.f1.season.lastRace.playerPos}`);
+  await expect(result).toContainText(`${after.f1.season.lastRace.points} ponto`);
+  await result.getByText('Ver relato da corrida').click();
+  await expect(result.getByText(/cedeu a posição/).first()).toBeVisible();
 });
 
 test('simular cinco e resto resolve largada e defesa até pausa narrativa ou fim', async ({ page }) => {
@@ -186,6 +195,7 @@ test('carreira inteira por cliques: criação, base, temporadas, contratos e leg
   // Nem toda seed progride até a F1; este cenário exercita um caminho que chega ao grid.
   await page.locator('#f-seed').fill(String(fixture('weekend_approach').seed));
   await page.locator('[data-act="create"]').click();
+  await page.locator('[data-act="kart-offer"][data-id="balanced"]').click();
   let sawContract = false;
   let sawGoal = false;
   for (let step = 0; step < 350; step++) {
@@ -208,11 +218,13 @@ test('carreira inteira por cliques: criação, base, temporadas, contratos e leg
       await expect(page.locator('.season-pulse')).toBeVisible();
       await page.getByText('Controles de acompanhamento', { exact: true }).click();
       await page.locator('[data-act="simrest"]').click();
+    } else if (pd.type === 'kart_return') {
+      await page.locator('[data-act="event"][data-id="stay"]').click();
     } else if (pd.type === 'contract_terms') {
       sawContract = true;
       await page.locator('[data-act="terms"]').click();
     } else {
-      const acts = { academy_invite: 'academy', offer_pick: 'offer', season_focus: 'focus', story_event: 'event', race_event: 'event', retire_or_continue: 'retire', race_strategy: 'strategy', race_start: 'start', race_finale: 'finale', team_order: 'order' };
+      const acts = { academy_invite: 'academy', offer_pick: 'offer', season_focus: 'focus', story_event: 'event', home_race: 'event', race_event: 'event', retire_or_continue: 'retire', race_strategy: 'strategy', race_start: 'start', race_finale: 'finale', team_order: 'order' };
       const id = pd.type === 'academy_invite' ? 'yes' : answer.id;
       await page.locator(`[data-act="${acts[pd.type]}"][data-id="${id}"]`).click();
     }

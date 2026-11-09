@@ -293,22 +293,45 @@ Atributos por dimensão (3.9), curvas distintas de evolução/declínio e mercad
 
 ## Entrada no kart por propostas — pedido para atualização futura
 
-Referência visual enviada pelo usuário em 2026-11-08. **Não implementar na v0.11.** Candidato ao pacote da base (v0.13 proposta), junto de D.3, 1.6 e 3.4.
+Referência visual enviada pelo usuário em 2026-11-08. Primeiras propostas entregues localmente na v0.12. Calendário detalhado da base, estrelas e academias vinculadas à F1 seguem no roadmap.
 
-- [ ] Ao criar o piloto, oferecer três equipes/escolas de kart antes da primeira temporada, em vez da equipe inicial sorteada.
+- [x] ~~Oferecer três equipes de kart antes da primeira temporada.~~ **Feito (2026-11-08).** A escolha é salva e afeta o carro e a formação.
 - [ ] Cartões comparáveis com equipe real, força do carro, pressão, formação e visibilidade. Estrelas, se usadas, precisam representar um critério explicado, não uma classificação oficial inventada.
-- [ ] Adaptar os arquétipos ao Bandeirada: **projeto vencedor** (carro forte, cobrança e desenvolvimento condicionado ao desempenho), **equilibrado** (trocas intermediárias) e **programa de formação** (menos foco no resultado imediato, benefício de aprendizado a definir).
+- [x] ~~Adaptar os três arquétipos ao Bandeirada.~~ **Feito (2026-11-08).** Projeto vencedor com carro forte e bônus de formação condicionado ao desempenho, equilibrado com crescimento regular e formação com carro mais fraco e bônus de aprendizado independente do resultado.
 - [ ] Separar força do carro, capacidade de formação e pressão quando necessário: hoje `profile.js` associa desenvolvimento à posição do carro; equipe fraca não significa automaticamente boa formação. Não prometer bônus que o código ainda não concede.
 - [ ] Escolha deve alterar a carreira, com efeitos visíveis nas ofertas e evolução; nenhuma opção pode ser universalmente melhor.
 - [ ] Diferenciar equipe/escola de kart de academia vinculada à F1; o convite de academia da carreira é outro sistema.
 
 Imagem é inspiração, não especificação copiada. Fechar os efeitos e a calibração quando esse pacote começar.
 
+## Atualizar o grid inicial da F1 em 2026
+
+- [ ] Revisar `data/world2026.js` em uma atualização posterior ao pacote da base. Usar a [escalação oficial de 2026](https://www.formula1.com/en/latest/article/2026-line-ups-confirmed-in-full-who-is-on-the-grid-for-next-season.3TyLfOUjOwpBKOp3KX1PiS) como ponto de partida e registrar a data de corte das mudanças permanentes. Separar titulares, reservas e substituições pontuais.
+- [ ] Incluir Hadjar na Red Bull, Lindblad ao lado de Lawson na Racing Bulls e Tsunoda no mercado como reserva. Conferir a situação da Haas no corte adotado. Em 3 de novembro, a equipe confirmou que Ocon não voltaria a correr por ela em 2026 e anunciou Rafael Câmara para São Paulo. [Anúncio da Fórmula 1](https://www.formula1.com/en/latest/article/f2-racer-camara-to-make-f1-debut-at-sao-paulo-grand-prix-as-haas-confirm-esteban-ocon-will-not-return.12Qa0tpaMZ9kgnEuGJBKFp)
+- [ ] Aplicar a escalação inicial a novas carreiras e preservar as transferências dos saves existentes. Conferir 22 titulares, dois por equipe, e ausência de pilotos duplicados entre grid e mercado.
+- [ ] Registrar os campeões reais de 2026 na retrospectiva do ponto de partida. Antonelli conquistou o Mundial de Pilotos no México e a Mercedes confirmou o título de Construtores em São Paulo. Temporadas disputadas pelo simulador têm resultados próprios. [Pilotos](https://www.formula1.com/en/latest/article/antonelli-crowned-youngest-ever-f1-champion-as-verstappen-wins-eventful-mexico-git-grand-prix.xpMMeef0KmRURs9IDs3LH) · [Construtores](https://www.formula1.com/en/latest/article/norris-beats-verstappen-in-wet-sao-paulo-gp-thriller-as-mercedes-win-constructors-championship.7JN7MXLZf5lk5l0C3gfKGI)
+
+## GP de casa do jogador
+
+- [x] ~~Identificar e destacar etapas em casa pela nacionalidade do piloto.~~ **Feito (2026-11-08).** Destaque em Etapas e no cartão da corrida.
+- [x] ~~Oferecer agenda com fãs ou preparação.~~ **Feito (2026-11-08).** Fama ou menor risco de abandono naquela etapa nas novas carreiras.
+- [x] ~~Variar a chamada conforme resultados no save.~~ **Feito (2026-11-08).** Estreia registrada, último resultado, abandono ou vitória anterior.
+- [ ] Mostrar corridas em casa, melhor resultado e vitórias no histórico do piloto. Destacar o primeiro pódio em casa na retrospectiva da temporada.
+
+## Corrida visual interativa
+
+- [ ] Prototipar uma corrida em uma pista com o traçado já disponível, destacando o carro do jogador e a fase atual. Usar o grid e os momentos que a simulação já conhece para representar largada, disputa e chegada. Entre esses momentos, a animação é ilustrativa.
+- [ ] Pausar nos eventos que pedem escolha. Mostrar a situação, as opções e o que aconteceu quando o jogador decidiu. Retomar a animação após a resposta e mostrar a posição e os pontos na bandeirada.
+- [ ] Permitir acelerar ou pular a animação. Conferir que as mesmas escolhas produzem os mesmos resultados nos modos visual e rápido, inclusive ao recarregar com uma decisão pendente.
+
 ## Imersão e aproveitamento de tela — referências para evoluir
 
 Pedido em 2026-11-08: eventos que retomem fatos reais da própria carreira (ex.: título de kart que escapou, voltar a disputar com custo no calendário), histórico de temporadas mais legível, cores com significado e mais informação útil na largura disponível. Referências visuais são inspiração, preservando identidade Bandeirada.
 
 Na v0.11: perfis coloridos, notícias de destino de pilotos, consulta de mercado e histórico recente de F1 com dados registrados. Expansão narrativa da base fica para outro pacote:
+
+- [x] ~~Separar o GP encerrado da próxima etapa.~~ **Feito (2026-11-08), v0.12 local.** Posição, largada e pontos em destaque. Relato recolhível e indicação de classificação, largada, corrida em andamento ou voltas finais.
+- [x] ~~Primeiro convite que retoma o histórico da base.~~ **Feito (2026-11-08).** Vice no kart pode voltar para uma prova de convidados com conflito real na abertura da F4. O histórico guarda equipe, posição e números por temporada.
 
 - [ ] Gatilhos por histórico salvo (vice de kart, lesão, ex-companheiro), sem inventar títulos/anos passados.
 - [ ] Convites opcionais com conflito de calendário e consequências simuladas (resultado, confiança, reputação), não só bônus textual.

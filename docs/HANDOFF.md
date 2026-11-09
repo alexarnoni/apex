@@ -11,8 +11,16 @@ Atualizado em **2026-11-08**, pacote v0.11.0.
 - GoatCounter configurado como `alexarnoni`; painel https://alexarnoni.goatcounter.com. Feedback segue pelo Worker. Painel de visitas não foi inspecionado.
 - Reservas não substituem automaticamente por lesão. Sem rotas alternativas jogáveis, rumores ou pré-contratos. Chromium móvel emulado não substitui testes em aparelhos reais.
 
-## Próximo pacote
+## v0.12 em validação local
 
-Candidato: rotas alternativas jogáveis (WEC/NASCAR/IndyCar/FE/Super Fórmula), começando com um recorte que tenha corridas, resultados e possível retorno à F1. Para a base: três ofertas iniciais de kart com carro/pressão/formação distintos e eventos que retomem fatos do save, sem copiar a referência visual.
+- Prioridade da revisão visual: cartão do GP encerrado com posição, largada, pontos e relato recolhível. A próxima etapa e a fase atual têm identificação própria.
+- Novas carreiras do navegador recebem três propostas de kart. Histórico da base registra temporada por temporada e permite o convite de volta ao kart após um vice, com ausência na abertura da F4.
+- GP de casa nas novas carreiras: escolha de agenda, memória por circuito e destaque em Etapas. Estatísticas agregadas ficam para a ampliação da ficha.
+- Build e 22 testes Playwright aprovados. A suíte Node anterior à última mudança de exibição passou 178 casos, e os três testes específicos de v0.12 passaram após a mudança.
+- Alterações locais. Revisar o pacote antes de publicar. Saves anteriores recebem a nova tela e passam a acumular histórico daqui em diante. A decisão de GP de casa está ativa nas novas carreiras.
+
+Próximos candidatos: grid real de 2026 por data de corte e retrospectiva com Antonelli e Mercedes campeões, além das rotas alternativas jogáveis. Ver prioridades em `proxima-atualizacao.md`.
+
+Feedback de teste: texto de estratégia usa “rádio” e “equipe”. Corrida visual com pausas nas decisões entrou no roadmap como protótipo futuro.
 
 Confira `git status --short` e `git log -3 --oneline`. Referências: `v0.11.md`, `proxima-atualizacao.md`, `roadmap-ideias.md` e `DECISIONS.md`.

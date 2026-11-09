@@ -12,7 +12,7 @@
 import { CONFIG } from './config.js';
 import { createWorld, beginYear, endYear } from './world.js';
 import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeason, trackFor } from './season.js';
-import { circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
+import { CIRCUITS, circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
 import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, finaleSituation, paceEdge } from './strategy.js';
 import { startOptions, resolveStart } from './start.js';
 import { createSeasonGoal, goalProgress } from './season-goals.js';
@@ -269,16 +269,41 @@ export function circuitView(n) {
 function weekendDecision(s) {
   const { season } = s.f1;
   const out = s.f1.missRaces > 0;
+  const race = season.raceIndex + 1;
+  const circuit = circuitView(race);
+  circuit.home = !!s.player.flag && circuit.flag === s.player.flag;
+  if (circuit.home && !out && s.baseCareer?.kartProgram && season.homeChoice?.race !== race) {
+    const previous = (s.f1.homeResults ?? []).filter(r => r.circuit === circuit.id);
+    const last = previous.at(-1);
+    const win = previous.findLast(r => r.position === 1);
+    const text = last?.position === null ? `Em ${last.year}, sua corrida aqui terminou em abandono.`
+      : win ? `A torcida ainda lembra da sua vitória em ${win.year}.`
+      : last ? `Na última vez aqui, você terminou em P${last.position} em ${last.year}.`
+      : 'É sua primeira corrida em casa registrada nesta carreira.';
+    return { type: 'home_race', payload: { race, circuit, title: 'GP de casa', text,
+      options: [
+        { id: 'fans', label: 'Encontrar a torcida', description: 'Entrevistas e encontros com fãs aumentam sua fama.' },
+        { id: 'prepare', label: 'Priorizar a preparação', description: 'Mais tempo com a equipe reduz ligeiramente o risco de abandono nesta etapa.' },
+      ] } };
+  }
   return {
     type: 'weekend_approach',
     payload: {
-      race: season.raceIndex + 1,
+      race,
       total: season.total,
-      circuit: circuitView(season.raceIndex + 1),
+      circuit,
       out,
       options: out ? { rest: { label: 'Acompanhar do box', description: 'Você está fora desta corrida.' } } : F1().approach,
     },
   };
+}
+
+export function resolveHomeRace(s, answer) {
+  const { race, options } = s.pendingDecision.payload;
+  if (!options.some(o => o.id === answer?.id)) throw new Error('Escolha uma opção para o GP de casa.');
+  s.f1.season.homeChoice = { race, id: answer.id };
+  if (answer.id === 'fans') s.player.fame += F1().homeRace.fanFame;
+  s.pendingDecision = weekendDecision(s);
 }
 
 const ser = (world, w) => {
@@ -314,7 +339,8 @@ export function resolveWeekendApproach(s, rng, answer) {
     const a = F1().approach[answer.id];
     const buff = (p.buffs ?? []).reduce((sum, b) => sum + b.value, 0);
     p.perfBonus = a.perfBonus + buff;
-    p.dnfDelta = a.dnfDelta;
+    const home = season.homeChoice;
+    p.dnfDelta = a.dnfDelta - (home?.race === season.raceIndex + 1 && home.id === 'prepare' ? F1().homeRace.prepDnfReduction : 0);
   }
 
   const w = startRace(drivers, world.category, rng, teamsById(world), trackFor(world.category, season.raceIndex + 1));
@@ -583,12 +609,13 @@ function finishRace(s, rng, w, absent, eventId) {
   season.prevPos = positionMap(world);
   season.prevConPos = constructorPositionMap(world);
   if (!absent) p.stats.gp = (p.stats.gp ?? 0) + 1;
+  const pointsBefore = p.seasonPoints ?? 0;
   const a = awardRace(w);
   const pos = a.classified.indexOf(p) + 1;
   const race = {
     n: season.raceIndex + 1, wet: a.wet, winner: a.winner, pole: a.pole,
     playerPos: absent ? null : (pos || null), missed: absent, event: eventId,
-    grid: season.cur?.grid ?? null,
+    grid: season.cur?.grid ?? null, points: (p.seasonPoints ?? 0) - pointsBefore,
   };
   const mate = world.drivers.find(d => d.name === season.goal?.teammate);
   race.teammateName = mate?.name ?? null;
@@ -596,6 +623,10 @@ function finishRace(s, rng, w, absent, eventId) {
   const order = season.ordersLog.find((o) => o.race === race.n && (o.p1 === p.name || o.p2 === p.name));
   race.summary = raceSummary(race, season.cur, order, p.name);
   race.story = raceStory(race, season.cur, order, p, w.result.length, carRank(world, p.team), rng);
+  const circuit = circuitFor(race.n);
+  if (!absent && p.flag && p.flag === circuit.flag) {
+    (s.f1.homeResults ??= []).push({ year: s.year, circuit: circuit.id, position: race.playerPos });
+  }
   season.cur = null;
   season.races.push(race);
   season.lastRace = race;
@@ -965,7 +996,7 @@ export function f1View(s) {
     pos: i + 1, id: c.id, name: c.name, points: c.points, isYours: c.id === p.team,
     delta: hasDelta ? (season.prevConPos?.[c.id] ?? i + 1) - (i + 1) : 0,
   }));
-  const isLast = (r) => r && { story: r.story ?? [], n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
+  const isLast = (r) => r && { story: r.story ?? [], n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, points: r.points ?? null, summary: r.summary ?? null };
   return {
     trainingFocus: s.f1.trainingFocus ?? 'balanced',
     trainingOptions: [{ id: 'balanced', label: 'Treino equilibrado' }, ...Object.entries(ATTRIBUTE_LABELS).map(([id, label]) => ({ id, label }))],
@@ -980,6 +1011,7 @@ export function f1View(s) {
     plans: Object.entries(PLAN_LABELS).map(([id, label]) => ({ id, label, description: F1().approach[id].description })),
     goal: goalProgress(s),
     advice: raceAdvice(s),
+    homeRounds: CIRCUITS.flatMap((c, i) => c.flag === p.flag ? [{ round: i + 1, gp: c.gp }] : []),
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
@@ -991,7 +1023,8 @@ export function f1View(s) {
     race: season ? { done: season.raceIndex, total: season.total, circuit: season.raceIndex < season.total ? circuitView(season.raceIndex + 1) : null } : null,
     lastRace: season ? isLast(season.lastRace) : null,
     rival: season?.rival ?? null,
-    lastEvent: s.f1.lastEvent,
+    lastEvent: season?.lastEventRace <= season?.raceIndex && RACE_EVENTS.some(e => e.id === s.f1.lastEvent?.id)
+      ? null : s.f1.lastEvent,
     standings,
     constructors,
     ordersLog: season?.ordersLog ?? [],

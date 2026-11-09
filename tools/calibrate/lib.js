@@ -65,6 +65,9 @@ export const POLICIES = ['a', 'train', 'notrain'];
 export function answerFor(state, policy = 'a', { retireAt = 34 } = {}) {
   const pd = state.pendingDecision;
   switch (pd.type) {
+    case 'kart_offer': return { id: 'balanced' };
+    case 'kart_return': return { id: 'stay' };
+    case 'home_race': return { id: 'prepare' };
     case 'base_choice': {
       const o = pd.payload.options;
       const keys = Object.keys(o);

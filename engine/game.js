@@ -9,11 +9,12 @@ import { CONFIG } from './config.js';
 import { attributeView, trainAttributes, evolveAttributes } from './driver-attributes.js';
 import {
   enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveRaceStrategy, resolveRaceStart, resolveRaceFinale, resolveTeamOrder,
-  resolveStoryEvent, resolveRaceEvent, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View,
+  resolveStoryEvent, resolveRaceEvent, resolveHomeRace, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View,
 } from './f1.js';
 import { createRng } from './rng.js';
 import { applyAging, makeRookie, getRookieCounter, setRookieCounter, declineInfo, raisePotential } from './drivers.js';
-import { createPlayer, runBaseSeasonSummary, pickTeamByTier, teamsByStrength } from './career.js';
+import { createPlayer, runBaseSeasonSummary, pickTeamByTier, teamsByStrength, makeBaseGrid, assignBaseTeams } from './career.js';
+import { startRace, resetSeasonStats, awardRace } from './season.js';
 import { tierOf, profileOf, profileView, effectiveDev, expectedPosition } from './profile.js';
 import { BASE_TEAMS } from '../data/baseTeams.js';
 import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
@@ -64,7 +65,7 @@ function syncBaseProfile(s) {
   s.player.devFactor = profileOf(tier).development;
 }
 
-export function createCareer({ surname, number, flag = null, style, seed, age = null } = {}) {
+export function createCareer({ surname, number, flag = null, style, seed, age = null, kartOffers = false } = {}) {
   if (!surname) throw new Error('surname obrigatório');
   if (!Number.isInteger(number) || number < 1 || number > 99) throw new Error('number deve ser 1-99');
   const A = CONFIG.base.startAge;
@@ -112,13 +113,39 @@ export function createCareer({ surname, number, flag = null, style, seed, age = 
       mods: null,
       lastSummary: null,
     };
-    syncBaseProfile(st);
-    const startTeam = BASE_TEAMS.kart.find((t) => t.id === st.baseCareer.teamId);
-    log(st, 'start', `${surname} #${number} começa no ${kart.name} pela ${startTeam.name}, aos ${player.age} anos.`);
-    st.phase = 'BASE_TEMPORADA';
-    st.pendingDecision = baseChoiceDecision(st);
+    if (kartOffers) {
+      const sorted = teamsByStrength(kart.id);
+      const middle = sorted.find(t => t.id === st.baseCareer.teamId);
+      const proposals = [
+        ['winner', sorted[0], 'Projeto vencedor', 'Carro forte · cobrança alta', 'Formação reforçada quando você entrega o resultado esperado.'],
+        ['balanced', middle, 'Projeto equilibrado', 'Carro intermediário · cobrança moderada', 'Desenvolvimento regular ao longo da temporada.'],
+        ['development', sorted.at(-1), 'Programa de formação', 'Carro menos competitivo · sem cobrança', 'Formação reforçada mesmo se o resultado demorar.'],
+      ];
+      st.baseCareer.teamId = null;
+      st.phase = 'BASE_OFERTAS';
+      st.pendingDecision = { type: 'kart_offer', payload: { options: proposals.map(([id, team, label, car, description]) =>
+        ({ id, teamId: team.id, teamName: team.name, label, car, description })) } };
+    } else {
+      startKart(st);
+    }
   });
   return s;
+}
+
+function startKart(s) {
+  syncBaseProfile(s);
+  const team = BASE_TEAMS.kart.find(t => t.id === s.baseCareer.teamId);
+  log(s, 'start', `${s.player.name} #${s.player.number} começa no kart pela ${team.name}, aos ${s.player.age} anos.`);
+  s.phase = 'BASE_TEMPORADA';
+  s.pendingDecision = baseChoiceDecision(s);
+}
+
+function resolveKartOffer(s, answer) {
+  const offer = s.pendingDecision.payload.options.find(o => o.id === answer?.id);
+  if (!offer) throw new Error('Escolha uma das propostas de kart.');
+  s.baseCareer.teamId = offer.teamId;
+  s.baseCareer.kartProgram = offer.id;
+  startKart(s);
 }
 
 function baseChoiceDecision(s) {
@@ -148,6 +175,9 @@ export function applyDecision(state, answer) {
 
 function resolveDecision(state, pd, answer) {
   switch (pd.type) {
+    case 'kart_offer': return transition(state, s => resolveKartOffer(s, answer));
+    case 'kart_return': return transition(state, (s, rng) => resolveKartReturn(s, rng, answer));
+    case 'home_race': return transition(state, s => resolveHomeRace(s, answer));
     case 'base_choice': return transition(state, (s, rng) => resolveBaseChoice(s, rng, answer));
     case 'academy_invite': return transition(state, (s, rng) => resolveAcademyInvite(s, rng, answer));
     case 'offer_pick':
@@ -166,6 +196,25 @@ function resolveDecision(state, pd, answer) {
   }
 }
 
+function resolveKartReturn(s, rng, answer) {
+  const bc = s.baseCareer;
+  if (!['return', 'stay'].includes(answer?.id)) throw new Error('Escolha uma resposta ao convite de kart.');
+  if (answer.id === 'return') {
+    const guest = structuredClone(s.player);
+    const kart = CATEGORIES.kart;
+    const drivers = [guest, ...makeBaseGrid(kart, rng, SURNAMES)];
+    assignBaseTeams(drivers, guest, kart, rng, s.pendingDecision.payload.teamId);
+    resetSeasonStats(drivers);
+    const { classified } = awardRace(startRace(drivers, kart, rng));
+    const position = classified.indexOf(guest) + 1;
+    const finish = position ? `P${position}` : 'abandono';
+    if (position && position <= 3) s.player.fame += CONFIG.base.kartReturnFame;
+    bc.kartReturn = { year: s.year, finish };
+    log(s, 'kart_return', `Voltou ao kart como convidado: ${finish}. Vai perder a abertura da F4.`);
+  }
+  s.pendingDecision = baseChoiceDecision(s);
+}
+
 function resolveBaseChoice(s, rng, answer) {
   const bc = s.baseCareer;
   const choice = CONFIG.base.choices[bc.category][answer?.option];
@@ -181,21 +230,24 @@ function resolveBaseChoice(s, rng, answer) {
   };
 
   const category = CATEGORIES[bc.category];
+  const missesOpening = category.id === 'f4' && bc.kartReturn?.year === s.year;
+  const starts = category.races - Number(missesOpening);
   const summary = runBaseSeasonSummary({
     player: p, category, rng, names: SURNAMES,
     persistentRivals: bc.rivals,
     playerTeamId: bc.teamId,
     hasAcademy: !!p.academy,
     carBonus: bc.mods.carBonus, perfBonus: bc.mods.perfBonus, scoutingBonus: bc.mods.scoutingBonus,
+    playerMissesOpening: missesOpening,
   });
 
   // Estatísticas, fama e rivais
   const st = p.stats;
   st.seasons += 1;
-  st.gp = (st.gp ?? 0) + category.races;
+  st.gp = (st.gp ?? 0) + starts;
   // Números por categoria (a ficha mostra a carreira separada: kart, F4, F3, F2 e F1)
   const cs = ((p.catStats ??= {})[category.id] ??= { seasons: 0, gp: 0, wins: 0, podiums: 0, poles: 0, titles: 0 });
-  cs.seasons += 1; cs.gp += category.races; cs.wins += p.seasonWins; cs.podiums += p.seasonPodiums; cs.poles += p.seasonPoles;
+  cs.seasons += 1; cs.gp += starts; cs.wins += p.seasonWins; cs.podiums += p.seasonPodiums; cs.poles += p.seasonPoles;
   if (summary.position === 1) cs.titles += 1;
   st.wins += p.seasonWins;
   st.podiums += p.seasonPodiums;
@@ -211,7 +263,14 @@ function resolveBaseChoice(s, rng, answer) {
 
   // Desenvolvimento do ano: na equipe de ponta só acelera quem correspondeu ao esperado para o carro.
   p.devFactor = effectiveDev(summary.tier, summary.position <= expectedPosition(summary.carRank));
+  if (category.id === 'kart' && bc.kartProgram) {
+    const metExpectation = summary.position <= expectedPosition(summary.carRank);
+    p.devFactor = bc.kartProgram === 'winner' && !metExpectation
+      ? CONFIG.base.kartFormation.balanced : CONFIG.base.kartFormation[bc.kartProgram];
+  }
   bc.lastSummary = { ...summary, year: s.year, category: category.id };
+  (bc.seasons ??= []).push({ year: s.year, category: category.name, categoryId: category.id,
+    team: summary.teamName, teamId: summary.teamId, position: summary.position, points: summary.points, wins: summary.wins, podiums: summary.podiums });
   log(s, 'season', `${s.year} ${category.name}: ${summary.position}º (${summary.wins} vitórias, ${summary.points} pts).`);
 
   // Convite de academia (só com oferta 'top', ainda sem academia)
@@ -376,6 +435,17 @@ function startNextSeason(s, rng, categoryId, teamId) {
   }
   s.phase = 'BASE_TEMPORADA';
   s.pendingDecision = baseChoiceDecision(s);
+  if (categoryId === 'f4' && bc.seasonInCategory === 1 && bc.kartProgram && !s.player.catStats?.kart?.titles) {
+    const runnerUp = bc.seasons?.findLast(entry => entry.categoryId === 'kart' && entry.position === 2);
+    if (runnerUp) s.pendingDecision = { type: 'kart_return', payload: {
+      title: 'Um último convite do kart', teamId: runnerUp.teamId,
+      text: `Você foi vice no kart em ${runnerUp.year} pela ${runnerUp.team}. A equipe te chama para uma corrida de convidados no mesmo fim de semana da estreia na F4.`,
+      options: [
+        { id: 'return', label: 'Voltar ao kart', description: 'Dispute a prova de convidados. Um pódio dá fama, mas você perde a primeira etapa da F4.' },
+        { id: 'stay', label: 'Estrear na F4', description: 'Dispute a temporada completa da F4.' },
+      ],
+    } };
+  }
 }
 
 // --- View: tudo que a UI precisa, sem expor o estado cru ---
@@ -469,6 +539,7 @@ export function getView(state) {
       decline: declineInfo(p),
     },
     decision: state.pendingDecision,
+    baseHistory: bc?.seasons ?? [],
     log: state.careerLog.slice(-10),
   };
   if (bc) {
@@ -477,6 +548,7 @@ export function getView(state) {
       category: CATEGORIES[bc.category].name,
       team: BASE_TEAMS[bc.category].find((t) => t.id === bc.teamId)?.name ?? null,
       seasonInCategory: bc.seasonInCategory,
+      kartReturn: bc.kartReturn?.year === state.year ? bc.kartReturn : null,
       rivals: bc.rivals.map((r) => rivalLine(r, sum?.position ?? Infinity)),
       lastSeason: sum && {
         year: sum.year,
