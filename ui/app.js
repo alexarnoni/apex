@@ -8,7 +8,7 @@ import { TEAMS_F1 } from '../data/world2026.js';
 import { createSaves } from './saves.js';
 import { flagImg, COUNTRY, countryList } from './flags.js';
 import { TRACKS } from '../data/trackPaths.js';
-import { paintRaceMap } from './race-visual.js';
+import { raceScene, paintRaceScene } from './race-visual.js';
 import { buildFeedback, careerSnapshot, sendUrl, feedbackPayload, sendFeedback, FEEDBACK_KINDS } from './feedback.js';
 
 // Destino opcional do feedback (ex.: página "nova issue" de um repositório), definido no build
@@ -71,6 +71,7 @@ let undoStack = []; // estados anteriores (só em memória); o estado é imutáv
 const UNDO_MAX = 30;
 let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '', contact: '', status: '' }, end: { rating: null, text: '', include: true, status: '', msg: '' }, autoSingle: true, simStop: false, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', age: 15, style: 'con', seed: '' } };
 let lastKey = '';
+let sceneModel = null; // setas, abandonos e narração da cena de corrida, calculados a cada render
 
 // --- util -------------------------------------------------------------------
 
@@ -465,40 +466,92 @@ function teamTag(f1) {
 // No DOM a decisão vem primeiro (no celular é o que aparece no topo); no desktop o CSS posiciona as colunas.
 
 function layout(view, main, aside = '') {
-  const map = raceMapCard(view.f1?.map);
+  const map = view.f1?.map;
+  const podium = podiumCard(map);
   return `${header(view)}${ladder(view)}
   <div class="layout">
-    <div class="col-main">${map ? `<div class="map-mobile">${map}</div>` : ''}${main}</div>
-    <div class="col-ficha">${ficha(view)}</div>
-    <div class="col-side">${map ? `<div class="map-desktop">${map}</div>` : ''}${aside}</div>
+    <div class="col-main">${podium ? `<div class="map-mobile">${podium}</div>` : ''}${raceSceneCard(map)}${main}</div>
+    <div class="col-ficha">${raceTower(map)}${carPanel(view)}${ficha(view)}</div>
+    <div class="col-side">${podium ? `<div class="map-desktop">${podium}</div>` : ''}${aside}</div>
   </div>`;
 }
 
-function raceMapCard(map) {
-  if (!map) return '';
+function podiumCard(map) {
+  if (map?.phase !== 'finish') return '';
   const position = map.cars.findIndex(car => car.isPlayer) + 1;
-  if (map.phase === 'finish') {
-    const podium = map.cars.slice(0, 3).map((car, i) => `<li>
-      <span class="pill trophy p${i + 1}">P${i + 1}</span>
-      <span class="podium-team" style="--podium-team:${esc(TEAM_COLOR[car.team] ?? 'var(--line)')}"><b>${esc(car.name)}</b>${car.isPlayer ? ' · Você' : ''}</span>
-    </li>`).join('');
-    const result = position ? `P${position}` : map.missed ? 'Não disputou' : 'Abandono';
-    return `<section class="card race-podium" aria-label="Pódio da corrida">
-      <h3>Pódio · ${esc(map.circuit.gp)}</h3>
-      ${podium ? `<ol>${podium}</ol>` : '<p>Sem classificados.</p>'}
-      <div class="podium-your-result"><span>Seu resultado</span><strong>${esc(result)}</strong></div>
-    </section>`;
-  }
-  if (!TRACKS[map.circuit.id]) return '';
-  const phase = map.phase === 'waiting' ? 'Antes da corrida' : WEEKEND_STAGE[map.phase];
-  return `<section class="card race-visual" aria-label="Mapa da corrida">
-    <h3>${esc(map.circuit.gp)}</h3>
-    <p class="small">${esc(phase)}${position ? ` · Você em P${position}` : ''}</p>
-    <svg role="img" aria-label="Traçado com carros nas cores das equipes"></svg>
-    <p class="small mute">Contorno branco: seu carro</p>
-    <div class="map-controls" hidden><button class="btn small">Acelerar ×2</button>
-    <button class="btn ghost small">Pular animação</button></div>
+  const podium = map.cars.slice(0, 3).map((car, i) => `<li>
+    <span class="pill trophy p${i + 1}">P${i + 1}</span>
+    <span class="podium-team" style="--podium-team:${esc(TEAM_COLOR[car.team] ?? 'var(--line)')}"><b>${esc(car.name)}</b>${car.isPlayer ? ' · Você' : ''}</span>
+  </li>`).join('');
+  const result = position ? `P${position}` : map.missed ? 'Não disputou' : 'Abandono';
+  return `<section class="card race-podium" aria-label="Pódio da corrida">
+    <h3>Pódio · ${esc(map.circuit.gp)}</h3>
+    ${podium ? `<ol>${podium}</ol>` : '<p>Sem classificados.</p>'}
+    <div class="podium-your-result"><span>Seu resultado</span><strong>${esc(result)}</strong></div>
   </section>`;
+}
+
+// Cena da corrida: pista, carros, controles e narração. O desenho e o movimento ficam em race-visual.js.
+function raceSceneCard(map) {
+  if (!map || !TRACKS[map.circuit.id]) return '';
+  const position = map.cars.findIndex(car => car.isPlayer) + 1;
+  const phase = map.phase === 'waiting' ? 'Antes da corrida' : map.phase === 'finish' ? 'Bandeirada' : WEEKEND_STAGE[map.phase];
+  const { feed, fresh, speed } = sceneModel ?? { feed: [], fresh: 0, speed: 1 };
+  const lines = feed.map((line, i) => `<li class="${i >= feed.length - fresh ? 'fresh' : ''}"><b>${esc(line.when)}</b> ${esc(line.text)}</li>`).reverse().join('');
+  return `<section class="card race-visual" aria-label="Mapa da corrida">
+    <div class="scene-head"><h3>${esc(map.circuit.gp)}</h3>
+      <span class="chip">${esc(phase)}${position ? ` · P${position}` : ''}</span>
+      ${map.cars.length ? `<span class="chip">${map.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span>` : ''}</div>
+    <svg role="img" aria-label="Traçado com carros nas cores das equipes"></svg>
+    <div class="scene-foot"><p class="small mute scene-status" aria-live="polite"></p>
+      <div class="map-controls" hidden>
+        <button class="btn ghost small" data-scene="pause" aria-pressed="false">Pausar</button>
+        ${[1, 2, 4].map(n => `<button class="btn ghost small" data-scene-speed="${n}" aria-pressed="${n === speed}" aria-label="Velocidade ${n}×">${n}×</button>`).join('')}
+        <button class="btn ghost small" data-scene="skip">Pular animação</button>
+      </div></div>
+    ${map.cars.length ? '<p class="small mute">Anel branco: seu carro. A cena ilustra o trecho entre decisões, sem tempos reais.</p>' : ''}
+    ${lines ? `<h3>Narração</h3><ol class="race-feed" aria-label="Narração da corrida">${lines}</ol>` : ''}
+  </section>`;
+}
+
+// Torre de posições: ordem atual, com as posições ganhas ou perdidas desde a fase anterior.
+function raceTower(map) {
+  if (!map?.cars.length) return '';
+  const { deltas, out } = sceneModel ?? { deltas: {}, out: [] };
+  const colour = car => esc(TEAM_COLOR[car.team] ?? 'var(--line)');
+  const rows = map.cars.map((car, i) => {
+    const delta = deltas[car.name] ?? 0;
+    const arrow = delta ? `<span class="delta ${delta > 0 ? 'up' : 'down'}" aria-label="${delta > 0 ? 'ganhou' : 'perdeu'} ${Math.abs(delta)}">${delta > 0 ? '▲' : '▼'}${Math.abs(delta)}</span>` : '';
+    return `<li class="${car.isPlayer ? 'you' : ''}"${delta ? ` data-delta="${delta}"` : ''}><span class="pos">${i + 1}</span><i style="background:${colour(car)}"></i>
+      <span class="name">${esc(car.name)}</span>${arrow}</li>`;
+  }).join('');
+  const gone = out.map(car => `<li class="out ${car.isPlayer ? 'you' : ''}"><span class="pos">—</span><i style="background:${colour(car)}"></i>
+    <span class="name">${esc(car.name)}</span><span class="delta">ABD</span></li>`).join('');
+  const title = map.phase === 'finish' ? 'Classificação final' : ['race_strategy', 'race_start'].includes(map.phase) ? 'Grid de largada' : 'Posições na pista';
+  return `<section class="card race-tower-card" aria-label="Torre de posições"><h3>${title}</h3>
+    <ol class="race-tower">${rows}${gone}</ol>
+    ${Object.keys(deltas).length ? '<p class="small mute">Setas: posições ganhas ou perdidas no último trecho.</p>' : ''}
+  </section>`;
+}
+
+// Painel do carro durante a corrida, só com dados que a engine já calcula.
+function carPanel(view) {
+  const f1 = view.f1;
+  const map = f1?.map;
+  const pd = view.decision;
+  if (!map?.cars.length || map.phase === 'finish') return '';
+  const position = map.cars.findIndex(car => car.isPlayer) + 1;
+  const plan = f1.plans.find(p => p.id === f1.plan)?.label;
+  const rows = [
+    ['Posição', position ? `P${position} de ${map.cars.length}` : 'Fora da prova'],
+    ['Pneus', map.tyre ?? 'A definir'],
+    pd?.type === 'race_pit' ? ['Condição estimada', `${pd.payload.condition}%`] : null,
+    ['Pista', map.wet ? 'Molhada' : 'Seca'],
+    plan ? ['Plano', plan] : null,
+    f1.goal ? ['Meta da equipe', f1.goal.label] : null,
+  ].filter(Boolean);
+  return `<section class="card car-panel" aria-label="Seu carro"><h3>Seu carro</h3>
+    <dl>${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl></section>`;
 }
 
 // Fase da carreira: quando o declínio começa e quanto custa o próximo ano (previsível, sem sorteio).
@@ -1035,9 +1088,10 @@ function screenF1(view) {
     }
     const advice = f1.advice;
     const context = advice && pd.type !== 'weekend_approach' && pd.type !== 'story_event'
-      ? `<aside class="decision-context note"><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar esta escolha</button>` : ''}</aside>` : '';
+      ? `<aside class="decision-context note radio"><small class="radio-tag">Rádio · engenheiro</small><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar esta escolha</button>` : ''}</aside>` : '';
     body = body.replace(/(<section class="card focus">[\s\S]*?<\/h2>)/, `$1${context}`);
-    body = raceDashboard(f1, pd, stage) + body;
+    const inRace = ['race_strategy', 'race_start', 'race_event', 'race_pit', 'team_order', 'race_finale'].includes(pd.type);
+    body = inRace ? body + raceDashboard(f1, pd, stage) : raceDashboard(f1, pd, stage) + body;
   }
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
@@ -1143,6 +1197,8 @@ function render(animateMap = false) {
   el.className = state ? `wrap wide${state.phase === 'F1_FIM_DE_SEMANA' ? ' race-page' : ''}` : 'wrap home';
   if (!state) { el.innerHTML = panels() + screenCreate() + footer(); document.body.classList.toggle('modal-open', !!anyModal()); return; }
   const view = getView(state);
+  const map = view.f1?.map;
+  sceneModel = map ? raceScene(map, `${view.year}|${map.circuit.id}`, animateMap === true) : null;
   let html;
   switch (view.screen) {
     case 'BASE_TEMPORADA':
@@ -1158,10 +1214,7 @@ function render(animateMap = false) {
   if (ui.notice) html = `<div class="note" role="status">${esc(ui.notice)}</div>${html}`;
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
   el.innerHTML = panels() + html + footer();
-  const map = view.f1?.map;
-  if (map) for (const panel of el.querySelectorAll('.race-visual')) {
-    paintRaceMap(panel, map, TEAM_COLOR, animateMap === true);
-  }
+  if (map) paintRaceScene(el, map, TEAM_COLOR);
   document.body.classList.toggle('modal-open', !!anyModal());
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
   if (key !== lastKey) { lastKey = key; scrollToTop(); focusHeading(el); }

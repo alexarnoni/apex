@@ -332,6 +332,33 @@ Imagem é inspiração, não especificação copiada. Fechar os efeitos e a cali
 - [x] ~~Pausar nas decisões e mostrar as consequências.~~ **Feito na v0.13, publicada em 2026-11-09.** Janela de box informa posição, clima e condição dos pneus. A escolha muda a ordem antes dos pontos e entra no relato.
 - [x] ~~Permitir acelerar ou pular a animação.~~ **Feito na v0.13, publicada em 2026-11-09.** A cena é independente das regras, respeita a preferência de movimento reduzido e pode ser pulada sem responder à escolha pendente.
 
+## Tela de corrida estilo manager
+
+Direção definida em 2026-11-09: o jogo deve funcionar como um F1 Manager/Football Manager do piloto. A corrida vira a "tela de partida", com decisões do piloto pausando a prova. Nada implementado ainda.
+
+**Etapa 1 — tela ilustrativa (só interface).** Usa a ordem por fase que a engine já calcula; não muda regras, saves nem balanceamento.
+
+- [x] ~~Mapa 2D com voltas, ultrapassagens visíveis e pista desenhada (asfalto, zebras, linha de largada).~~ **Feito (2026-11-09), local, sem commit.** Cada trecho entre decisões vira uma volta (duas até a bandeirada), com luzes de largada, chuva e abandonos. Os carros param na pausa da decisão; o espaçamento é fixo, sem distâncias reais.
+- [x] ~~Torre de posições com piloto, cor da equipe e setas de ganho ou perda.~~ **Feito (2026-11-09), local.** Sem diferença em segundos e sem pneu dos rivais enquanto a engine não gerar esses dados. Abandonos aparecem no fim da lista.
+- [x] ~~Narração progressiva.~~ **Feito (2026-11-09), local.** Usa o relato parcial da engine (`map.notes`) e movimentos derivados da troca de ordem. Sem número de volta. Setas e linhas derivadas ficam só na aba: somem ao recarregar ou desfazer.
+- [x] ~~Controles: pausar, 1×, 2×, 4× e pular.~~ **Feito (2026-11-09), local.** Pular leva ao fim do trecho sem responder à decisão. Movimento reduzido mostra a cena parada.
+- [x] ~~Pausa nas decisões existentes, com o recado do engenheiro em balão.~~ **Feito (2026-11-09), local.** A decisão continua disponível durante a cena; nada é bloqueado.
+- [x] ~~Painel do carro do jogador.~~ **Feito (2026-11-09), local.** Posição, pneus, pista, plano e meta; condição estimada só na janela de box.
+
+Limites da etapa 1: ao simular várias etapas, só a última bandeirada é animada. Celular conferido apenas em emulação. Nesta máquina o Playwright rodou com o Chrome instalado (`channel: 'chrome'`), porque o navegador do Playwright não estava baixado.
+
+**Etapa 2 — simulação volta a volta (engine, liga com D.2).** Pacote grande, exige recalibrar.
+
+- [ ] Tempo por volta para cada carro, a partir de ritmo, carro, pista, clima e variação por seed.
+- [ ] Desgaste e composto de pneus para todos os carros, com paradas dos rivais simuladas.
+- [ ] Diferenças reais em segundos, ar sujo e ultrapassagem dependente de ritmo e pista.
+- [ ] Decisões abertas em voltas específicas, no lugar das fases fixas. Alterações continuam antes da atribuição dos pontos, com determinismo por seed e decisões.
+- [ ] Torre com diferença para o da frente e pneu de cada carro; narração volta a volta para o grid inteiro ("Volta 12: Teste passa Albon na chicane").
+- [ ] Safety car e bandeira vermelha compactando o pelotão (v0.14 proposta).
+- [ ] Definir o que acontece com saves no meio de uma corrida no formato antigo.
+
+**Depois.** Câmera seguindo o carro (pede traçados suavizados; os atuais têm coordenadas inteiras em 200×140), sons (2.8/D.15), caixa de entrada para notícias e propostas, radar de atributos e comparação com o companheiro. Visão 3D fica fora: pesa o arquivo único e complica a CSP.
+
 ## Imersão e aproveitamento de tela — referências para evoluir
 
 Pedido em 2026-11-08: eventos que retomem fatos reais da própria carreira (ex.: título de kart que escapou, voltar a disputar com custo no calendário), histórico de temporadas mais legível, cores com significado e mais informação útil na largura disponível. Referências visuais são inspiração, preservando identidade Bandeirada.

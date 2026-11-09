@@ -1061,12 +1061,20 @@ export function f1View(s) {
   const preStart = ['race_strategy', 'race_start'].includes(decision?.type);
   const mapDrivers = indices => indices.map(i => world.drivers[i]).filter(Boolean)
     .map(d => ({ team: d.team, isPlayer: !!d.isPlayer, name: d.name }));
+  // Relato parcial da corrida em andamento, com os mesmos textos que entram no relato final.
+  const cur = season?.cur;
+  const notes = [
+    cur?.strategy && { when: `Estratégia (${cur.strategy.label})`, text: cur.strategy.text },
+    cur?.event && { when: cur.event, text: cur.eventText ?? 'Você teve de decidir na pista.' },
+    cur?.pit && { when: 'Janela de box', text: cur.pit.text },
+  ].filter(Boolean);
   const map = !season ? null : pending ? {
     circuit: circuitView(round), phase: decision.type,
     cars: preStart ? (season.cur?.mapGrid ?? decision.payload.gridRows ?? []) : mapDrivers(pending.result.filter(i => !pending.dnfs.includes(i))),
+    wet: !!pending.wet, tyre: cur?.strategy?.label ?? null, notes,
   } : season.lastRace?.mapOrder ? {
     circuit: circuitView(season.lastRace.n), phase: 'finish', cars: season.lastRace.mapOrder,
-    missed: season.lastRace.missed,
+    missed: season.lastRace.missed, wet: !!season.lastRace.wet, tyre: null, notes: season.lastRace.story ?? [],
   } : round <= season.total ? { circuit: circuitView(round), phase: 'waiting', cars: [] } : null;
   const eventPosition = decision?.type === 'race_event'
     ? decision.payload.position ?? (season?.pendingRace?.w ? raceCtx(s, deser(world, season.pendingRace.w)).pos : null)

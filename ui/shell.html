@@ -405,11 +405,58 @@ h2::before { display: none; }
   .map-desktop { display: block; }
   .map-mobile { display: none; }
 }
-.race-visual { gap: 6px; }
+.race-visual { gap: 6px; --road: #3b3848; --kerb: #f4f2fa; }
 .race-visual h3, .race-visual p { margin: 0; }
-.race-visual svg { display: block; width: 100%; max-height: 42vh; }
-.race-visual .visual-car { stroke: var(--panel); stroke-width: .75; }
-.race-visual .you-car { stroke: white; stroke-width: 1.6; }
+.race-visual svg { display: block; width: 100%; max-height: 40vh; background: color-mix(in srgb, var(--good) 9%, var(--panel2)); border-radius: 10px; }
+.race-visual svg.wet { --road: #2b3346; background: color-mix(in srgb, var(--cyan) 12%, var(--panel2)); }
+.race-visual svg path, .race-visual svg line { stroke-linejoin: round; stroke-linecap: round; }
+.race-visual svg .track-kerb { stroke: var(--kerb); stroke-width: 7.6; }
+.race-visual svg .track-kerb-red { stroke: #d8343c; stroke-width: 7.6; stroke-dasharray: 2.5 2.5; stroke-linecap: butt; }
+.race-visual svg .track-road { stroke: var(--road); stroke-width: 6; }
+.race-visual svg .track-centre { stroke: #fff; stroke-width: .3; stroke-dasharray: 1.6 2.4; opacity: .35; }
+.race-visual svg .track-finish { stroke: #fff; stroke-width: .9; stroke-dasharray: .9 .9; stroke-linecap: butt; }
+.race-visual svg .track-finish.alt { stroke-dashoffset: .9; }
+.race-visual svg .track-rain line { stroke: var(--cyan); stroke-width: .35; opacity: .5; }
+.track-rain { animation: rain .7s linear infinite; }
+@keyframes rain { to { transform: translate(-4px, 12px); } }
+.race-visual svg path.visual-car { stroke: #14121c; stroke-width: .7; }
+.race-visual svg path[class^="track-"] { fill: none; }
+.race-visual svg path.you-car { stroke: #fff; stroke-width: 1.2; }
+.race-visual svg path.out-car { filter: grayscale(1); }
+.you-halo { fill: none; stroke: #fff; stroke-width: .8; opacity: .85; animation: halo 1.6s ease-in-out infinite; }
+@keyframes halo { 50% { opacity: .25; } }
+.race-visual svg [hidden] { display: none; }
+.start-lights rect { fill: #14121c; }
+.start-lights circle { fill: #4a2326; }
+.start-lights circle.on { fill: #ff3b30; }
+.scene-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.scene-head h3 { margin-inline-end: auto; }
+.scene-foot { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-height: 2.2rem; }
+.map-controls { display: flex; flex-wrap: wrap; gap: 6px; }
+.map-controls[hidden] { display: none; }
+.map-controls [aria-pressed="true"] { background: var(--signal); color: var(--signal-ink); border-color: var(--signal); }
+.race-visual.flag .scene-status { color: var(--fg); font-weight: 700; }
+.race-visual.flag .scene-status::before { content: "🏁 "; }
+.race-feed { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; max-height: 9.5rem; overflow-y: auto; font-size: .92rem; }
+.race-feed li { padding: 4px 8px; border-inline-start: 3px solid var(--line); background: var(--panel2); border-radius: 0 6px 6px 0; }
+.race-feed li:first-child { border-inline-start-color: var(--signal); }
+.race-feed li.fresh { display: none; }
+.race-feed b { color: var(--signal-text); margin-inline-end: 4px; }
+.race-tower { list-style: none; margin: 0; padding: 0; font-size: .9rem; }
+.race-tower li { display: flex; align-items: center; gap: 6px; padding: 3px 4px; border-top: 1px solid var(--line); }
+.race-tower li > i { flex: none; width: 4px; height: 18px; border-radius: 1px; }
+.race-tower .pos { flex: none; width: 1.6em; text-align: right; color: var(--mute); font-family: var(--f-mono); }
+.race-tower .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.race-tower .delta { flex: none; font-family: var(--f-mono); font-size: .8rem; color: var(--mute); }
+.race-tower .delta.up { color: var(--good); } .race-tower .delta.down { color: var(--bad); }
+.race-tower li.you { background: var(--you); font-weight: 600; border-radius: 6px; }
+.race-tower li.out { opacity: .55; }
+.car-panel dl { margin: 0; display: grid; gap: 6px; }
+.car-panel dl div { display: flex; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding-top: 6px; }
+.car-panel dt { color: var(--mute); } .car-panel dd { margin: 0; font-weight: 600; text-align: right; }
+.decision-context.radio { border-inline-start: 4px solid var(--cyan); border-radius: 4px 14px 14px 14px; }
+.radio-tag { display: block; color: var(--cyan); font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+@media (prefers-reduced-motion: reduce) { .track-rain, .you-halo { animation: none; } }
 .kart-offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
 .opt.kart-offer {
   --kart-color: color-mix(in srgb, var(--offer-team) 42%, var(--fg));

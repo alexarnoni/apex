@@ -175,6 +175,11 @@ test('acompanhamento visual permite pular a cena sem responder à decisão', asy
   const scene = page.getByRole('region', { name: 'Mapa da corrida' });
   await expect(scene).toBeVisible();
   expect(await scene.locator('.visual-car').count()).toBeGreaterThan(1);
+  await expect(page.getByRole('region', { name: 'Torre de posições' }).locator('li.you')).toHaveCount(1);
+  await expect(page.getByRole('region', { name: 'Seu carro' })).toContainText('Pneus');
+  await expect(scene.getByRole('list', { name: 'Narração da corrida' }).locator('li').first()).toBeAttached();
+  await scene.getByRole('button', { name: 'Velocidade 4×' }).click();
+  await expect(scene.getByRole('button', { name: 'Velocidade 4×' })).toHaveAttribute('aria-pressed', 'true');
   const before = await saved(page);
   await scene.getByRole('button', { name: 'Pular animação' }).click();
   await expect(scene).toBeVisible();

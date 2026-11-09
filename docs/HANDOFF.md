@@ -33,6 +33,9 @@ Próximos candidatos: grid real de 2026 por data de corte e retrospectiva com An
 - Validação final de 2026-11-09: 182 testes Node, 28 Playwright e build com o aviso MIT dos traçados. Publicada no commit 4915f02. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42708906210). Versão, mapa, pódio, box e GoatCounter conferidos no HTML servido.
 - README apresenta o Bandeirada como jogo independente. Avisos MIT de traçados e bandeiras acompanham o build. Nomes reais e marcas no jogo continuam como tema separado para revisão antes de monetizar.
 - Próxima etapa proposta: v0.14 com treino livre, safety car e bandeira vermelha. Escopo em `proxima-atualizacao.md`.
+- Direção de 2026-11-09: tela de corrida estilo manager do piloto, em duas etapas. Escopo e limites em `roadmap-ideias.md`, seção "Tela de corrida estilo manager".
+- Etapa 1 (ilustrativa) feita localmente em 2026-11-09, **sem commit nem publicação**: pista desenhada, voltas com ultrapassagens, luzes, torre, narração, controles e painel do carro em `ui/race-visual.js`, `ui/app.js` e `ui/shell.html`. A view ganhou `map.wet`, `map.tyre` e `map.notes` em `engine/f1.js`, sem mudar regras nem saves. 182 testes Node, 28 Playwright (com Chrome do sistema) e build aprovados.
+- Etapa 2 (volta a volta na engine) não começou; ordem em relação à v0.14 a combinar.
 - Depois: grid real de 2026, base mais fiel, salto excepcional F4–F2 e desenvolvimento persistente. Para F1, aplicar os pacotes ao longo do calendário é proposta. Carreira de chefe de equipe fica para uma etapa própria.
 
 Confira `git status --short` e `git log -3 --oneline`. Referências: `v0.11.md`, `proxima-atualizacao.md`, `roadmap-ideias.md` e `DECISIONS.md`.
