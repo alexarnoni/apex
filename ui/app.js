@@ -183,7 +183,7 @@ const HELP = [
   ['Nota de scouting', 'Soma o resultado no campeonato, um bônus por bater carros melhores que o seu, academia e fama, menos uma pressão por idade acima do típico da categoria. A tela mostra cada parcela.'],
   ['Academia', 'Convite de uma equipe de F1 para a sua formação. Aumenta a nota de scouting nas temporadas seguintes e abre ofertas ligadas a essa equipe.'],
   ['Estilo de pilotagem', 'Agressivo: mais rápido na classificação, mas oscila e abandona mais. Técnico: vai bem na chuva e ajuda a equipe a desenvolver o carro. Consistente: raramente abandona e pontua sempre, com menos picos.'],
-  ['Habilidade e potencial', 'Habilidade é o quanto você é rápido hoje. Ela cresce com a idade, o treino e as escolhas, até um limite que você só vê como o potencial estimado pelos olheiros.'],
+  ['Habilidade e potencial', 'Habilidade é o resumo ponderado de classificação, corrida, consistência, chuva, pneus e contribuição técnica. O carro não entra nessa nota. Na F1 você pode direcionar o treino; ao envelhecer, velocidade e competências de experiência não caem na mesma proporção. O potencial é uma estimativa de desenvolvimento, exibida em faixa.'],
   ['Fama', 'Sobe com resultados e certos eventos. Ajuda nas ofertas e é uma das formas de conseguir cláusula de saída no contrato.'],
   ['Status na equipe', 'Piloto 1 tem prioridade e um bônus de desempenho. Piloto 2 pode receber ordem de equipe para ceder posição. Igual significa sem prioridade. O status vem do desempenho em relação ao companheiro ou de uma cláusula do contrato.'],
   ['Ordem de equipe e confiança', 'Quando você, como piloto 2, está na frente do piloto 1, a equipe pode mandar ceder a posição. Obedecer aumenta a confiança da equipe; desafiar reduz bastante. Confiança baixa pode custar o status e até a renovação.'],
@@ -561,6 +561,7 @@ function ficha(view) {
       </div>
     </div>
     ${attributes(p)}
+    <details class="pilot-profile"><summary>Perfil de pilotagem</summary>${profileBars(p.attributes)}<p class="mute small">O overall resume estas competências. O carro não entra nesta nota.</p></details>
     <div class="tiles">${stat('Idade', p.age)}${stat('Potencial', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}${stat('Margem', margin(p))}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
     ${team}
     <div class="counters">${stat('GP', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Poles', c.poles)}</div>
@@ -616,7 +617,7 @@ function seasonPanel(view) {
     ? racesList(f1)
     : `<div class="tabs sub" role="tablist">${tabBtn('sttab', 'drivers', 'Pilotos', ui.stTab)}${tabBtn('sttab', 'teams', 'Construtores', ui.stTab)}</div>${ui.stTab === 'teams' ? teamsTable(f1) : driversTable(f1)}`;
   return `<section class="card"><h3>${esc(title)}</h3>
-    <div class="tabs" role="tablist">${tabBtn('tab', 'standings', 'Tabela', ui.tab)}${tabBtn('tab', 'races', 'Etapas', ui.tab)}</div>${body}</section>`;
+    <div class="tabs" role="tablist">${tabBtn('tab', 'standings', 'Tabela', ui.tab)}${tabBtn('tab', 'races', 'Etapas', ui.tab)}</div>${body}${rosterPanel(f1.roster)}</section>`;
 }
 
 // --- telas ------------------------------------------------------------------
@@ -832,9 +833,30 @@ function marketCard(moves) {
     const who = `${flagImg(m.nat, { alt: false, h: 11 })} <b>${esc(m.name)}</b>`;
     if (m.kind === 'transfer') return `<li>${who}: ${esc(m.from ?? '—')} → <b>${esc(m.to ?? '—')}</b></li>`;
     if (m.kind === 'rookie') return `<li>${who} estreia na <b>${esc(m.to ?? '—')}</b>${m.origin ? ` <span class="mute small">(${esc(m.origin)})</span>` : ''}</li>`;
-    return `<li>${who} se aposenta${m.from ? ` <span class="mute small">(${esc(m.from)}, ${esc(m.age)} anos)</span>` : ''}</li>`;
+    if (m.kind === 'return') return `<li class="market-return"><span class="news-tag">Retorno</span> ${who} volta ao grid pela <b>${esc(m.to)}</b>.</li>`;
+    if (m.kind === 'reserve') return `<li class="market-reserve"><span class="news-tag">Reserva</span> ${who} segue no paddock, agora como reserva da <b>${esc(m.to)}</b>.</li>`;
+    if (m.kind === 'available') return `<li class="market-free"><span class="news-tag">Sem assento</span> ${who} deixa a ${esc(m.from ?? 'equipe')} e avalia oportunidades.</li>`;
+    return `<li class="market-retire"><span class="news-tag">Aposentadoria</span> ${who} encerra sua participação na F1${m.age ? ` aos ${esc(m.age)} anos` : ''}${m.from ? `, após correr pela ${esc(m.from)}` : ''}.</li>`;
   }).join('');
   return `<section class="card"><h3>Mercado de pilotos</h3><ul class="log">${rows}</ul></section>`;
+}
+
+function profileBars(values = []) {
+  return `<dl class="profile-bars">${values.map(a => `<div class="profile-stat" data-attribute="${esc(a.id)}"><dt>${esc(a.label)}</dt><dd>${esc(a.value)}</dd><div class="profile-track" aria-hidden="true"><i style="width:${esc(a.value)}%"></i></div></div>`).join('')}</dl>`;
+}
+function rosterPanel(roster = []) {
+  const selected = roster.find(d => d.id === ui.profileDriver) ?? roster.find(d => d.isPlayer) ?? roster[0];
+  if (!selected) return '';
+  const roles = { race: 'No grid', reserve: 'Reserva', free: 'Sem assento', retired: 'Aposentado' };
+  return `<details class="roster-panel" ${ui.rosterOpen ? 'open' : ''}><summary>Pilotos e mercado</summary>
+    <label class="field">Consultar piloto<select id="roster-driver">${roster.map(d => `<option value="${esc(d.id)}" ${selected.id === d.id ? 'selected' : ''}>${esc(d.name)} · ${esc(roles[d.role] ?? d.role)}</option>`).join('')}</select></label>
+    <p><b>${flagImg(selected.nat, { alt: false, h: 12 })} ${esc(selected.name)}</b> · ${esc(selected.age)} anos · overall ${esc(selected.overall)}</p>
+    <span class="news-tag role-${esc(selected.role)}">${esc(roles[selected.role] ?? selected.role)}${selected.team || selected.reserveTeam ? ` · ${esc(selected.team ?? selected.reserveTeam)}` : ''}</span>
+    ${profileBars(selected.attributes)}<p class="mute small">Estimativas do simulador, não notas oficiais. Reservas podem disputar vagas futuras; perder o assento não apaga o piloto.</p></details>`;
+}
+function recentCareer(f1) {
+  if (!f1.seasons.length) return '';
+  return `<details class="card career-history"><summary>Seus últimos capítulos</summary>${[...f1.seasons].slice(-5).reverse().map(y => `<article class="career-chapter"><h3>${esc(y.year)} · ${esc(y.teamName)}</h3><p><span class="pill ${y.position <= 3 ? 'good' : ''}">${esc(y.position)}º no mundial</span> ${esc(y.points)} pontos · <b class="season-wins">${esc(y.wins)} vitórias</b> · <b class="season-podiums">${esc(y.podiums)} pódios</b></p>${y.goal ? `<p class="mute small">${esc(y.goal.label)} · ${y.goal.met ? 'Meta cumprida' : 'Meta não cumprida'}</p>` : ''}<p class="mute small">Campeão: ${esc(y.champion)}</p></article>`).join('')}</details>`;
 }
 
 // Relato da corrida: o que aconteceu na largada, na estratégia, nos eventos e na chegada.
@@ -863,7 +885,7 @@ function screenF1(view) {
   if (view.screen === 'F1_PRE_TEMPORADA') {
     title = `Pré-temporada ${f1.worldSeason + 1}`;
     body = pd.type === 'story_event' ? eventCard(pd)
-      : `${marketCard(f1.marketMoves)}<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${planControl(f1, "season-plan")}${optionCards(pd.payload.options, 'focus')}</section>`;
+      : `${marketCard(f1.marketMoves)}<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${planControl(f1, "season-plan")}<label class="field">Área de treino (se escolher Treinar)<select id="training-focus">${f1.trainingOptions.map(t => `<option value="${esc(t.id)}" ${t.id === f1.trainingFocus ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}</select></label>${optionCards(pd.payload.options, 'focus')}</section>`;
   } else if (view.screen === 'F1_FIM_DE_SEMANA' && pd) {
     title = r.done >= r.total ? `Temporada ${f1.worldSeason} · fim do campeonato` : `Temporada ${f1.worldSeason} · etapa ${r.done + 1} de ${r.total}${r.circuit ? ` · ${r.circuit.gp}` : ''}`;
     const prog = `<div class="bar-meter"><i style="width:${Math.round((r.done / r.total) * 100)}%"></i></div>`;
@@ -897,13 +919,13 @@ function screenF1(view) {
     const advice = f1.advice;
     const context = advice && pd.type !== 'weekend_approach' && pd.type !== 'story_event'
       ? `<aside class="decision-context note"><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar à equipe e seguir</button>` : ''}</aside>` : '';
-    body = body.replace(/(<section class="card focus"><h2>[\s\S]*?<\/h2>)/, `$1${context}`);
+    body = body.replace(/(<section class="card focus">[\s\S]*?<\/h2>)/, `$1${context}`);
     body = `${prog}${body}`;
   }
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
   const last = f1.lastRace && view.screen === 'F1_FIM_DE_SEMANA' ? `<section class="card">${raceLine(f1.lastRace)}</section>` : '';
-  return layout(view, `<h2>${esc(title)}</h2>${seasonPulseCard(f1.goal)}${lastEventCard(f1)}${body}${last}${dev}`, seasonPanel(view));
+  return layout(view, `<h2>${esc(title)}</h2>${seasonPulseCard(f1.goal)}${lastEventCard(f1)}${body}${last}${dev}${recentCareer(f1)}`, seasonPanel(view));
 }
 
 function screenEndSeason(view) {
@@ -1095,10 +1117,15 @@ document.addEventListener('change', (e) => {
   else if (t.id === 'fb-include') { ui.fb.include = t.checked; refreshSendLink(); }
   else if (t.id === 'fb-full') { ui.fb.full = t.checked; refreshSendLink(); }
   else if (t.id === 'race-plan') decide({ id: t.value, savePlan: true });
+  else if (t.id === 'roster-driver') { ui.profileDriver = t.value; render(); }
   else if (t.id === 't-auto') { ui.autoSingle = t.checked; run((s) => settle(s)); }
   else if (t.id === 't-stop') ui.simStop = t.checked;
   else if (t.id === 'f-flag') { const w = document.getElementById('flag-preview'); if (w) w.innerHTML = flagImg(t.value, { alt: false, h: 18 }); }
 });
+
+document.addEventListener('toggle', (e) => {
+  if (e.target.isConnected && e.target.classList.contains('roster-panel')) ui.rosterOpen = e.target.open;
+}, true);
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && anyModal()) { closeModals(); render(); }
@@ -1135,7 +1162,7 @@ document.addEventListener('click', (e) => {
     case 'run-base': { const o = ui.baseOpt; ui.baseOpt = null; return decide({ option: o }); }
     case 'academy': return decide({ accept: id === 'yes' });
     case 'offer': return decide({ id });
-    case 'focus': return decide({ id, plan: document.getElementById('season-plan')?.value ?? getView(state).f1.plan });
+    case 'focus': return decide({ id, plan: document.getElementById('season-plan')?.value ?? getView(state).f1.plan, training: document.getElementById('training-focus')?.value ?? 'balanced' });
     case 'approach': return decide({ id });
     case 'strategy': return decide({ id });
     case 'finale': return decide({ id });

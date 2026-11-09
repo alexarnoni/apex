@@ -23,7 +23,8 @@ Este documento junta, em um lugar só, o que cada versão do jogo trouxe. Ele re
 | v0.9 | Corrida em momentos, declínio previsível, veteranos, nomes por país e mercado | 2026-11-08 | sim (commit `4b9add0`) |
 | v0.9.1 | Talento de berço e dedicação no lugar do corte de potencial | 2026-11-08 | sim (commit `f35795c`) |
 | v0.9.2 | Perfil da equipe nas ofertas: pressão x desenvolvimento | 2026-11-08 | sim (commit `659b46a`) |
-| v0.10.0 | Ritmo contextual, planos, metas, história da temporada e nova página inicial | 2026-11-08 | pacote desta atualização; código `36bc86f` |
+| v0.10.0 | Ritmo contextual, planos, metas, história da temporada e nova página inicial | 2026-11-08 | sim; código `36bc86f` |
+| v0.11.0 | Seis atributos, treino direcionado, reservas e mercado preservado | 2026-11-08 | implementação validada; publicação em HANDOFF |
 
 ---
 
@@ -188,3 +189,7 @@ Pacote implementado em 2026-11-08, código `36bc86f`. Plano persistente, avanço
 | `docs/calibracao.md` | Como medir e calibrar os números do jogo (ferramentas em `tools/calibrate/`), metas, decisões e armadilhas. |
 
 Os documentos originais continuam onde estavam; este arquivo só resume e aponta para eles.
+
+## v0.11.0: perfis e mercado vivo
+
+Detalhes em [v0.11.md](v0.11.md). 178 testes Node e 22 de navegador. ENGINE_VERSION 1, atributos inferidos em saves antigos, sem reconstruir pilotos anteriormente apagados. Mercado preserva livres e reservas; transferência mantém grid completo.

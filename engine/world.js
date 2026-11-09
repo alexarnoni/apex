@@ -8,7 +8,8 @@ import { CONFIG } from './config.js';
 import { runDevSeason, applyRegulationReset, isRegulationYear, rollInitialConcepts } from './development.js';
 import { runSeason, resetSeasonStats } from './season.js';
 import { applyAging, retirementProb, makeRookie } from './drivers.js';
-import { fillSeats } from './market.js';
+import { fillSeats, assignReserves } from './market.js';
+import { ensureAttributes, attributesOf } from './driver-attributes.js';
 import { assignStatus } from './status.js';
 import { SISTER_TEAMS } from '../data/world2026.js';
 
@@ -18,8 +19,9 @@ export function createWorld({ teams, drivers, category, names }) {
     category,
     names,
     teams: teams.map((t) => ({ ...t, prize: 5, seats: t.seats ?? 2 })),
-    drivers: drivers.map((d) => ({
+    drivers: drivers.map((d) => ensureAttributes({
       ...d,
+      id: d.id ?? `real-${d.name}`, role: 'race',
       form: 0,
       generated: false,
       potential: d.potential ?? d.skill + Math.max(0, (26 - d.age) * 1.2),
@@ -43,6 +45,9 @@ export function beginYear(world, rng) {
   const devLog = {};
   for (const t of world.teams) {
     t.hasTecDriver = world.drivers.some((d) => d.team === t.id && d.style === 'tec');
+    const contributors = [...world.drivers.filter(d => d.team === t.id), ...(world.market ?? []).filter(d => d.reserveTeam === t.id)];
+    const best = Math.max(CONFIG.driverAttributes.reference, ...contributors.map(d => attributesOf(d).feedback));
+    t.driverFeedbackBonus = CONFIG.driverAttributes.enabled ? Math.min(CONFIG.driverAttributes.maxFeedbackDev, (best - CONFIG.driverAttributes.reference) * CONFIG.driverAttributes.feedbackDevWeight) : 0;
     devLog[t.id] = runDevSeason(t, rng);
   }
 
@@ -114,12 +119,23 @@ export function endYear(world, rng, result, teamsById, devLog) {
   const staying = [];
   const retiredNow = [];
   const prevTeamOf = new Map();
+  const availableBefore = [...(world.market ?? [])];
+  const aliveMarket = [];
+  for (const d of availableBefore) {
+    applyAging(d, rng);
+    d.seasonsWithoutSeat = (d.seasonsWithoutSeat ?? 0) + 1;
+    if (rng.chance(retirementProb(d))) {
+      d.role = 'retired'; d.reserveTeam = null; d.team = null;
+      world.retired.push(d); retiredNow.push(d);
+    } else aliveMarket.push(d);
+  }
+  world.market = aliveMarket;
   for (const d of world.drivers) {
     prevTeamOf.set(d, d.team);
     applyAging(d, rng);
     d.contract -= 1;
     if (d.isPlayer) { staying.push(d); continue; }
-    if (rng.chance(retirementProb(d))) { d.prevTeam = d.team; d.team = null; world.retired.push(d); retiredNow.push(d); continue; }
+    if (rng.chance(retirementProb(d))) { d.prevTeam = d.team; d.team = null; d.role = 'retired'; d.reserveTeam = null; world.retired.push(d); retiredNow.push(d); continue; }
     if (d.contract > 0) { staying.push(d); continue; }
     // Contrato vencido: o top 3 do mundial renova quase sempre; os demais renovam conforme a força do carro
     // (melhor carro 75%, pior 40%, mais 10 pontos para a elite).
@@ -133,6 +149,7 @@ export function endYear(world, rng, result, teamsById, devLog) {
     }
     d.prevTeam = d.team;
     d.team = null;
+    d.role = 'free'; d.reserveTeam = null; d.status = null; d.statusClause = null; d.seasonsWithoutSeat = 0;
     world.market.push(d);
   }
   for (let i = 0; i < CONFIG.rookies.perSeason; i++) {
@@ -141,6 +158,8 @@ export function endYear(world, rng, result, teamsById, devLog) {
   world.market = fillSeats(world.teams, staying, world.market, rng, () => makeRookie(world.names, rng, 'F2'), SISTER_TEAMS);
   world.drivers = staying;
   world.lastMoves = marketMoves(world, prevTeamOf, retiredNow);
+  for (const d of world.market) if (prevTeamOf.has(d)) world.lastMoves.push({ kind: 'available', name: d.name, nat: d.nat ?? null, from: world.teams.find(t => t.id === d.prevTeam)?.name ?? null });
+  assignReserves(world);
 
   // 4. Atribuir status para o próximo ano (após mercado, com grid final)
   assignStatus(world.teams, world.drivers, result.champion);
@@ -154,7 +173,7 @@ function marketMoves(world, prevTeamOf, retiredNow) {
     if (d.isPlayer) continue;
     const from = prevTeamOf.get(d);
     if (from === undefined) {
-      moves.push({ kind: 'rookie', name: d.name, nat: d.nat ?? null, to: teamName(d.team), origin: d.origin ?? null, skill: d.skill });
+      moves.push({ kind: !d.generated || d.stats.seasons > 0 ? 'return' : 'rookie', name: d.name, nat: d.nat ?? null, to: teamName(d.team), origin: d.origin ?? null, skill: d.skill });
     } else if (from !== d.team) {
       moves.push({ kind: 'transfer', name: d.name, nat: d.nat ?? null, from: teamName(from), to: teamName(d.team), skill: d.skill });
     }

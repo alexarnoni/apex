@@ -1,13 +1,16 @@
 // Mercado de assentos da F1 e nota de scouting das categorias de base.
 
 import { CONFIG } from './config.js';
+import { attributesOf } from './driver-attributes.js';
 
 // Valor de mercado de um piloto para as equipes de F1.
 export function marketScore(d) {
   const M = CONFIG.market;
   const growth = Math.max(0, d.potential - d.skill);
   const agePenalty = Math.max(0, d.age - M.agePenaltyStart) * M.agePenaltyPerYear;
-  return d.skill * M.skillWeight + growth * M.growthWeight - agePenalty;
+  const a = attributesOf(d);
+  const credit = M.profilesEnabled ? Math.min(M.maxExperienceCredit, Math.max(0, (a.consistency + a.tyres + a.feedback) / 3 - CONFIG.driverAttributes.reference) * M.experienceCredit) : 0;
+  return d.skill * M.skillWeight + growth * M.growthWeight - Math.max(0, agePenalty - credit);
 }
 
 // Preenche assentos vagos: equipes em ordem de força de carro escolhem primeiro.
@@ -20,6 +23,16 @@ export function seatFit(d, team, mates, carRank, sisters = {}) {
   if (d.prevTeam === team.id) fit += M.loyaltyBonus;
   else if (d.prevTeam && sisters[d.prevTeam] === team.id) fit += M.sisterBonus;
   if (d.skill >= M.starSkill && carRank > M.starCarRank && mates.some((m) => m.skill >= M.starSkill)) fit -= M.starClashPenalty;
+  if (M.profilesEnabled && Number.isFinite(d.age)) {
+    const a = attributesOf(d);
+    if (team.budget !== undefined && team.budget >= M.performanceBudget) {
+      fit += (a.consistency - d.skill) * M.consistencyFit;
+    } else {
+      fit += (a.feedback - d.skill) * M.feedbackFit;
+      // A equipe com um veterano pode complementar a dupla com margem de crescimento.
+      if (mates.some(m => m.age >= M.agePenaltyStart)) fit += Math.max(0, d.potential - d.skill) * M.youthFit;
+    }
+  }
   return fit;
 }
 
@@ -38,12 +51,42 @@ export function fillSeats(teams, seated, market, rng, makeExtra, sisters = {}) {
     market.sort((a, b) => score(b) - score(a));
     const pick = market.shift();
     pick.team = t.id;
+    pick.role = 'race'; pick.reserveTeam = null; pick.seasonsWithoutSeat = 0;
     pick.contract = rng.int(CONFIG.rookies.contractRange[0], CONFIG.rookies.contractRange[1]);
     seated.push(pick);
   }
-  // Quem sobra no mercado: só continua quem ainda tem apelo
+  // Sem assento não significa apagado: o ciclo de vida e aposentadoria ficam no mundo.
+  return market;
+}
+
+export function makeAvailable(world, driver) {
+  const from = driver.team;
+  world.drivers = world.drivers.filter(d => d !== driver);
+  driver.prevTeam = from ?? driver.prevTeam;
+  driver.team = null; driver.contract = 0; driver.role = 'free'; driver.reserveTeam = null;
+  driver.seasonsWithoutSeat = 0; driver.status = null; driver.statusClause = null;
+  world.market ??= [];
+  if (!world.market.includes(driver)) world.market.push(driver);
+  return from;
+}
+
+// Um reserva por equipe; o vínculo não ocupa assento e permite disputar futuras vagas.
+export function assignReserves(world) {
   const M = CONFIG.market;
-  return market.filter((d) => d.skill >= M.keepMinSkill && d.age <= M.keepMaxAge);
+  const occupied = new Set();
+  const candidates = [...world.market].sort((a, b) => (b.skill * M.reserveSkillWeight + attributesOf(b).feedback * M.reserveFeedbackWeight)
+    - (a.skill * M.reserveSkillWeight + attributesOf(a).feedback * M.reserveFeedbackWeight));
+  for (const d of candidates) {
+    const previous = d.reserveTeam;
+    const choices = world.teams.filter(t => !occupied.has(t.id));
+    const team = d.skill >= M.reserveMinSkill ? choices.sort((a, b) => {
+      const score = t => (d.prevTeam === t.id ? M.loyaltyBonus : 0) + seatFit(d, t, [], world.teams.indexOf(t) + 1);
+      return score(b) - score(a);
+    })[0] : null;
+    d.role = team ? 'reserve' : 'free'; d.reserveTeam = team?.id ?? null;
+    if (team) occupied.add(team.id);
+    if (team && previous !== team.id) (world.lastMoves ??= []).push({ kind: 'reserve', name: d.name, nat: d.nat ?? null, to: team.name });
+  }
 }
 
 // Nota de scouting em categoria de base -> define o leque de ofertas de subida.

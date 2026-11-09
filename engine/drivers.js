@@ -3,6 +3,7 @@
 
 import { CONFIG } from './config.js';
 import { NAME_POOLS } from '../data/names.js';
+import { ensureAttributes, evolveAttributes } from './driver-attributes.js';
 
 export function ageDelta(age, rng) {
   const Z = CONFIG.lifecycle.veteranGoodYear;
@@ -48,14 +49,17 @@ export function applyAging(driver, rng) {
   if (driver.isPlayer) {
     const d = playerDeclineDelta(driver.age, driver.style, !!driver.declineShield);
     if (d !== null) {
-      driver.skill = Math.max(CONFIG.lifecycle.skillFloor, driver.skill + d);
+      if (CONFIG.driverAttributes.enabled) evolveAttributes(driver, d, { learning: true });
+      else driver.skill = Math.max(CONFIG.lifecycle.skillFloor, driver.skill + d);
       return;
     }
   }
   let delta = ageDelta(driver.age, rng);
+  if (delta > 0 && CONFIG.driverAttributes.enabled && !driver.isPlayer) delta *= CONFIG.driverAttributes.offSeatGrowth[driver.role] ?? 1;
   // O desenvolvimento da equipe só acelera ou freia o crescimento do jogador (nunca o declínio).
   if (delta > 0 && driver.isPlayer) delta *= driver.devFactor ?? 1;
-  if (delta > 0) driver.skill = Math.min(driver.potential, driver.skill + delta);
+  if (CONFIG.driverAttributes.enabled) evolveAttributes(driver, delta, { learning: true });
+  else if (delta > 0) driver.skill = Math.min(driver.potential, driver.skill + delta);
   else driver.skill = Math.max(CONFIG.lifecycle.skillFloor, driver.skill + delta);
 }
 
@@ -98,7 +102,8 @@ export function makeRookie(names, rng, origin = 'F2') {
   rookieCounter += 1;
   const star = rng.chance(R.starChance);
   const potRange = star ? R.starPotRange : R.normalPotRange;
-  return {
+  return ensureAttributes({
+    id: `rookie-${rookieCounter}`,
     name,
     nat,
     team: null,
@@ -111,7 +116,7 @@ export function makeRookie(names, rng, origin = 'F2') {
     origin,
     form: 0,
     stats: { wins: 0, podiums: 0, poles: 0, titles: 0, seasons: 0, points: 0, dnfs: 0 },
-  };
+  });
 }
 
 export function resetRookieCounter() { rookieCounter = 0; }

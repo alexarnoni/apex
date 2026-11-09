@@ -6,6 +6,7 @@
 // Ainda fora: eventos narrativos (spec-conteudo) e ROTA_ALTERNATIVA (tela terminal por enquanto).
 
 import { CONFIG } from './config.js';
+import { attributeView, trainAttributes, evolveAttributes } from './driver-attributes.js';
 import {
   enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveRaceStrategy, resolveRaceStart, resolveRaceFinale, resolveTeamOrder,
   resolveStoryEvent, resolveRaceEvent, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View,
@@ -170,7 +171,7 @@ function resolveBaseChoice(s, rng, answer) {
   const choice = CONFIG.base.choices[bc.category][answer?.option];
   if (!choice) throw new Error('option inválida (use "A" ou "B")');
   const p = s.player;
-  if (choice.skillGain) { raisePotential(p); p.skill = Math.min(p.potential, p.skill + choice.skillGain); }
+  if (choice.skillGain) { raisePotential(p); trainAttributes(p, choice.skillGain); }
   if (choice.fameGain) p.fame += choice.fameGain;
   bc.mods = {
     carBonus: choice.carBonus ?? 0,
@@ -352,7 +353,7 @@ function ageEveryone(s, rng) {
   applyAging(s.player, rng);
   // Talento jovem alcança o grid da categoria acima: fecha parte do gap até o potencial.
   const p = s.player;
-  p.skill = Math.min(p.potential, p.skill + (p.potential - p.skill) * CONFIG.base.playerGrowthRate * (p.devFactor ?? 1));
+  evolveAttributes(p, (p.potential - p.skill) * CONFIG.base.playerGrowthRate * (p.devFactor ?? 1));
   for (const r of s.baseCareer.rivals) applyAging(r, rng);
 }
 
@@ -461,6 +462,7 @@ export function getView(state) {
     player: {
       name: p.name, number: p.number, flag: p.flag, style: p.style, age: p.age, fame: p.fame, academy: p.academy, stats: p.stats,
       skill: Math.round(p.skill * 10) / 10,
+      attributes: attributeView(p),
       potentialBand: potentialBand(p.potential),
       career: careerTotals(state, p),
       byCategory: categoryBreakdown(state, p),

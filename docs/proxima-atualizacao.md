@@ -12,17 +12,16 @@ Código `36bc86f`, em 2026-11-08. Detalhes e limites em `v0.10.md`. Publicação
 - [x] ~~Validar carreira completa, saves e redução de entradas~~ — **Feito**: 167 testes Node, 18 de navegador e comparação de calibração.
 - [x] ~~Novo piloto acima dos saves e laterais da página inicial~~ — **Feito**; laterais apenas no desktop.
 
-## v0.11 proposta — perfis de pilotos e mercado vivo
+## v0.11 — perfis de pilotos e mercado vivo (implementada)
 
-A conversa posterior ao lançamento definiu uma dependência antes das rotas alternativas: preservar os pilotos sem vaga e dar valor a competências distintas. Escopo recomendado, ainda não implementado:
+Detalhes, calibração e limitações em `v0.11.md`. **Feito em 2026-11-08:**
 
-- [ ] Separar classificação, ritmo de corrida, consistência, chuva e gestão de pneus; overall como resumo, sem somar carro à habilidade pessoal.
-- [ ] Definir critérios das notas iniciais e curvas de evolução/declínio por dimensão. Experiência não é bônus infinito; idade não reduz tudo igualmente.
-- [ ] Preservar no mercado o piloto substituído pelo jogador, em vez de excluí-lo do mundo.
-- [ ] Avaliar vaga em outra equipe, papel de reserva ou aposentadoria por perfil/desempenho/oportunidade, com notícias coerentes e grid no tamanho correto.
-- [ ] Testar envelhecimento, mercado, determinismo e saves; calibrar o conjunto antes de publicar. Usuário aceita começar save novo para testar, mas não apagar saves silenciosamente.
-
-Rotas alternativas jogáveis vêm depois, usando essa estrutura. Não acrescentar WEC/NASCAR apenas como troca de nomes.
+- [x] ~~Seis atributos, incluindo contribuição técnica, para jogador e adversários~~ — **Feito**; overall sem carro.
+- [x] ~~Treino direcionado e evolução/declínio por dimensão~~ — **Feito**; potencial individual preservado.
+- [x] ~~Preservar piloto substituído, mercado livre, reservas e retorno~~ — **Feito**; sem substituição automática por lesão.
+- [x] ~~Perfis de contratação e grid completo após transferência~~ — **Feito**; negociação por rumores fica futura.
+- [x] ~~Consulta de perfis, cores, largura desktop e histórico recente~~ — **Feito**, com dados registrados.
+- [x] ~~Testar e calibrar pacote~~ — **Feito**: 178 Node, 22 Playwright; limites quantitativos em `calibracao.md`.
 
 ## Outros candidatos seguintes
 

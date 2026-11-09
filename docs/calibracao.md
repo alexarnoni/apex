@@ -114,3 +114,34 @@ npm run calibrate:pace -- --n 30
 `--driving legacy` continua padrão para preservar comparações históricas. `team` usa a recomendação da engine durante corridas; narrativa e decisões de carreira mantêm a política definida.
 
 **Ritmo:** 30 sementes, 27 primeiras temporadas de F1 completas, 648 corridas. Passo a passo: 2528 entradas; roteiro contextual: 994 (**60,7% menos**). `tools/calibrate/pace.js` verifica que ambos chegam ao mesmo estado final com as mesmas escolhas. Não mede tempo humano nem diversão; não deve ser tratado como teste com usuários.
+
+## v0.11 — atributos, mercado e reservas (2026-11-08)
+
+Carreiras: 80 sementes (1–80) por política/versão, plano da equipe e aposentadoria padrão aos 34. A taxa de título usa apenas quem chegou à F1. Mudanças no consumo de RNG fazem a mesma semente produzir trajetórias diferentes.
+
+| Versão e política | Chegou à F1 | Com título na F1 | Títulos / carreira F1 | Vitórias / carreira F1 | Temporadas F1 |
+|---|---:|---:|---:|---:|---:|
+| v0.10 a | 66/80 | 16/66 (24,2%) | 0,59 | 10,7 | 12,3 |
+| v0.11 a | 73/80 | 15/73 (20,5%) | 0,59 | 13,4 | 12,6 |
+| v0.10 notrain | 77/80 | 2/77 (2,6%) | 0,04 | 1,7 | 13,4 |
+| v0.11 notrain | 76/80 | 4/76 (5,3%) | 0,05 | 2,4 | 13,4 |
+
+Amostra pequena, especialmente para títulos sem treino; diferenças não provam equivalência nem mudança da taxa real. Nenhum ajuste no teto de potencial foi feito para obter estes resultados.
+
+Mundo: `npm run balance` com 200 eras de 25 anos por semente 42/137/999; comparação com v0.10 (`7ec7fc9`).
+
+| Medida | v0.10 (42/137/999) | v0.11 (42/137/999) |
+|---|---|---|
+| Campeões distintos | 10,8 / 10,7 / 10,9 | 10,5 / 10,8 / 10,5 |
+| Maior dinastia, média | 4,3 / 4,4 / 4,3 | 4,4 / 4,4 / 4,3 |
+| Maior dinastia observada | 8 / 8 / 8 | 9 / 8 / 9 |
+| Idade média do campeão | 28,8 / 28,7 / 28,6 | 28,6 / 28,6 / 28,7 |
+| Campeões 38+ | 3% / 2% / 2% | 2% / 2% / 2% |
+| Campeões gerados | 56% / 56% / 56% | 57% / 58% / 57% |
+| Desvio de força dos carros | 8,5 / 8,4 / 8,4 | 8,4 / 8,3 / 8,5 |
+| Títulos roubados pelo P2 | 19% / 19% / 19% | 18% / 19% / 19% |
+| Parcela modal em construtores | 57% / 58% / 57% | 57% / 58% / 59% |
+
+O alvo de dinastia máxima < 9 falhou em duas sementes; a parcela modal não atingiu > 60%, como na referência. Kart (1.000 simulações): posição média 12,1/20 contra 11,6; ofertas top 8%, médias 49%, sem oferta 44% (arredondadas), contra 9%/54%/38%.
+
+As notas iniciais por dimensão são escolhas de design. A média usa 20% classificação, 30% corrida, 15% consistência, 10% chuva, 15% pneus e 10% contribuição técnica. O ritmo de corrida usa pneus em 20% do componente do piloto; na chuva, 35% vem da competência de chuva. Ajustes futuros devem conferir também base e mercado, pois ambos passam a consumir as especialidades.

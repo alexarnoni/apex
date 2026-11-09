@@ -50,7 +50,7 @@ test('a cada virada de ano o mundo guarda o resumo do mercado (trocas, estreias 
     advanceYear(world, rng);
     for (const m of world.lastMoves) {
       kinds.add(m.kind);
-      assert.ok(m.name && ['transfer', 'rookie', 'retire'].includes(m.kind));
+      assert.ok(m.name && ['transfer', 'rookie', 'retire', 'return', 'available', 'reserve'].includes(m.kind));
       if (m.kind === 'transfer') assert.notEqual(m.from, m.to);
     }
   }

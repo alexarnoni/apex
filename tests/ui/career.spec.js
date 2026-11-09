@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { createCareer, advance, applyDecision, ENGINE_VERSION } from '../../engine/game.js';
 import { answerFor } from '../../tools/calibrate/lib.js';
+import { enterF1 } from '../../engine/f1.js';
+import { createRng } from '../../engine/rng.js';
 
 // Fixtures pela API pública; interação e importação passam pela interface real.
 const fixtures = new Map();
@@ -181,7 +183,8 @@ test('carreira inteira por cliques: criação, base, temporadas, contratos e leg
   await page.goto('/');
   await page.locator('#f-surname').fill('CarreiraUI');
   await page.locator('#f-number').fill('7');
-  await page.locator('#f-seed').fill('1');
+  // Nem toda seed progride até a F1; este cenário exercita um caminho que chega ao grid.
+  await page.locator('#f-seed').fill(String(fixture('weekend_approach').seed));
   await page.locator('[data-act="create"]').click();
   let sawContract = false;
   let sawGoal = false;
@@ -215,4 +218,45 @@ test('carreira inteira por cliques: criação, base, temporadas, contratos e leg
     }
   }
   throw new Error('carreira não chegou ao legado');
+});
+
+function ferrariFixture() {
+  // Fixture controlada para exercitar a vaga concreta citada pelo usuário.
+  const s = createCareer({ surname: 'TesteUI', number: 7, style: 'con', age: 15, seed: 8 });
+  s.player.skill = 85; s.player.potential = 95;
+  enterF1(s, createRng(8), 'fer');
+  return s;
+}
+
+test('consulta Hamilton reserva e perfil do jogador sem perder a seleção', async ({ page }) => {
+  const state = ferrariFixture();
+  if (test.info().project.name === 'desktop') await page.setViewportSize({ width: 1920, height: 1080 });
+  await importCareer(page, state);
+  await page.getByText('Pilotos e mercado', { exact: true }).click();
+  await page.locator('#roster-driver').selectOption('real-Hamilton');
+  await expect(page.locator('.roster-panel')).toHaveAttribute('open', '');
+  await expect(page.locator('#roster-driver')).toHaveValue('real-Hamilton');
+  await expect(page.locator('.roster-panel')).toContainText('Reserva · Ferrari');
+  await expect(page.locator('.roster-panel .profile-stat')).toHaveCount(6);
+  await page.locator('.pilot-profile summary').click();
+  await expect(page.locator('.pilot-profile .profile-stat')).toHaveCount(6);
+  if (test.info().project.name === 'desktop') {
+    const width = await page.locator('#app').evaluate(el => el.clientWidth);
+    expect(width).toBeGreaterThan(1500);
+  }
+  await page.locator('.roster-panel').scrollIntoViewIfNeeded();
+  await page.screenshot({ path: test.info().outputPath('perfis-v011.png'), fullPage: true });
+});
+
+test('treino direcionado fica salvo e o perfil acompanha a evolução', async ({ page }) => {
+  await importCareer(page, ferrariFixture());
+  await page.locator('#training-focus').selectOption('tyres');
+  await page.locator('[data-act="focus"][data-id="train"]').click();
+  const state = await saved(page);
+  expect(state.f1.trainingFocus).toBe('tyres');
+  expect(state.player.attributes.tyres).toBeGreaterThan(85);
+  await page.reload();
+  await page.locator('[data-act="continue"][data-slot="1"]').click();
+  await page.locator('.pilot-profile summary').click();
+  await expect(page.locator('.pilot-profile')).toContainText('Gestão de pneus');
 });

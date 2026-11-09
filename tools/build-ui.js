@@ -40,7 +40,8 @@ const out = await build({
 
 // Evita que "</script" dentro do bundle feche a tag antes da hora.
 const js = out.outputFiles[0].text.replace(/<\/script/gi, '<\\/script');
-const shell = readFileSync(join(root, 'ui/shell.html'), 'utf8');
+// HTML normaliza CRLF para LF antes de validar hashes CSP. Hash e conteúdo devem usar os mesmos bytes.
+const shell = readFileSync(join(root, 'ui/shell.html'), 'utf8').replace(/\r\n?/g, '\n');
 const [headPart, bodyPart] = shell.split('<!--BODY-->');
 const body = bodyPart.replace('{{BUNDLE}}', () => js);
 

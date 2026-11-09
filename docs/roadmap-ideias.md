@@ -5,7 +5,7 @@ Itens já registrados como dívida no README estão marcados com (README).
 
 ## Resumo do estado (atualizado em 2026-11-08)
 
-O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, v0.10.0: 167 testes Node + 18 de navegador aprovados localmente, código `36bc86f`; publicação deste lote pelo pipeline da main). Para retomar, leia também `INDEX.md` e `HANDOFF.md`. Esta seção resume as prioridades; os detalhes de cada item estão nas seções abaixo.
+O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnoni/apex`, deploy automático por push na `main`, v0.11.0 implementada: 178 testes Node + 22 de navegador; confirmação da publicação em `HANDOFF.md`). Para retomar, leia também `INDEX.md` e `HANDOFF.md`. Esta seção resume as prioridades; os detalhes de cada item estão nas seções abaixo.
 
 ### Feito (neste ciclo)
 
@@ -43,7 +43,7 @@ O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnon
 ### Limites conhecidos
 
 - **Histórico anterior à v0.10; comparação atual em `docs/calibracao.md`.** A taxa de títulos do jogador depende de treinar e das escolhas de oferta: nas simulações históricas de 400 carreiras, nunca treina 5% e a política mista (treina todo ano na F1) 20%. A média do talento de berço (84,5) foi ajustada para compensar o empurrão dos perfis de equipe.
-- Numa das três sementes do balanceamento a maior dinastia chegou a 9 títulos seguidos (alvo < 9).
+- Na v0.11, em duas das três sementes do balanceamento a maior dinastia chegou a 9 títulos seguidos (alvo < 9).
 - Saves antigos guardam textos e dados antigos de uma decisão pendente (abordagens, pista, evento sem `safe`) e pilotos gerados com nomes antigos ("Almeida II") e sem nacionalidade; o potencial do jogador salvo continua o antigo e só passa a subir com o treino daqui para frente. Carreiras novas já saem certas.
 - A taxa de títulos depende de a pessoa treinar (5% a 26% nas simulações); o jogador comum fica no meio. O "talento" ainda não aparece de forma legível na ficha (só a faixa de potencial).
 - A bandeira em emoji não aparece no Windows; o jogo usa imagens, e códigos de país fora do conjunto embutido caem para o texto do código.
@@ -87,7 +87,7 @@ O jogo está no ar em https://bandeirada.alexarnoni.com (repositório `alexarnon
 | 3.6 | Orçamento de equipe seguindo o sucesso, com piso (README) | M | Mexe no desenvolvimento do carro; recalibrar o `npm run balance`. |
 | 3.7 | Contratos mais ricos (cláusula de performance, rescisão) | M | Estende o `contract_terms`. |
 | 3.8 | Mercado de transferências com notícias e rumores | M | Texto gerado a partir do mercado que já existe. |
-| 3.9 | Atributos separados do piloto (classificação, corrida, chuva, largada, pneus) | M-G | Afeta o motor de corrida e toda a calibração. |
+| ~~3.9~~ | ~~Atributos separados do piloto~~ | M-G | **Feito (2026-11-08), v0.11.** Classificação, corrida, consistência, chuva, pneus e contribuição técnica; largada continua escolha/risco, sem atributo separado. Treino e declínio por dimensão. |
 | 3.10 | Modo fictício (arquivo de substituição de nomes) (README) | M | Dados já estão em arquivos; falta um seletor e geração de nomes. |
 | 3.11 | Rotas alternativas (Super Fórmula, IndyCar, Fórmula E) como tabela leve que regenera o scouting (README) | M-G | Hoje a rota alternativa é tela terminal. Inclui legado e `altRouteTitles`. |
 | 3.12 | Salvar e recarregar em nuvem | M | Depende de 4.1. |
@@ -224,7 +224,7 @@ Feedback de quem jogou: na F1 cada corrida é a mesma escolha de três botões (
 | D.5 | Metas e tensão de temporada: objetivos da equipe, pressão do contrato, briga de título com o rival | **Parcial na v0.10 (2026-11-08).** Metas de F1 fixadas pela força inicial do carro, progresso, confiança sem punição duplicada, comparação com companheiro, distância ao líder e aviso de fim de contrato. Faltam metas na base e narrativa de título mais profunda. |
 | ~~D.6~~ | ~~Declínio previsível do piloto do jogador~~ | ✅ Feito (2026-11-08). Curva fixa por idade, sem sorteio (`playerDeclineDelta`): começa aos 30 (agressivo), 31 (consistente) ou 32 (técnico), perde 0,5 no primeiro ano e mais 0,2 a cada ano, até −1,8; escolher "Treinar" na pré-temporada corta a queda do ano em 35%. A ficha mostra "Fase da carreira" com a previsão. O crescimento antes do pico segue com variação. **A pedido seu, o declínio não pode ser uma parede:** a curva é bem mais gentil que a primeira versão, e os veteranos controlados pelo jogo ganharam "ano bom" (30% de chance, a partir dos 34 anos, de quase não cair), aposentadoria mais lenta para a elite (fator 0,45 acima de 86 de habilidade, `retirePerYear` de 0,07 para 0,035) e idade máxima de 47 anos. Resultado medido (120 mundos de 25 anos): campeão com 35+ anos em 8% das temporadas, 0,67 piloto com 38+ por temporada (antes 0,18) e veteranos no top 3 de vez em quando, sem desequilibrar dinastias. Testes em `tests/decline.test.js` e `tests/realism.test.js`. |
 | ~~D.7~~ | ~~Nomes genéricos por país, com bandeira nas tabelas~~ | ✅ Feito (2026-11-08). Todo piloto tem nacionalidade (`nat`; os 22 reais em `data/world2026.js`, os gerados sorteados por peso em `NAME_POOLS`: 24 países, dez nomes e doze sobrenomes cada). Nome gerado no formato "I. Sobrenome" (sem "II" e sem colidir com os reais). A bandeira aparece na tabela de pilotos e no grid de largada. Testes em `tests/names.test.js`. Falta nacionalidade nos rivais de base (hoje só têm nome) e bandeira nas tabelas de equipes. |
-| D.8 | Mercado de pilotos inteligente | **Parcial (2026-11-08).** Feito: renovação por força do carro (melhor carro renova 65%, pior 38%, mais 10 pontos para a elite, além do top 3 do mundial que continua renovando 85%), lealdade (o ex-piloto tem preferência na vaga), equipes irmãs (Red Bull e Racing Bulls, Ferrari e Haas, Mercedes e Williams), duas estrelas só em carro top 2 e resumo "Mercado de pilotos" na pré-temporada (trocas, estreias e aposentadorias do ano). Ajustes em `CONFIG.market`; dinastias e campeões por era seguem nos alvos. Testes em `tests/market.test.js`. **Falta:** boatos de mercado no meio do ano, perfil de cada equipe (veterano ou novato), academia real e o seu contrato entrando na história. É a base da silly season (D.14). |
+| D.8 | Mercado de pilotos inteligente | **Parcial (2026-11-08).** Feito: renovação por força do carro (melhor carro renova 65%, pior 38%, mais 10 pontos para a elite, além do top 3 do mundial que continua renovando 85%), lealdade (o ex-piloto tem preferência na vaga), equipes irmãs (Red Bull e Racing Bulls, Ferrari e Haas, Mercedes e Williams), duas estrelas só em carro top 2 e resumo "Mercado de pilotos" na pré-temporada (trocas, estreias e aposentadorias do ano). Ajustes em `CONFIG.market`; métricas e desvios dos alvos em `calibracao.md`. Testes em `tests/market.test.js`. **v0.11 feita:** preservação de livres/reservas, retorno, preferências por contribuição técnica/consistência e dupla complementar. **Falta:** boatos de mercado no meio do ano, academias com vínculos reais e o seu contrato entrando na história. É a base da silly season (D.14). |
 | ~~D.10~~ | ~~Idade inicial escolhida (12 a 16) e idade mínima por categoria~~ | ✅ Feito (2026-11-07). A criação tem um seletor de idade. Idade mínima para subir (`CONFIG.base.minAge`): F4 15, F3 16, F2 17 e F1 18. **Confirmado por você (2026-11-07):** F4 15 (FIA e CBA), F3 16 e F1 18 (17 só por exceção da FIA, e a superlicença exige 40 pontos). A F2 não tem mínimo oficial; o 17 é convenção do jogo, porque a F2 só leva à F1 com 18 (as fontes sobre a F2 que você trouxe eram fóruns e redes sociais, então vale conferir no regulamento da FIA se um dia isso importar). Nenhuma categoria tem idade máxima oficial, o que confirma a escolha de só penalizar a idade alta. Quem ainda não tem idade repete o ano e isso **não** conta como "sem oferta" (a tela explica). Além da penalidade dos olheiros, **o código atual tem um corte de progressão de jogo**: `startNextSeason` encerra a base quando a idade supera `typicalAge[1] + CONFIG.base.altRouteOverAge` (margem atual: 3). Isso não é limite regulamentar e diverge da intenção de não impor corte rígido; revisão permanece pendente. Abaixo de 14 anos a habilidade inicial cai 3 por ano e o teto fica em 100. Medido (150 carreiras por idade): começar aos 12 leva à F1 aos 18,6 em média (99% chegam), aos 16 só aos 22,6 (83%). Quem começa novo ainda sai um pouco na frente (0,32 títulos por carreira contra 0,24), porque o teto é maior. Sem idade informada a API continua sorteando 14 a 16. Testes em `tests/ages.test.js`. |
 | ~~D.11~~ | ~~Estatísticas separadas por categoria~~ | ✅ Feito (2026-11-07). A ficha mostra a tabela "Por categoria" (temporadas, GP, vitórias, pódios, poles e títulos de kart, F4, F3, F2 e F1), somando o total. Carreiras salvas antes não têm o detalhe da base (só os totais). Testes em `tests/bycat.test.js`. |
 | ~~D.12~~ | ~~Bandeiras de todos os países na criação (255, nome em português pelo navegador)~~ | ✅ Feito (2026-11-07). As 26 mais usadas ficam embutidas; as outras são arquivos em `flags/` no site (flag-icons, MIT, 1,5 MB, carregados só quando aparecem). Lista em `ui/countries.js`, gerada dos arquivos. Nacionalidade dos pilotos da F1 também foi implementada (D.7); rivais da base continuam pendentes. |
@@ -285,8 +285,32 @@ Pacote posterior à v0.10 de ritmo e objetivos; não foi adicionado silenciosame
 
 Detalhes em `docs/v0.10.md`; os próximos candidatos em `docs/proxima-atualizacao.md`. WEC/NASCAR e demais rotas alternativas permanecem planejadas, sem implementação nesta versão.
 
-## Próximo pacote proposto: v0.11 — pilotos e mercado vivo
+## ~~Pacote v0.11 — pilotos e mercado vivo~~ — Feito
 
-Pedido do usuário: dar valor aos veteranos e continuar a história de quem perde assento para o jogador. **Planejado, ainda não implementado**; detalhamento em `docs/proxima-atualizacao.md`.
+Pedido do usuário: dar valor aos veteranos e continuar a história de quem perde assento para o jogador. **Feito em 2026-11-08**; detalhamento em `docs/v0.11.md`.
 
-Atributos por dimensão (3.9), curvas distintas de evolução/declínio e mercado preservando pilotos sem vaga vêm antes das rotas alternativas jogáveis (3.11). Destinos possíveis: nova equipe, reserva ou aposentadoria contextual; outras categorias serão expansão posterior. As notas atuais do grid são estimativas manuais, sem avaliação oficial por dimensão.
+Atributos por dimensão (3.9), curvas distintas de evolução/declínio e mercado preservando pilotos sem vaga vêm antes das rotas alternativas jogáveis (3.11). Destinos implementados: nova equipe, reserva ou aposentadoria contextual; outras categorias serão expansão posterior. As notas atuais do grid são estimativas manuais, sem avaliação oficial por dimensão.
+
+## Entrada no kart por propostas — pedido para atualização futura
+
+Referência visual enviada pelo usuário em 2026-11-08. **Não implementar na v0.11.** Candidato ao pacote da base (v0.13 proposta), junto de D.3, 1.6 e 3.4.
+
+- [ ] Ao criar o piloto, oferecer três equipes/escolas de kart antes da primeira temporada, em vez da equipe inicial sorteada.
+- [ ] Cartões comparáveis com equipe real, força do carro, pressão, formação e visibilidade. Estrelas, se usadas, precisam representar um critério explicado, não uma classificação oficial inventada.
+- [ ] Adaptar os arquétipos ao Bandeirada: **projeto vencedor** (carro forte, cobrança e desenvolvimento condicionado ao desempenho), **equilibrado** (trocas intermediárias) e **programa de formação** (menos foco no resultado imediato, benefício de aprendizado a definir).
+- [ ] Separar força do carro, capacidade de formação e pressão quando necessário: hoje `profile.js` associa desenvolvimento à posição do carro; equipe fraca não significa automaticamente boa formação. Não prometer bônus que o código ainda não concede.
+- [ ] Escolha deve alterar a carreira, com efeitos visíveis nas ofertas e evolução; nenhuma opção pode ser universalmente melhor.
+- [ ] Diferenciar equipe/escola de kart de academia vinculada à F1; o convite de academia da carreira é outro sistema.
+
+Imagem é inspiração, não especificação copiada. Fechar os efeitos e a calibração quando esse pacote começar.
+
+## Imersão e aproveitamento de tela — referências para evoluir
+
+Pedido em 2026-11-08: eventos que retomem fatos reais da própria carreira (ex.: título de kart que escapou, voltar a disputar com custo no calendário), histórico de temporadas mais legível, cores com significado e mais informação útil na largura disponível. Referências visuais são inspiração, preservando identidade Bandeirada.
+
+Na v0.11: perfis coloridos, notícias de destino de pilotos, consulta de mercado e histórico recente de F1 com dados registrados. Expansão narrativa da base fica para outro pacote:
+
+- [ ] Gatilhos por histórico salvo (vice de kart, lesão, ex-companheiro), sem inventar títulos/anos passados.
+- [ ] Convites opcionais com conflito de calendário e consequências simuladas (resultado, confiança, reputação), não só bônus textual.
+- [ ] Histórico navegável também para base e campeonatos anteriores do mundo, com estatísticas preservadas desde a temporada correspondente.
+- [ ] Cores por equipe, categoria e tipo de notícia, com texto/ícone e contraste; não depender só da cor para informar.

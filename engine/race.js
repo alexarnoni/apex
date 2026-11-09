@@ -2,6 +2,7 @@
 // a categoria só muda carWeight, tamanho de grid e afins (ver data/categories.js).
 
 import { CONFIG } from './config.js';
+import { racingSkill, consistencyNoise } from './driver-attributes.js';
 
 const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
@@ -15,10 +16,10 @@ export function updateForm(driver, rng) {
   driver.form = clamp((driver.form ?? 0) + rng.range(-f.step, f.step), -f.cap, f.cap);
 }
 
-function basePerf(d, car, wet, carWeight) {
+function basePerf(d, car, wet, carWeight, phase = 'race') {
   const st = CONFIG.styles[d.style] ?? {};
   const cw = wet ? CONFIG.race.wetCarWeight : carWeight;
-  let p = cw * car + (1 - cw) * d.skill + (d.form ?? 0) + (d.weekend ?? 0) + (d.perfBonus ?? 0);
+  let p = cw * car + (1 - cw) * racingSkill(d, phase, wet) + (d.form ?? 0) + (d.weekend ?? 0) + (d.perfBonus ?? 0);
   if (st.flatBonus) p += st.flatBonus;
   if (wet && st.wetBonus) p += st.wetBonus;
   // Bônus de status p1 (só F1, quando atribuído)
@@ -61,9 +62,9 @@ export function simWeekend(drivers, category, rng, track = null) {
   const quali = drivers
     .map((d) => {
       const st = CONFIG.styles[d.style] ?? {};
-      let sigma = R.noise.quali + (st.noiseDelta ?? 0) + (st.qualiNoiseDelta ?? 0);
+      let sigma = Math.max(CONFIG.driverAttributes.minNoise, R.noise.quali + (st.noiseDelta ?? 0) + (st.qualiNoiseDelta ?? 0) + consistencyNoise(d));
       if (wet) sigma += R.noise.wetExtra;
-      const p = basePerf(d, d.teamCar, wet, carWeight) + (st.qualiBonus ?? 0) + rng.gauss() * sigma;
+      const p = basePerf(d, d.teamCar, wet, carWeight, 'qualifying') + (st.qualiBonus ?? 0) + rng.gauss() * sigma;
       return { d, p };
     })
     .sort((a, b) => b.p - a.p)
@@ -78,7 +79,7 @@ export function simWeekend(drivers, category, rng, track = null) {
     const st = CONFIG.styles[d.style] ?? {};
     const dnfProb = Math.max(R.dnfMin, reliability(d.teamCar) + (st.dnfDelta ?? 0) + (d.dnfDelta ?? 0) + T.dnfDelta);
     if (rng.chance(dnfProb)) { dnfs.push(d); continue; }
-    let sigma = R.noise.race + (st.noiseDelta ?? 0);
+    let sigma = Math.max(CONFIG.driverAttributes.minNoise, R.noise.race + (st.noiseDelta ?? 0) + consistencyNoise(d));
     if (wet) sigma += R.noise.wetExtra;
     let p = basePerf(d, d.teamCar, wet, carWeight);
     p -= st.peakPenalty ?? 0;

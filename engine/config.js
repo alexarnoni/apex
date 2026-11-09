@@ -106,6 +106,22 @@ export const CONFIG = {
     range: 34,
   },
 
+  // Atributos pessoais: overall é média ponderada, nunca inclui força do carro.
+  driverAttributes: {
+    enabled: true,
+    weights: { qualifying: 0.20, race: 0.30, consistency: 0.15, wet: 0.10, tyres: 0.15, feedback: 0.10 },
+    styles: { agg: [3, 1, -3, 0, -2, -1], con: [-1, 0, 4, 0, 3, 1], tec: [0, 0, 1, 4, 2, 4] },
+    growth: { qualifying: 1.1, race: 1.1, consistency: 0.9, wet: 1, tyres: 0.8, feedback: 0.7 },
+    decline: { qualifying: 1.4, race: 1.2, consistency: 0.55, wet: 0.8, tyres: 0.4, feedback: 0.1 },
+    experienceStart: 22, experienceEnd: 40,
+    learning: { consistency: 0.04, tyres: 0.08, feedback: 0.12 },
+    learningCap: 96, raceTyreWeight: 0.2, wetWeight: 0.35,
+    consistencyNoise: 0.06, maxNoiseDelta: 1.5, minNoise: 0.1, reference: 80,
+    feedbackDevWeight: 0.002, maxFeedbackDev: 0.03,
+    trainingFocused: 2, trainingOther: 0.6,
+    offSeatGrowth: { free: 0.35, reserve: 0.65 },
+  },
+
   // Ciclo de vida do piloto
   lifecycle: {
     ageCurve: [
@@ -182,6 +198,10 @@ export const CONFIG = {
     // quem fica no mercado sem assento pro ano seguinte
     keepMinSkill: 76,
     keepMaxAge: 42,              // era 29
+    profilesEnabled: true, feedbackFit: 0.12, consistencyFit: 0.08, youthFit: 0.10,
+    reserveMinSkill: 72, reserveFeedbackWeight: 0.35, reserveSkillWeight: 0.65,
+    experienceCredit: 0.20, maxExperienceCredit: 3,
+    performanceBudget: 8,
   },
 
   // Scouting das categorias de base (gera as ofertas de subida)

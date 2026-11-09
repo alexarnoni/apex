@@ -12,10 +12,12 @@ npm run test:ui
 
 No Linux de CI, a instalação usa `npx playwright install --with-deps chromium --only-shell` para incluir bibliotecas do sistema.
 
-`npm test` continua sendo a suíte Node (167 testes registrados na v0.10). `npm run test:ui` é separado e executa nove cenários em dois tamanhos: desktop 1440×1000 e celular 375×812, totalizando **18 testes**. O runner constrói o site, inicia servidor em `127.0.0.1:5057` e encerra o servidor ao terminar. Essa porta deve estar livre.
+`npm test` continua sendo a suíte Node (178 testes na v0.11). `npm run test:ui` é separado e executa onze cenários em dois tamanhos: desktop 1440×1000 e celular 375×812, totalizando **22 testes** (consulta de perfis também em 1920 px). O runner constrói o site, inicia servidor em `127.0.0.1:5057` e encerra o servidor ao terminar. Essa porta deve estar livre.
 
 ## Cobertura atual
 
+- Consultar piloto reserva, seis atributos e preservar seleção após renderização.
+- Direcionar treino e retomar atributos persistidos no save.
 - Criar piloto, disputar uma temporada de base e retomar após recarregar.
 - Importar JSON pela interface, responder à largada, desfazer e retomar a decisão pendente.
 - Mostrar perseguidor na defesa, ceder e conferir resultado/relato salvo.

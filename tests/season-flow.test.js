@@ -10,7 +10,10 @@ function weekend() {
   for (let seed = 1; seed <= 10; seed++) {
     let s = createCareer({ surname: 'Fluxo', number: 7, style: 'con', age: 15, seed });
     for (let i = 0; i < 500; i++) {
-      if (s.pendingDecision?.type === 'weekend_approach') return s;
+      if (s.pendingDecision?.type === 'weekend_approach') {
+        if (s.pendingDecision.payload.out) break; // esta fixture precisa de uma largada disponível
+        return s;
+      }
       if (s.phase === 'ROTA_ALTERNATIVA') break;
       s = s.pendingDecision ? applyDecision(s, answerFor(s)) : advance(s);
     }

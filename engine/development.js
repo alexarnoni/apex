@@ -12,7 +12,7 @@ export function runDevSeason(team, rng) {
   const D = CONFIG.development;
   const devPoints = team.budget * D.budgetWeight + (team.prize ?? 5) * D.prizeWeight;
   const mag = D.magBase + devPoints / D.magDivisor;
-  let pSuccess = D.pSuccess + (team.concept ?? 0) + (team.devBonus ?? 0) + (team.hasTecDriver ? (CONFIG.styles.tec.devAssist ?? 0) : 0);
+  let pSuccess = D.pSuccess + (team.concept ?? 0) + (team.devBonus ?? 0) + (team.driverFeedbackBonus ?? 0) + (team.hasTecDriver ? (CONFIG.styles.tec.devAssist ?? 0) : 0);
 
   const log = [];
   let skipNext = false;

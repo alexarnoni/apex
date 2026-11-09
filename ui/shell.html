@@ -76,6 +76,29 @@ p { margin: 0; }
 .btn:focus-visible, .opt:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, summary:focus-visible, a:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
 h1:focus, h2:focus { outline: none; }
 .wrap.wide { max-width: 1320px; }
+@media (min-width: 1600px) {
+  .wrap.wide { max-width: 1840px; }
+  .wrap.wide .layout { grid-template-columns: 280px minmax(0, 1fr) 440px; }
+}
+.profile-bars { display: grid; gap: 9px; margin: 10px 0; }
+.profile-stat { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; --profile-color: var(--signal); }
+.profile-stat dt { font-size: 13px; } .profile-stat dd { margin: 0; font-family: var(--f-mono); font-size: 13px; }
+.profile-track { grid-column: 1 / -1; height: 5px; border-radius: 4px; background: var(--panel2); overflow: hidden; }
+.profile-track i { display: block; height: 100%; background: var(--profile-color); }
+.profile-stat[data-attribute="qualifying"] { --profile-color: var(--pink); }
+.profile-stat[data-attribute="race"] { --profile-color: var(--signal); }
+.profile-stat[data-attribute="consistency"] { --profile-color: var(--lime); }
+.profile-stat[data-attribute="wet"] { --profile-color: var(--cyan); }
+.profile-stat[data-attribute="tyres"] { --profile-color: var(--amber); }
+.profile-stat[data-attribute="feedback"] { --profile-color: var(--signal-text); }
+.news-tag { display: inline-block; border: 1px solid currentColor; border-radius: 5px; padding: 2px 6px; font-size: 11px; font-weight: 700; color: var(--signal-text); }
+.market-reserve, .market-free, .market-return, .market-retire { color: var(--fg); }
+.market-reserve .news-tag, .role-reserve { color: var(--fg); border-color: var(--cyan); background: color-mix(in srgb, var(--cyan) 15%, var(--panel)); }
+.market-free .news-tag, .role-free { color: var(--fg); border-color: var(--amber); background: color-mix(in srgb, var(--amber) 15%, var(--panel)); }
+.market-retire .news-tag, .role-retired { color: var(--fg); border-color: var(--mute); background: var(--panel2); }
+.market-return .news-tag, .role-race { color: var(--fg); border-color: var(--good); background: color-mix(in srgb, var(--good) 15%, var(--panel)); }
+.career-chapter { padding: 12px 0; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.season-wins { color: var(--amber); } .season-podiums { color: var(--good); }
 .home-layout, .home-main { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .home-aside { display: none; }
 .home-kicker { color: var(--signal-text); font-family: var(--f-mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }

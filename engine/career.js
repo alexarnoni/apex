@@ -6,6 +6,7 @@ import { CONFIG } from './config.js';
 import { runSeason } from './season.js';
 import { scoutingScore, scoutingBreakdown, offerTier } from './market.js';
 import { makeRookie } from './drivers.js';
+import { ensureAttributes } from './driver-attributes.js';
 import { tierOf, scoutPressure } from './profile.js';
 import { BASE_TEAMS } from '../data/baseTeams.js';
 
@@ -134,7 +135,8 @@ export function createPlayer({ surname, number, style, rng, age: chosenAge = nul
   const S = CONFIG.base.startAge;
   const young = Math.max(0, S.calibratedFrom - age);
   const skill = 50 + (16 - Math.max(age, S.calibratedFrom)) * 1.5 - young * S.skillLossPerYearUnder;
-  return {
+  return ensureAttributes({
+    id: 'player',
     name: surname,
     number,
     style,
@@ -147,5 +149,5 @@ export function createPlayer({ surname, number, style, rng, age: chosenAge = nul
     form: 0,
     isPlayer: true,
     stats: { wins: 0, podiums: 0, poles: 0, titles: 0, seasons: 0, points: 0, dnfs: 0 },
-  };
+  });
 }

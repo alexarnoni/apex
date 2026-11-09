@@ -61,6 +61,7 @@ test('build real: os hashes da política batem com o script e o estilo embutidos
   assert.ok(csp.includes(sha256(scripts[0])), 'hash do script na política');
   const styles = [...html.matchAll(/<style>([\s\S]*?)<\/style>/g)].map((m) => m[1]);
   assert.equal(styles.length, 1);
+  assert.doesNotMatch(styles[0], /\r/, 'hash calculado com LF, como o parser HTML, mesmo com checkout CRLF no Windows');
   assert.ok(csp.includes(sha256(styles[0])), 'hash do estilo na política');
 
   // Regressão: o PowerShell em pt-BR gerou "x=""10,5""" (vírgula decimal) no logotipo e no ícone. SVG só aceita ponto.

@@ -2,6 +2,8 @@
 
 Jogo de carreira de Fórmula 1 no navegador, inspirado no F1 Glory: da largada à bandeirada, com um mundo fictício vivo a partir do grid 2026 real.
 
+Versão atual implementada: **v0.11.0 — perfis de pilotos e mercado vivo**. [Mudanças, validação e limites](docs/v0.11.md); estado da publicação em [HANDOFF](docs/HANDOFF.md).
+
 ## Retomar o projeto
 
 Leia [`docs/INDEX.md`](docs/INDEX.md) para encontrar os documentos e [`docs/HANDOFF.md`](docs/HANDOFF.md) para o estado confirmado e o próximo trabalho. Regras para agentes em [`AGENTS.md`](AGENTS.md). Consulte somente as referências necessárias. Decisões estáveis: [`docs/DECISIONS.md`](docs/DECISIONS.md); organização global/projeto: [`docs/contexto-agentes.md`](docs/contexto-agentes.md).
@@ -25,6 +27,7 @@ engine/    módulos puros, isomórficos (Node + navegador), sem dependências
   race.js         motor de corrida (quali + corrida), único para todas as categorias
   season.js       temporada completa de qualquer categoria
   development.js  desenvolvimento de carro com risco + viradas de regulamento
+  driver-attributes.js seis competências, overall, treino e evolução
   drivers.js      envelhecimento, aposentadoria, geração de novatos
   market.js       mercado de assentos da F1 + scouting da base
   world.js        orquestra um ano da F1 (dev -> temporada -> virada de ano)

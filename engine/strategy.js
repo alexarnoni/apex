@@ -7,6 +7,7 @@
 
 import { CONFIG } from './config.js';
 import { EFFECTS } from './events.js';
+import { racingSkill } from './driver-attributes.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -59,7 +60,7 @@ const BAD = {
 
 // Vantagem de ritmo do jogador sobre o rival: positiva = jogador mais rápido. Mistura carro e habilidade pelo peso da categoria.
 export function paceEdge(player, rival, carWeight) {
-  const perf = (d) => carWeight * (d.teamCar ?? 80) + (1 - carWeight) * d.skill;
+  const perf = (d) => carWeight * (d.teamCar ?? 80) + (1 - carWeight) * racingSkill(d);
   return perf(player) - perf(rival);
 }
 

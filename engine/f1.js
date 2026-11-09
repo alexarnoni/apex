@@ -20,11 +20,13 @@ import { racePlan, PLAN_LABELS, raceAdvice } from './race-policy.js';
 import { raisePotential } from './drivers.js';
 import { tierOf, profileOf, profileView, trustPressure, effectiveDev, expectedPosition } from './profile.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
-import { marketScore } from './market.js';
+import { marketScore, makeAvailable, assignReserves, fillSeats } from './market.js';
+import { makeRookie } from './drivers.js';
+import { attributeView, ATTRIBUTE_LABELS, trainAttributes, ensureAttributes } from './driver-attributes.js';
 import { applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
 import { CATEGORIES } from '../data/categories.js';
 import { SURNAMES } from '../data/names.js';
-import { TEAMS_F1, DRIVERS_F1 } from '../data/world2026.js';
+import { TEAMS_F1, DRIVERS_F1, SISTER_TEAMS } from '../data/world2026.js';
 import { NARRATIVE_EVENTS, RACE_EVENTS } from '../data/events.js';
 
 const F1 = () => CONFIG.f1;
@@ -75,9 +77,12 @@ export function enterF1(s, rng, teamId) {
 
   const mates = world.drivers.filter((d) => d.team === team.id);
   const displaced = mates.reduce((a, b) => (a.skill <= b.skill ? a : b));
-  world.drivers = world.drivers.filter((d) => d !== displaced);
+  makeAvailable(world, displaced);
+  world.lastMoves = [{ kind: 'available', name: displaced.name, nat: displaced.nat, from: team.name }];
+  assignReserves(world);
 
   const p = s.player;
+  ensureAttributes(p);
   p.baseStats = p.stats;
   p.stats = { wins: 0, podiums: 0, poles: 0, titles: 0, seasons: 0, points: 0, dnfs: 0, vice: 0 };
   p.team = team.id;
@@ -212,7 +217,10 @@ export function resolveSeasonFocus(s, rng, answer) {
   s.f1.racePlan = plan;
   const p = s.player;
   s.f1.lastEvent = null;
-  if (f.skillGain) { raisePotential(p); p.skill = clampSkill(p, p.skill + f.skillGain); }
+  const training = answer.training ?? 'balanced';
+  if (training !== 'balanced' && !Object.hasOwn(ATTRIBUTE_LABELS, training)) throw new Error('foco de treino inválido');
+  s.f1.trainingFocus = training;
+  if (f.skillGain) { raisePotential(p); trainAttributes(p, f.skillGain, training); }
   if (f.fameGain) p.fame += f.fameGain;
   if (f.devBonus) s.f1.devBonus += f.devBonus;
   s.f1.focus = answer.id;
@@ -838,13 +846,19 @@ export function resolveContractTerms(s, rng, answer) {
   if (pl.kind === 'move') {
     const weaker = weakestMate(world, pl.teamId);
     if (weaker) {
-      world.drivers = world.drivers.filter((d) => d !== weaker);
-      weaker.team = null;
-      world.market.push(weaker);
+      const from = makeAvailable(world, weaker);
+      (world.lastMoves ??= []).push({ kind: 'available', name: weaker.name, nat: weaker.nat, from: teamName(world, from) });
     }
     log(s, 'transfer', `Troca a ${teamName(world, p.team)} pela ${pl.teamName}.`);
     p.team = pl.teamId;
     p.trust = CONFIG.trust.trustStart;
+    // A vaga deixada pelo jogador é preenchida já, sem temporada com grid incompleto.
+    const previousTeams = new Map(world.market.map(d => [d, d.prevTeam]));
+    world.market = fillSeats(world.teams, world.drivers, world.market, rng, () => makeRookie(SURNAMES, rng, 'F2'), SISTER_TEAMS);
+    for (const [d, from] of previousTeams) if (world.drivers.includes(d)) {
+      world.lastMoves.push({ kind: 'transfer', name: d.name, nat: d.nat, from: teamName(world, from), to: teamName(world, d.team) });
+    }
+    assignReserves(world);
   } else {
     log(s, 'contract', `Renova com a ${pl.teamName}.`);
   }
@@ -953,6 +967,15 @@ export function f1View(s) {
   }));
   const isLast = (r) => r && { story: r.story ?? [], n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, summary: r.summary ?? null };
   return {
+    trainingFocus: s.f1.trainingFocus ?? 'balanced',
+    trainingOptions: [{ id: 'balanced', label: 'Treino equilibrado' }, ...Object.entries(ATTRIBUTE_LABELS).map(([id, label]) => ({ id, label }))],
+    roster: [...world.drivers, ...(world.market ?? []), ...(world.retired ?? []).map(d => ({ ...d, role: 'retired' }))].map((d, i) => ({
+      id: d.id ?? `legacy-${i}-${d.name}`, name: d.name, age: d.age, nat: d.nat ?? d.flag ?? null,
+      role: d.role ?? (d.team ? 'race' : 'free'), team: d.team ? teamName(world, d.team) : null,
+      reserveTeam: d.reserveTeam ? teamName(world, d.reserveTeam) : null,
+      overall: Math.round(d.skill * 10) / 10, attributes: attributeView(d), isPlayer: !!d.isPlayer,
+      origin: d.origin ?? null, seasonsWithoutSeat: d.seasonsWithoutSeat ?? 0,
+    })),
     plan: racePlan(s),
     plans: Object.entries(PLAN_LABELS).map(([id, label]) => ({ id, label, description: F1().approach[id].description })),
     goal: goalProgress(s),
