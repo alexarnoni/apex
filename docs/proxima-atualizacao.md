@@ -34,7 +34,7 @@ Detalhes, calibração e limitações em `v0.11.md`. **Feito em 2026-11-08:**
 
 ## v0.13 — corrida visual e estratégia de box
 
-**Implementada localmente.** A cena mostra trechos ilustrativos nos traçados existentes e abre as decisões normais do jogo. A janela de box usa desgaste estimado e mudanças de condição, com efeito sobre posições antes da distribuição dos pontos.
+**Publicada em 2026-11-09.** A cena mostra trechos ilustrativos nos traçados existentes e abre as decisões normais do jogo. A janela de box usa desgaste estimado e mudanças de condição, com efeito sobre posições antes da distribuição dos pontos.
 
 **Corrida visual interativa.** Prototipar uma volta no traçado com a câmera no jogador, pausas nas decisões existentes e transição clara para a bandeirada. [Escopo no roadmap](roadmap-ideias.md#corrida-visual-interativa).
 

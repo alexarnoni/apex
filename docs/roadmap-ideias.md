@@ -329,8 +329,8 @@ Imagem é inspiração, não especificação copiada. Fechar os efeitos e a cali
 ## Corrida visual interativa
 
 - [x] ~~Prototipar corrida no traçado, com destaque para o carro e a fase.~~ **Feito na v0.13.** O mapa lateral usa os traçados existentes, e o pódio ocupa esse espaço na bandeirada.
-- [x] ~~Pausar nas decisões e mostrar as consequências.~~ **Feito localmente na v0.13.** Janela de box informa posição, clima e condição dos pneus. A escolha muda a ordem antes dos pontos e entra no relato.
-- [x] ~~Permitir acelerar ou pular a animação.~~ **Feito localmente na v0.13.** A cena é independente das regras, respeita a preferência de movimento reduzido e pode ser pulada sem responder à escolha pendente.
+- [x] ~~Pausar nas decisões e mostrar as consequências.~~ **Feito na v0.13, publicada em 2026-11-09.** Janela de box informa posição, clima e condição dos pneus. A escolha muda a ordem antes dos pontos e entra no relato.
+- [x] ~~Permitir acelerar ou pular a animação.~~ **Feito na v0.13, publicada em 2026-11-09.** A cena é independente das regras, respeita a preferência de movimento reduzido e pode ser pulada sem responder à escolha pendente.
 
 ## Imersão e aproveitamento de tela — referências para evoluir
 
