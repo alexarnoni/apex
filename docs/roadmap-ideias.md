@@ -357,7 +357,40 @@ Limites da etapa 1: ao simular várias etapas, só a última bandeirada é anima
 - [ ] Safety car e bandeira vermelha compactando o pelotão (v0.14 proposta).
 - [ ] Definir o que acontece com saves no meio de uma corrida no formato antigo.
 
-**Depois.** Câmera seguindo o carro (pede traçados suavizados; os atuais têm coordenadas inteiras em 200×140), sons (2.8/D.15), caixa de entrada para notícias e propostas, radar de atributos e comparação com o companheiro. Visão 3D fica fora: pesa o arquivo único e complica a CSP.
+**Ideias para evoluir a tela de corrida (2026-11-09, nenhuma implementada).** Só interface, salvo indicação.
+
+- [ ] Resultado só depois da cena: pódio e "Corrida encerrada" aparecem quando os carros chegam. Mexe nos testes Playwright. Prioridade sugerida, junto com o item seguinte.
+- [ ] Bandeirada um a um: carros cruzam a linha em ordem e a torre fecha as posições.
+- [ ] Número do carro e rótulo dos três primeiros no mapa.
+- [ ] Destaque no mapa do rival citado na decisão de ataque ou defesa.
+- [ ] Pit stop visível, com pit lane desenhada (os traçados atuais só têm a pista).
+- [ ] Carros circulando devagar durante a pausa, no lugar de congelados. Decidir com o usuário.
+- [ ] Suavizar os traçados sem trocar a fonte dos dados.
+- [ ] Barra de progresso da corrida (largada, meio, final) enquanto não há número de volta.
+- [ ] Torre recolhida no celular: três primeiros e o jogador, com botão para abrir.
+- [ ] Narração com ícone por tipo (ultrapassagem, abandono, rádio).
+- [ ] Classificação animada: volta rápida com setores coloridos e torre se montando. Reaproveita a cena.
+- [ ] Atalhos de teclado: espaço pausa, números mudam a velocidade, setas escolhem a opção.
+
+**Ideias de manager do piloto (2026-11-09, nenhuma implementada).**
+
+- [ ] Caixa de entrada para propostas, recados do chefe, notícias e convites. Prioridade sugerida.
+- [ ] Duelo com o companheiro: placar fixo de classificações e corridas. Prioridade sugerida.
+- [ ] Briefing antes da largada: expectativa da equipe, clima e vizinhos de grid.
+- [ ] Entrevista pós-corrida com efeito em confiança, fama ou relação com o companheiro. Exige regra na engine.
+- [ ] Empresário que traz sondagens e negocia, com qualidade variável. Exige regra na engine.
+- [ ] Rivalidades guardadas no save e retomadas em eventos e na narração. Exige regra na engine.
+- [ ] Reputação separada por equipe, paddock e torcida. Exige regra na engine e calibração.
+- [ ] Linha do tempo da carreira com os marcos em ordem.
+- [ ] Radar de atributos comparando com companheiro ou rival.
+- [ ] Gráfico da temporada: posição por corrida e curva de pontos.
+- [ ] Página da equipe: evolução do carro, pacotes e posição no grid.
+- [ ] Recordes do mundo: vitórias, poles e campeões por ano.
+- [ ] Cartão de resultado compartilhável em imagem.
+- [ ] Conquistas de longo prazo.
+- [ ] Tutorial na primeira corrida, com o engenheiro explicando cada decisão uma vez.
+
+**Depois.** Câmera seguindo o carro (pede traçados suavizados; os atuais têm coordenadas inteiras em 200×140), e sons (2.8/D.15). Visão 3D fica fora: pesa o arquivo único e complica a CSP.
 
 ## Imersão e aproveitamento de tela — referências para evoluir
 
