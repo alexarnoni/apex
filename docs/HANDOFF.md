@@ -1,6 +1,6 @@
 # Retomada — Bandeirada
 
-Atualizado em **2026-11-08**, pacote v0.11.0.
+Atualizado em **2026-11-09**, v0.12 publicada e v0.13 em revisão local.
 
 - Repo `alexarnoni/apex`; push na main aciona GitHub Pages. Site: https://bandeirada.alexarnoni.com.
 - v0.11 publicada no commit `9e9738e`. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42538364924); HTTP 200, versão, perfis, treino, GoatCounter, Worker e hashes CSP conferidos no HTML servido.
@@ -23,6 +23,16 @@ Atualizado em **2026-11-08**, pacote v0.11.0.
 
 Próximos candidatos: grid real de 2026 por data de corte e retrospectiva com Antonelli e Mercedes campeões, além das rotas alternativas jogáveis. Ver prioridades em `proxima-atualizacao.md`.
 
-Feedback de teste: texto de estratégia usa “rádio” e “equipe”. Relargada e demais eventos na pista mostram a posição atual. Corrida visual com pausas nas decisões entrou no roadmap como protótipo para v0.13.
+## v0.13 local
+
+- Os dois botões principais agora avançam no máximo uma etapa. **Acompanhar etapa** pausa nas escolhas, **Só decisões importantes** delega a rotina e para em escolha relevante ou na bandeirada. Simulação em lote fica nos controles de acompanhamento.
+
+- Os dois botões usam o mapa lateral com minimonopostos nas cores das equipes. Na bandeirada, entra o pódio. O painel central agrupa GP, fase, posição e última parada.
+- A janela de box informa composto, condição estimada, clima e posição. A escolha altera a ordem antes de pontuar e aparece no relato. Desgaste e mudanças de clima são simplificados por fase.
+- Ofertas do kart à F1 usam cores das equipes. O rádio descreve a estratégia. Confiança baixa pesa na vaga, mas top 5 à frente do companheiro reduz o risco. Ofertas externas consideram até três temporadas recentes.
+- Validação final de 2026-11-09: 182 testes Node, 28 Playwright e build com o aviso MIT dos traçados. Conferir o Pages e o domínio após o push.
+- README apresenta o Bandeirada como jogo independente. Avisos MIT de traçados e bandeiras acompanham o build. Nomes reais e marcas no jogo continuam como tema separado para revisão antes de monetizar.
+- Próxima etapa proposta: v0.14 com treino livre, safety car e bandeira vermelha. Escopo em `proxima-atualizacao.md`.
+- Depois: grid real de 2026, base mais fiel, salto excepcional F4–F2 e desenvolvimento persistente. Para F1, aplicar os pacotes ao longo do calendário é proposta. Carreira de chefe de equipe fica para uma etapa própria.
 
 Confira `git status --short` e `git log -3 --oneline`. Referências: `v0.11.md`, `proxima-atualizacao.md`, `roadmap-ideias.md` e `DECISIONS.md`.

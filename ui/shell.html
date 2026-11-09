@@ -399,6 +399,65 @@ h2::before { display: none; }
 .race-result .race-position { font-size: clamp(1.5rem, 4vw, 2.25rem); line-height: 1.1; }
 .race-result h2 { margin-block: .5rem; }
 .race-result details, .weekend-stage { margin-block: .6rem; }
+.map-desktop { display: none; }
+.map-mobile { margin-bottom: 12px; }
+@media (min-width: 1100px) {
+  .map-desktop { display: block; }
+  .map-mobile { display: none; }
+}
+.race-visual { gap: 6px; }
+.race-visual h3, .race-visual p { margin: 0; }
+.race-visual svg { display: block; width: 100%; max-height: 42vh; }
+.race-visual .visual-car { stroke: var(--panel); stroke-width: .75; }
+.race-visual .you-car { stroke: white; stroke-width: 1.6; }
+.kart-offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.opt.kart-offer {
+  --kart-color: color-mix(in srgb, var(--offer-team) 42%, var(--fg));
+  display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+  background: color-mix(in srgb, var(--offer-team) 10%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--offer-team) 52%, var(--line));
+  border-top: 4px solid var(--offer-team);
+  color: var(--fg); padding: 14px;
+}
+.opt.kart-offer .kart-project {
+  color: var(--kart-color); font: 700 .85rem var(--f-body);
+  background: color-mix(in srgb, var(--kart-color) 14%, var(--panel));
+  border-radius: 6px; padding: 4px 8px;
+}
+.opt.kart-offer strong { font-size: 1.55rem; }
+.opt.kart-offer .kart-traits { display: flex; flex-wrap: wrap; gap: 5px 10px; color: var(--fg); }
+.opt.kart-offer .kart-description { color: var(--fg); font-size: .95rem; }
+.opt.kart-offer .kart-cta { margin-top: auto; padding-top: 6px; color: var(--kart-color); font-weight: 700; }
+.opt.kart-offer:focus-visible { outline: 3px solid var(--kart-color); outline-offset: 3px; }
+.career-offers { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 285px), 1fr)); gap: 14px; }
+.career-offer .profile { width: 100%; padding: 10px; background: var(--panel); border-radius: 8px; }
+.career-offer .profile-label { color: var(--kart-color); }
+.career-offer .why, .career-offer .pc { color: var(--fg); font-size: .9rem; }
+.career-offer .pc :is(.pro, .con) { color: var(--fg); }
+.career-offer .pc .pro b { color: var(--good); }
+.career-offer .pc .con b { color: var(--bad); }
+.wrap.wide.race-page { max-width: 1920px; }
+.race-dashboard { border-top-color: var(--signal); gap: 10px; }
+.race-dashboard-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.race-dashboard-head h2 { margin-block: .3rem; font-size: clamp(1.5rem, 3vw, 2.35rem); }
+.race-dashboard-head p, .race-pit-report p { margin: 0; }
+.race-phase { color: var(--signal-text); font-weight: 700; }
+.race-current-position { display: grid; justify-items: center; flex: none; padding: 8px 12px; border-radius: 10px; background: var(--you); }
+.race-current-position strong { font-size: clamp(1.65rem, 4vw, 2.5rem); line-height: 1.1; }
+.race-pit-report { background: color-mix(in srgb, var(--cyan) 12%, var(--panel)); border-inline-start: 4px solid var(--cyan); border-radius: 8px; padding: 10px 12px; }
+.race-pit-report p { margin-top: 4px; }
+.race-progress { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; font-size: .85rem; }
+.previous-race .race-result { margin-top: 12px; box-shadow: none; }
+@media (min-width: 1100px) {
+  .wrap.wide.race-page .layout {
+    grid-template-columns: minmax(190px, 16%) minmax(0, 1fr) minmax(275px, 24%);
+  }
+}
+.race-podium ol { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
+.race-podium li { display: flex; align-items: center; gap: 8px; }
+.podium-team { border-inline-start: 3px solid var(--podium-team); padding-inline-start: 8px; }
+.podium-your-result { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 10px; background: var(--you); border-radius: 8px; }
+.trust-notice p { margin: 4px 0 0; }
 </style>
 <!--BODY-->
 <div class="wrap" id="app" role="main"></div>

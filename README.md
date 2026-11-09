@@ -1,6 +1,8 @@
 # Bandeirada
 
-Jogo de carreira de Fórmula 1 no navegador, inspirado no F1 Glory: da largada à bandeirada, com um mundo fictício vivo a partir do grid 2026 real.
+Bandeirada é um simulador independente de carreira no automobilismo que roda no navegador. Comece no kart, dispute vagas em equipes e tome decisões de estratégia em corridas de Fórmula 1.
+
+Os traçados são derivados do projeto [f1-circuits](https://github.com/bacinger/f1-circuits), com [licença MIT](ui/assets/LICENSE-f1-circuits.txt). As bandeiras usam [flag-icons](https://github.com/lipis/flag-icons), também sob [licença MIT](ui/assets/flags/LICENSE-flag-icons.txt).
 
 Versão atual implementada: **v0.11.0 — perfis de pilotos e mercado vivo**. [Mudanças, validação e limites](docs/v0.11.md); estado da publicação em [HANDOFF](docs/HANDOFF.md).
 

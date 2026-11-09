@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createCareer, getView, applyDecision } from '../engine/game.js';
-import { enterF1 } from '../engine/f1.js';
+import { enterF1, openOffseason } from '../engine/f1.js';
 import { createRng } from '../engine/rng.js';
 import { createWorld, advanceYear } from '../engine/world.js';
 import { makeAvailable, fillSeats, assignReserves } from '../engine/market.js';
@@ -15,6 +15,24 @@ function entry() {
   enterF1(s, createRng(8), 'fer');
   return s;
 }
+
+test('piloto dispensado atrai equipes mais fortes pelo histórico contra o companheiro', () => {
+  const s = createCareer({ surname: 'Fernandes', number: 7, style: 'con', age: 15, seed: 8 });
+  enterF1(s, createRng(8), 'mer');
+  Object.assign(s.player, { contract: 0, released: true, trust: 5, skill: 83, potential: 87 });
+  const baseline = structuredClone(s);
+  openOffseason(baseline, createRng(8));
+  s.f1.seasons = Array.from({ length: 3 }, (_, i) => ({
+    team: 'mer', position: i === 2 ? 4 : 6, points: 303,
+    standings: [{ team: 'mer', name: 'Russell', points: 232, isPlayer: false }],
+  }));
+  openOffseason(s, createRng(8));
+  const offers = s.pendingDecision.payload.options;
+  assert.equal(s.pendingDecision.payload.releasedBy, 'Mercedes');
+  assert.ok(offers.every(o => o.teamId !== 'mer'));
+  assert.ok(offers[0].carRank < baseline.pendingDecision.payload.options[0].carRank);
+  assert.match(offers[0].why, /3 temporadas/);
+});
 
 test('entrar na Ferrari preserva Hamilton no paddock, com todos os dados e 22 assentos', () => {
   const s = entry(); const w = s.f1.world;

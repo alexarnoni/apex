@@ -109,7 +109,12 @@ export function applyTrustEvent(player, event) {
 // Avalia efeitos de confiança na virada de ano para o jogador.
 // Retorna array de efeitos aplicados (para log/narrativa).
 // ---------------------------------------------------------------------------
-export function evaluateTrustEffects(player, teamDrivers, teamConstructorRank, rng) {
+export function trustReleaseChance(position, leadsTeammate) {
+  const T = CONFIG.trust;
+  return T.lowTrustReleaseChance * (position > 0 && position <= T.strongSeasonTop && leadsTeammate ? T.strongSeasonRiskFactor : 1);
+}
+
+export function evaluateTrustEffects(player, teamDrivers, teamConstructorRank, rng, leadsTeammate = false) {
   const T = CONFIG.trust;
   const effects = [];
 
@@ -135,7 +140,7 @@ export function evaluateTrustEffects(player, teamDrivers, teamConstructorRank, r
   }
 
   // Rescisão por confiança baixa
-  if (player.trust < T.lowTrustCap && rng.chance(T.lowTrustReleaseChance)) {
+  if (player.trust < T.lowTrustCap && rng.chance(trustReleaseChance(player.seasonChampPos, leadsTeammate))) {
     effects.push('lowTrustRelease');
   }
 

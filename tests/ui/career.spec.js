@@ -3,11 +3,12 @@ import { createCareer, advance, applyDecision, ENGINE_VERSION } from '../../engi
 import { answerFor } from '../../tools/calibrate/lib.js';
 import { enterF1 } from '../../engine/f1.js';
 import { createRng } from '../../engine/rng.js';
+import { advanceRaces } from '../../engine/advance-races.js';
 
 // Fixtures pela API pública; interação e importação passam pela interface real.
 const fixtures = new Map();
 function fixture(type, predicate = () => true) {
-  if (fixtures.has(type)) return fixtures.get(type);
+  if (fixtures.has(type) && predicate(fixtures.get(type))) return fixtures.get(type);
   for (let seed = 1; seed <= 10; seed++) {
     let s = createCareer({ surname: 'TesteUI', number: 7, style: 'con', flag: 'BR', age: 15, seed });
     for (let step = 0; step < 2000; step++) {
@@ -156,6 +157,44 @@ test('parar nas decisões interrompe a simulação antes de decidir pneus', asyn
   await expect(page.getByRole('status')).toContainText('estratégia de pneus');
 });
 
+test('acompanhamento visual permite pular a cena sem responder à decisão', async ({ page }) => {
+  const state = fixture('weekend_approach', s => {
+    if (s.pendingDecision.payload.out) return false;
+    const strategy = applyDecision(s, { id: s.f1.racePlan ?? 'balanced' });
+    if (strategy.pendingDecision?.type !== 'race_strategy') return false;
+    const start = applyDecision(strategy, { id: strategy.pendingDecision.payload.safe });
+    return start.pendingDecision?.type === 'race_start' && start.pendingDecision.payload.options.length > 1
+      && applyDecision(start, { id: start.pendingDecision.payload.safe }).f1.season.raceIndex === s.f1.season.raceIndex;
+  });
+  await importCareer(page, state);
+  await page.locator('[data-act="simnext"]').click();
+  const strategy = (await saved(page)).pendingDecision;
+  await page.locator(`[data-act="strategy"][data-id="${strategy.payload.safe}"]`).click();
+  const launch = (await saved(page)).pendingDecision;
+  await page.locator(`[data-act="start"][data-id="${launch.payload.safe}"]`).click();
+  const scene = page.getByRole('region', { name: 'Mapa da corrida' });
+  await expect(scene).toBeVisible();
+  expect(await scene.locator('.visual-car').count()).toBeGreaterThan(1);
+  const before = await saved(page);
+  await scene.getByRole('button', { name: 'Pular animação' }).click();
+  await expect(scene).toBeVisible();
+  await expect(scene.getByRole('button', { name: 'Pular animação' })).toBeHidden();
+  expect(await saved(page)).toEqual(before);
+});
+
+test('janela de box retoma após reload e registra a parada na corrida', async ({ page }) => {
+  const state = fixture('race_pit');
+  await importCareer(page, state);
+  await expect(page.getByRole('heading', { name: 'Janela de box', exact: true })).toBeVisible();
+  await expect(page.locator('.focus')).toContainText(`Posição atual · P${state.pendingDecision.payload.position}`);
+  await page.reload();
+  await page.locator('[data-act="continue"][data-slot="1"]').click();
+  await page.getByRole('button', { name: /Parar agora/ }).click();
+  const next = await saved(page);
+  const result = next.f1.season.cur?.pit?.text ?? next.f1.season.lastRace?.story.find(item => item.when === 'Janela de box')?.text;
+  expect(result).toMatch(/voltou em P\d+/);
+});
+
 test('plano muda sem gastar etapa, persiste no reload e meta fica visível', async ({ page }) => {
   const state = fixture('weekend_approach');
   await importCareer(page, state);
@@ -173,10 +212,14 @@ test('plano muda sem gastar etapa, persiste no reload e meta fica visível', asy
 });
 
 test('avanço contextual mostra motivo e permite delegar a decisão atual', async ({ page }) => {
-  await importCareer(page, fixture('weekend_approach'));
+  const start = fixture('weekend_approach', s => {
+    const next = advanceRaces(s, { limit: 1 }).state;
+    return ['race_event', 'race_pit', 'race_finale', 'team_order'].includes(next.pendingDecision?.type);
+  });
+  await importCareer(page, start);
   await page.locator('[data-act="simimportant"]').click();
   const after = await saved(page);
-  expect(['race_event', 'race_finale', 'team_order', 'story_event']).toContain(after.pendingDecision.type);
+  expect(['race_event', 'race_pit', 'race_finale', 'team_order', 'story_event']).toContain(after.pendingDecision.type);
   if (after.pendingDecision.type !== 'story_event') {
     if (after.pendingDecision.type === 'race_event') {
       await expect(page.getByText(`Posição atual · P${after.pendingDecision.payload.position}`, { exact: true })).toBeVisible();
@@ -186,8 +229,21 @@ test('avanço contextual mostra motivo e permite delegar a decisão atual', asyn
     await page.locator('.focus').scrollIntoViewIfNeeded();
     await page.screenshot({ path: test.info().outputPath('decisao-v010.png'), fullPage: true });
     await page.locator('[data-act="delegate"]').click();
-    expect((await saved(page)).history.length).toBeGreaterThan(after.history.length);
+    const delegated = await saved(page);
+    expect(delegated.history[after.history.length].type).toBe(after.pendingDecision.type);
+    expect(delegated.f1.season.raceIndex - start.f1.season.raceIndex).toBeLessThanOrEqual(1);
   }
+});
+
+test('modo de decisões importantes para na bandeirada quando a etapa não tem escolha relevante', async ({ page }) => {
+  const start = fixture('weekend_approach', s => advanceRaces(s, { limit: 1 }).state.pendingDecision?.type === 'weekend_approach');
+  await importCareer(page, start);
+  await page.getByRole('button', { name: 'Só decisões importantes' }).click();
+  expect((await saved(page)).f1.season.raceIndex).toBe(start.f1.season.raceIndex + 1);
+  await expect(page.locator('.race-result')).toBeVisible();
+  const podium = page.getByRole('region', { name: 'Pódio da corrida' });
+  await expect(podium.getByText('Seu resultado')).toBeVisible();
+  await expect(podium.locator('li')).toHaveCount(3);
 });
 
 test('carreira inteira por cliques: criação, base, temporadas, contratos e legado', async ({ page }) => {
@@ -227,7 +283,7 @@ test('carreira inteira por cliques: criação, base, temporadas, contratos e leg
       sawContract = true;
       await page.locator('[data-act="terms"]').click();
     } else {
-      const acts = { academy_invite: 'academy', offer_pick: 'offer', season_focus: 'focus', story_event: 'event', home_race: 'event', race_event: 'event', retire_or_continue: 'retire', race_strategy: 'strategy', race_start: 'start', race_finale: 'finale', team_order: 'order' };
+      const acts = { academy_invite: 'academy', offer_pick: 'offer', season_focus: 'focus', story_event: 'event', home_race: 'event', race_event: 'event', retire_or_continue: 'retire', race_strategy: 'strategy', race_start: 'start', race_pit: 'pit', race_finale: 'finale', team_order: 'order' };
       const id = pd.type === 'academy_invite' ? 'yes' : answer.id;
       await page.locator(`[data-act="${acts[pd.type]}"][data-id="${id}"]`).click();
     }

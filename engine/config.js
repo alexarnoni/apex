@@ -24,6 +24,7 @@ export const CONFIG = {
   // Estratégia de pneus (F1, engine/strategy.js): aposta que move o jogador 1 ou 2 posições.
   // Com encaixe (fit) 0 a chance de dar certo e de dar errado é igual, então a média é zero.
   strategy: {
+    pit: { life: { soft: 30, medium: 55, hard: 75, inters: 55, wait: 55, slicks: 55 }, window: 55, worn: 65, wetChange: 0.18, dryChangeFactor: 0.35 },
     pGood: 0.30, pBad: 0.30,      // chances de bom e de ruim com encaixe 0 (o resto é neutro)
     perFit: 0.12,                 // cada ponto de encaixe move 12pp de ruim para bom
     bigShift: 0.25,               // chance de o efeito ser 2 posições em vez de 1
@@ -302,6 +303,7 @@ export const CONFIG = {
     maxAge: 44,                           // aposentadoria forçada
     maxOffers: 3,                         // ofertas de OUTRAS equipes por offseason
     offerMargin: 0,                       // marketScore do jogador precisa superar o do piloto mais fraco da equipe por isso
+    offerTrackRecord: { seasons: 3, teammateWin: 2, topFive: 2, freeAgentBonus: 2 },
     contractYears: [1, 2, 3],
     exitClause: { minFame: 10, minMarketRank: 6 },  // cláusula de saída: fama >= 10 OU top 6 de marketScore do grid
     carTierRank: { top: 4, mid: 8 },      // ranking de carro: <= top 'equipe de ponta', <= mid 'meio do pelotão', senão 'zebra'
@@ -328,5 +330,7 @@ export const CONFIG = {
     lowTrustCap: 40,
     highTrustFloor: 80,
     lowTrustReleaseChance: 0.3,
+    strongSeasonTop: 5,
+    strongSeasonRiskFactor: 0.5,
   },
 };

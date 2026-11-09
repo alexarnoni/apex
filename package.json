@@ -1,6 +1,6 @@
 {
   "name": "apex",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "description": "Jogo de carreira de F1: do karting à glória. Engine de simulação isomórfica (Node + navegador).",
   "type": "module",
   "scripts": {

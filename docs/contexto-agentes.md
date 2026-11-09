@@ -29,4 +29,6 @@ O [guia oficial de AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration
 
 ## Skills e hooks
 
-Não foram adicionados comandos de barra, skills extras ou hooks nesta etapa. A rotina é instrução, não automação garantida. Adicionar skill para um procedimento repetitivo concreto e hooks só após verificar suporte e utilidade. Não copiar configurações de Claude/Gemini para o Codex como se fossem equivalentes.
+Use a skill `$bandeirada-entrega` para retomar ou preparar uma versão. Ela está em [`.agents/skills/bandeirada-entrega/SKILL.md`](../.agents/skills/bandeirada-entrega/SKILL.md). A descoberta pela interface deve ser conferida em uma nova sessão.
+
+Para auditar contexto, confira quais arquivos, skills e ferramentas foram usados e retire do fluxo padrão o que só serve a tarefas específicas. Hooks ficam para uma etapa própria, quando houver uma ação repetitiva verificável para automatizar.

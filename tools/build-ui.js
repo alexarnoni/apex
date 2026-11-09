@@ -54,6 +54,7 @@ writeFileSync(join(root, 'dist/apex.artifact.html'), `${headPart}${body}`);
 const ogSrc = join(root, 'ui/assets/og.jpg');
 const hasOgImage = existsSync(ogSrc);
 if (hasOgImage) copyFileSync(ogSrc, join(root, 'dist/og.jpg'));
+copyFileSync(join(root, 'ui/assets/LICENSE-f1-circuits.txt'), join(root, 'dist/LICENSE-f1-circuits.txt'));
 const head = headPart.replace('<title>Bandeirada</title>', `<title>${TITLE}</title>`);
 
 // Política de segurança: os blocos <script> e <style> embutidos são autorizados pelo hash do conteúdo exato.

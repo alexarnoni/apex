@@ -82,6 +82,7 @@ export function answerFor(state, policy = 'a', { retireAt = 34 } = {}) {
     case 'season_focus': return { id: policy === 'notrain' ? 'image' : 'train' };
     case 'weekend_approach': return { id: pd.payload.out ? 'rest' : 'balanced' };
     case 'race_strategy':
+    case 'race_pit':
     case 'race_start':
     case 'race_finale': return { id: pd.payload.safe };
     case 'story_event':

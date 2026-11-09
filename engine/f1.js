@@ -19,11 +19,11 @@ import { createSeasonGoal, goalProgress } from './season-goals.js';
 import { racePlan, PLAN_LABELS, raceAdvice } from './race-policy.js';
 import { raisePotential } from './drivers.js';
 import { tierOf, profileOf, profileView, trustPressure, effectiveDev, expectedPosition } from './profile.js';
-import { assignStatus, applyTrustEvent, evaluateTrustEffects } from './status.js';
+import { assignStatus, applyTrustEvent, evaluateTrustEffects, trustReleaseChance } from './status.js';
 import { marketScore, makeAvailable, assignReserves, fillSeats } from './market.js';
 import { makeRookie } from './drivers.js';
 import { attributeView, ATTRIBUTE_LABELS, trainAttributes, ensureAttributes } from './driver-attributes.js';
-import { applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
+import { EFFECTS, applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
 import { CATEGORIES } from '../data/categories.js';
 import { SURNAMES } from '../data/names.js';
 import { TEAMS_F1, DRIVERS_F1, SISTER_TEAMS } from '../data/world2026.js';
@@ -353,6 +353,7 @@ export function resolveWeekendApproach(s, rng, answer) {
     const sctx = { tags: circuitFor(n).tags, grid: season.cur.grid ?? 10, wet: w.wet };
     const { options, safe } = strategyOptions(sctx);
     const rows = w.quali.map((d, i) => ({ pos: i + 1, name: d.name, nat: d.nat ?? d.flag ?? null, team: d.team, isPlayer: d === p }));
+    season.cur.mapGrid = rows;
     season.pendingRace = { w: ser(world, w), absent: false, eventId: null, strategyCtx: sctx };
     s.pendingDecision = {
       type: 'race_strategy',
@@ -374,7 +375,7 @@ export function resolveRaceStrategy(s, rng, answer) {
   if (!options.some((o) => o.id === answer?.id)) throw new Error(`id inválido (use ${options.map((o) => o.id).join(', ')})`);
   const w = deser(world, pr.w);
   const result = resolveStrategy(w, s.player, answer.id, pr.strategyCtx, rng);
-  season.cur.strategy = { label: result.label, kind: result.kind, shift: result.shift, text: result.text };
+  season.cur.strategy = { id: answer.id, label: result.label, kind: result.kind, shift: result.shift, text: result.text };
   const startCtx = { ...pr.strategyCtx, gridSize: world.drivers.length };
   const { options: starts, safe } = startOptions(startCtx);
   season.pendingRace = { w: ser(world, w), absent: false, eventId: null, startCtx };
@@ -411,7 +412,7 @@ function openRaceEvent(s, rng, w, out) {
       return;
     }
   }
-  continueToOrders(s, rng, w, out);
+  openPitWindow(s, rng, w, out);
 }
 
 function raceCtx(s, w) {
@@ -443,7 +444,51 @@ export function resolveRaceEvent(s, rng, answer) {
   season.cur.eventText = outcomeText(outcome, ctx);
   season.lastEventRace = season.raceIndex + 1;
   season.pendingRace = null;
-  continueToOrders(s, rng, w, pr.absent, ev.id);
+  openPitWindow(s, rng, w, pr.absent, ev.id);
+}
+
+function openPitWindow(s, rng, w, absent, eventId = null) {
+  const { world, season } = s.f1;
+  const tyre = season.cur?.strategy;
+  if (absent || !tyre?.id || w.dnfs.includes(s.player)) return continueToOrders(s, rng, w, absent, eventId);
+  const cfg = CONFIG.strategy.pit;
+  const circuit = circuitFor(season.raceIndex + 1);
+  const condition = 100 - Math.round(cfg.window * (100 - cfg.life[tyre.id]) / 100);
+  const changes = rng.chance(w.wet ? cfg.wetChange : circuit.chuva * cfg.dryChangeFactor);
+  if (!changes && condition > cfg.worn) return continueToOrders(s, rng, w, absent, eventId);
+  const classified = w.result.filter(d => !w.dnfs.includes(d));
+  const index = classified.indexOf(s.player);
+  const rival = classified[index - 1];
+  const clearAir = !rival || paceEdge(s.player, rival, world.category.carWeight) > CONFIG.strategy.finale.paceThreshold;
+  const wet = changes ? !w.wet : w.wet;
+  season.pendingRace = { w: ser(world, w), absent, eventId };
+  s.pendingDecision = { type: 'race_pit', payload: {
+    position: index + 1, tyre: tyre.id === 'slicks' ? 'Pneus de pista seca' : tyre.id === 'wait' ? 'Composto mantido' : tyre.label,
+    condition, wet, changes, rival: rival?.name ?? null,
+    clearAir, safe: changes || !clearAir ? 'pit' : 'extend',
+    options: [
+      { id: 'pit', label: 'Parar agora', description: changes ? 'Trocar para pneus adequados à nova condição da pista.' : 'Trocar pneus cedo para tentar ganhar tempo antes dos rivais.' },
+      { id: 'extend', label: 'Estender o stint', description: changes ? 'Ficar com o composto atual enquanto avalia a pista.' : 'Adiar a troca e aproveitar o ritmo em pista livre.' },
+    ],
+  } };
+}
+
+export function resolveRacePit(s, rng, answer) {
+  const { world, season } = s.f1;
+  const { w: snapshot, absent, eventId } = season.pendingRace;
+  const p = s.pendingDecision.payload;
+  if (!p.options.some(o => o.id === answer?.id)) throw new Error('Escolha uma estratégia de parada.');
+  const w = deser(world, snapshot);
+  w.wet ||= p.wet;
+  const pit = answer.id === 'pit';
+  const edge = p.changes ? (pit ? 1 : -2) : pit ? (p.clearAir ? 0 : 1) : (p.clearAir ? 1 : -1);
+  EFFECTS.shift({ w, player: s.player }, edge);
+  const position = w.result.indexOf(s.player) + 1;
+  const compound = p.wet ? 'pneus de chuva' : 'pneus de pista seca';
+  const detail = pit ? `Você parou, colocou ${compound} e voltou em P${position}.` : `Você estendeu o stint e ficou em P${position} após a janela de paradas.`;
+  season.cur.pit = { id: answer.id, text: detail };
+  season.pendingRace = null;
+  return continueToOrders(s, rng, w, absent, eventId);
 }
 
 // Ordens de equipe (podem pausar numa decisão) e depois o fim da corrida.
@@ -584,6 +629,7 @@ function raceStory(race, cur, order, p, gridSize, carRankNow, rng) {
   }
   if (cur?.strategy) lines.push({ when: `Estratégia (${cur.strategy.label})`, text: cur.strategy.text });
   if (cur?.event) lines.push({ when: cur.event, text: cur.eventText ?? 'Você teve de decidir na pista.' });
+  if (cur?.pit) lines.push({ when: 'Janela de box', text: cur.pit.text });
   if (cur?.finale) lines.push({ when: `Final (${cur.finale.label})`, text: cur.finale.text });
   if (order) {
     lines.push({ when: 'Rádio', text: order.p2 === p.name ? (order.defied ? 'Você desafiou a ordem de equipe e manteve a posição.' : 'Você cedeu a posição por ordem de equipe.') : 'A equipe mandou o companheiro ceder a posição a você.' });
@@ -616,6 +662,7 @@ function finishRace(s, rng, w, absent, eventId) {
     n: season.raceIndex + 1, wet: a.wet, winner: a.winner, pole: a.pole,
     playerPos: absent ? null : (pos || null), missed: absent, event: eventId,
     grid: season.cur?.grid ?? null, points: (p.seasonPoints ?? 0) - pointsBefore,
+    mapOrder: a.classified.map(d => ({ team: d.team, isPlayer: !!d.isPlayer, name: d.name })),
   };
   const mate = world.drivers.find(d => d.name === season.goal?.teammate);
   race.teammateName = mate?.name ?? null;
@@ -660,6 +707,8 @@ function finalizeSeason(s, rng) {
     season.ordersLog,
   );
   const pos = result.standings.indexOf(p) + 1;
+  const teammate = result.standings.find(d => d !== p && d.team === p.team);
+  const leadsTeammate = !!teammate && p.seasonPoints > teammate.seasonPoints;
   const conPos = result.constructors.findIndex((c) => c.id === p.team) + 1;
   const seasonRank = carRank(world, p.team);
   const seasonTier = tierOf(seasonRank, world.teams.length, F1().carTierRank);
@@ -670,6 +719,7 @@ function finalizeSeason(s, rng) {
     teamName: teamName(world, p.team),
     position: pos,
     points: p.seasonPoints,
+    teammate: teammate ? { name: teammate.name, points: teammate.seasonPoints } : null,
     wins: p.seasonWins,
     podiums: p.seasonPodiums,
     poles: p.seasonPoles,
@@ -703,7 +753,7 @@ function finalizeSeason(s, rng) {
     p.trust = Math.max(0, (p.trust ?? CONFIG.trust.trustStart) + pressureLoss);
     log(s, 'trust', `${record.teamName} esperava mais de você nesta temporada (${pressureLoss} de confiança).`);
   }
-  const effects = evaluateTrustEffects(p, null, conPos, rng);
+  const effects = evaluateTrustEffects(p, null, conPos, rng, leadsTeammate);
   if (effects.includes('lowTrustRelease')) {
     p.contract = 0;
     p.released = true;
@@ -758,6 +808,20 @@ function weakestMate(world, teamId) {
   return mates.reduce((a, b) => (marketScore(a) <= marketScore(b) ? a : b));
 }
 
+// Resultados recentes complementam a estimativa de habilidade no mercado.
+export function offerTrackRecord(seasons, teamId, freeAgent) {
+  const cfg = F1().offerTrackRecord;
+  const recent = seasons.slice(-cfg.seasons).filter(year => year.team === teamId);
+  const wins = recent.filter(year => {
+    const mate = year.teammate ?? year.standings?.find(d => !d.isPlayer && d.team === year.team);
+    return mate && year.points > mate.points;
+  }).length;
+  const topFive = recent.filter(year => year.position >= 1 && year.position <= 5).length;
+  const bonus = wins * cfg.teammateWin + topFive * cfg.topFive
+    + (freeAgent && wins >= 2 && topFive ? cfg.freeAgentBonus : 0);
+  return { wins, topFive, bonus };
+}
+
 function openOffers(s) {
   const { world } = s.f1;
   const p = s.player;
@@ -773,7 +837,8 @@ function openOffers(s) {
   const offers = [];
   if (!p.released) offers.push({ id: 'renew', teamId: p.team, kind: expired ? 'renew' : 'keep' });
 
-  const myScore = marketScore(p) + (p.offerBonus ?? 0);
+  const record = offerTrackRecord(s.f1.seasons ?? [], p.team, expired);
+  const myScore = marketScore(p) + (p.offerBonus ?? 0) + record.bonus;
   const others = world.teams
     .filter((t) => t.id !== p.team)
     .filter((t) => {
@@ -792,12 +857,18 @@ function openOffers(s) {
     type: 'offer_pick',
     payload: {
       scope: 'f1',
+      releasedBy: p.released ? teamName(world, p.team) : null,
       options: offers.map((o) => {
         const rank = carRank(world, o.teamId);
         let why;
         if (o.kind === 'renew') why = 'Seu contrato acabou e a equipe quer renovar.';
         else if (o.kind === 'keep') why = 'Sua cláusula de saída deixa você ficar ou sair; ficar mantém o contrato.';
-        else why = `Você vale mais para o mercado que ${weakestMate(world, o.teamId)?.name ?? 'o piloto mais fraco'}, o piloto mais fraco dessa equipe.`;
+        else if (record.bonus) {
+          const reasons = [];
+          if (record.wins) reasons.push(record.wins === 1 ? 'superou seu companheiro em uma temporada recente' : `superou seu companheiro em ${record.wins} temporadas recentes`);
+          if (record.topFive) reasons.push(record.topFive === 1 ? 'terminou uma temporada no top 5' : `terminou ${record.topFive} temporadas no top 5`);
+          why = `A equipe viu que você ${reasons.join(' e ')}.`;
+        } else why = `Você vale mais para o mercado que ${weakestMate(world, o.teamId)?.name ?? 'o piloto mais fraco'}, o piloto mais fraco dessa equipe.`;
         return { ...o, teamName: teamName(world, o.teamId), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)), why, ...offerNotes(world, p, o, rank) };
       }),
     },
@@ -985,6 +1056,18 @@ export function f1View(s) {
   const { world, season } = s.f1;
   const p = s.player;
   const decision = s.pendingDecision;
+  const round = (season?.raceIndex ?? 0) + 1;
+  const pending = season?.pendingRace?.w;
+  const preStart = ['race_strategy', 'race_start'].includes(decision?.type);
+  const mapDrivers = indices => indices.map(i => world.drivers[i]).filter(Boolean)
+    .map(d => ({ team: d.team, isPlayer: !!d.isPlayer, name: d.name }));
+  const map = !season ? null : pending ? {
+    circuit: circuitView(round), phase: decision.type,
+    cars: preStart ? (season.cur?.mapGrid ?? decision.payload.gridRows ?? []) : mapDrivers(pending.result.filter(i => !pending.dnfs.includes(i))),
+  } : season.lastRace?.mapOrder ? {
+    circuit: circuitView(season.lastRace.n), phase: 'finish', cars: season.lastRace.mapOrder,
+    missed: season.lastRace.missed,
+  } : round <= season.total ? { circuit: circuitView(round), phase: 'waiting', cars: [] } : null;
   const eventPosition = decision?.type === 'race_event'
     ? decision.payload.position ?? (season?.pendingRace?.w ? raceCtx(s, deser(world, season.pendingRace.w)).pos : null)
     : null;
@@ -1016,12 +1099,21 @@ export function f1View(s) {
     goal: goalProgress(s),
     advice: raceAdvice(s),
     eventPosition,
+    map,
+    pitUpdate: season?.cur?.pit?.text ?? null,
     homeRounds: CIRCUITS.flatMap((c, i) => c.flag === p.flag ? [{ round: i + 1, gp: c.gp }] : []),
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
     races: (season?.races ?? []).map((r) => ({ story: r.story ?? [], n: r.n, circuit: circuitView(r.n), playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
     trust: p.trust,
+    trustReview: {
+      threshold: CONFIG.trust.lowTrustCap,
+      releaseChance: trustReleaseChance(standings.find(d => d.isPlayer)?.pos,
+        standings.some(d => !d.isPlayer && d.team === p.team && p.seasonPoints > d.points)),
+      baseReleaseChance: CONFIG.trust.lowTrustReleaseChance,
+      strongSeasonTop: CONFIG.trust.strongSeasonTop,
+    },
     contract: { years: p.contract, statusClause: p.statusClause, exitClause: p.exitClause },
     worldSeason: world.season,
     marketMoves: (world.lastMoves ?? []).slice(0, 12),

@@ -8,7 +8,7 @@
 import { CONFIG } from './config.js';
 import { attributeView, trainAttributes, evolveAttributes } from './driver-attributes.js';
 import {
-  enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveRaceStrategy, resolveRaceStart, resolveRaceFinale, resolveTeamOrder,
+  enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveRaceStrategy, resolveRaceStart, resolveRacePit, resolveRaceFinale, resolveTeamOrder,
   resolveStoryEvent, resolveRaceEvent, resolveHomeRace, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View,
 } from './f1.js';
 import { createRng } from './rng.js';
@@ -186,6 +186,7 @@ function resolveDecision(state, pd, answer) {
     case 'weekend_approach': return transition(state, (s, rng) => resolveWeekendApproach(s, rng, answer));
     case 'race_strategy': return transition(state, (s, rng) => resolveRaceStrategy(s, rng, answer));
     case 'race_start': return transition(state, (s, rng) => resolveRaceStart(s, rng, answer));
+    case 'race_pit': return transition(state, (s, rng) => resolveRacePit(s, rng, answer));
     case 'race_finale': return transition(state, (s, rng) => resolveRaceFinale(s, rng, answer));
     case 'team_order': return transition(state, (s, rng) => resolveTeamOrder(s, rng, answer));
     case 'story_event': return transition(state, (s, rng) => resolveStoryEvent(s, rng, answer));

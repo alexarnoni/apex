@@ -318,11 +318,19 @@ Imagem é inspiração, não especificação copiada. Fechar os efeitos e a cali
 - [x] ~~Variar a chamada conforme resultados no save.~~ **Feito (2026-11-08).** Estreia registrada, último resultado, abandono ou vitória anterior.
 - [ ] Mostrar corridas em casa, melhor resultado e vitórias no histórico do piloto. Destacar o primeiro pódio em casa na retrospectiva da temporada.
 
+## Evolução da carreira de piloto
+
+- [ ] Atualizar o ponto de partida da F1 com titulares, reservas e histórico de 2026, usando um recorte datado.
+- [ ] Usar pilotos reais e vagas por equipe na F2 e F3. Escolher um campeonato nacional ou regional como referência para a F4 e aproximar o formato de cada categoria.
+- [ ] Oferecer salto excepcional da F4 para a F2 quando desempenho, idade, elegibilidade e vaga permitirem. Apresentar as alternativas de F3 e permanência quando disponíveis.
+- [ ] Guardar no save a evolução dos carros da base e aplicar os pacotes da F1 ao longo do calendário. Mostrar o efeito no desempenho e a posição relativa no grid.
+- [ ] Planejar a carreira de chefe de equipe como modo futuro, com comando dos dois carros, orçamento, contratos e desenvolvimento.
+
 ## Corrida visual interativa
 
-- [ ] Prototipar uma corrida em uma pista com o traçado já disponível, destacando o carro do jogador e a fase atual. Usar o grid e os momentos que a simulação já conhece para representar largada, disputa e chegada. Entre esses momentos, a animação é ilustrativa.
-- [ ] Pausar nos eventos que pedem escolha. Mostrar a situação, as opções e o que aconteceu quando o jogador decidiu. Retomar a animação após a resposta e mostrar a posição e os pontos na bandeirada.
-- [ ] Permitir acelerar ou pular a animação. Conferir que as mesmas escolhas produzem os mesmos resultados nos modos visual e rápido, inclusive ao recarregar com uma decisão pendente.
+- [x] ~~Prototipar corrida no traçado, com destaque para o carro e a fase.~~ **Feito na v0.13.** O mapa lateral usa os traçados existentes, e o pódio ocupa esse espaço na bandeirada.
+- [x] ~~Pausar nas decisões e mostrar as consequências.~~ **Feito localmente na v0.13.** Janela de box informa posição, clima e condição dos pneus. A escolha muda a ordem antes dos pontos e entra no relato.
+- [x] ~~Permitir acelerar ou pular a animação.~~ **Feito localmente na v0.13.** A cena é independente das regras, respeita a preferência de movimento reduzido e pode ser pulada sem responder à escolha pendente.
 
 ## Imersão e aproveitamento de tela — referências para evoluir
 

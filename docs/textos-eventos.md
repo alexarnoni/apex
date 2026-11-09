@@ -270,11 +270,11 @@ Quando: race (chance 8% por corrida) · peso 3
 
 Quando: race · peso 2
 
-> Rádio: "Teste, temos uma estratégia alternativa. Confia na gente ou vai do seu jeito?"
+> Rádio: "Teste, nossa proposta é manter o ritmo, poupar os pneus e defender Pundefined. Se quiser buscar posições agora, vai ter que forçar mais o carro."
 
-- **Confiar na equipe**: +5 de confiança, resultado neutro.
-  - Você obedece e a equipe agradece.
-- **Fazer do seu jeito**: 50% de +2 posições, 50% de -2; -5 de confiança nos dois casos.
+- **Administrar a posição**: Mantenha o ritmo e a posição nesta decisão. A equipe ganha 5 pontos de confiança em você.
+  - Você administra a posição como combinado com a equipe.
+- **Forçar o ritmo**: 50% de chance de ganhar até duas posições e 50% de perder até duas. A confiança da equipe cai 5 pontos em ambos os casos.
   - (50%) Você ganha posições, mas a equipe não gostou de ser contrariada.
   - (50%) Você perde posições, e a equipe questiona sua decisão.
 

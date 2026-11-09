@@ -7,7 +7,8 @@ import { CATEGORIES, BASE_LADDER } from '../data/categories.js';
 import { TEAMS_F1 } from '../data/world2026.js';
 import { createSaves } from './saves.js';
 import { flagImg, COUNTRY, countryList } from './flags.js';
-import { TRACKS, TRACK_BOX } from '../data/trackPaths.js';
+import { TRACKS } from '../data/trackPaths.js';
+import { paintRaceMap } from './race-visual.js';
 import { buildFeedback, careerSnapshot, sendUrl, feedbackPayload, sendFeedback, FEEDBACK_KINDS } from './feedback.js';
 
 // Destino opcional do feedback (ex.: página "nova issue" de um repositório), definido no build
@@ -52,6 +53,17 @@ const CLAUSE_TEXT = { none: 'Sem cláusula de status', p1: 'Exigir status de pil
 // Marca: bandeira quadriculada (grade 4x3) em roxo, ao lado do nome.
 const LOGO = `<div class="logo"><svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="7" fill="#7b3fe4"/><g fill="#fff"><rect x="5" y="7.75" width="5.5" height="5.5"/><rect x="16" y="7.75" width="5.5" height="5.5"/><rect x="10.5" y="13.25" width="5.5" height="5.5"/><rect x="21.5" y="13.25" width="5.5" height="5.5"/><rect x="5" y="18.75" width="5.5" height="5.5"/><rect x="16" y="18.75" width="5.5" height="5.5"/></g><g fill="#4a1d9e"><rect x="10.5" y="7.75" width="5.5" height="5.5"/><rect x="21.5" y="7.75" width="5.5" height="5.5"/><rect x="5" y="13.25" width="5.5" height="5.5"/><rect x="16" y="13.25" width="5.5" height="5.5"/><rect x="10.5" y="18.75" width="5.5" height="5.5"/><rect x="21.5" y="18.75" width="5.5" height="5.5"/></g></svg><span>Bandeirada</span></div>`;
 const TEAM_COLOR = Object.fromEntries(TEAMS_F1.map((t) => [t.id, t.color]));
+// Paleta do jogo inspirada nas identidades visuais das equipes de base.
+const BASE_TEAM_COLOR = {
+  tonykart: '#168542', birel: '#df2335', crg: '#ec7418', kartrepublic: '#c52331',
+  parolin: '#cc2837', energy: '#346fce', sodikart: '#e7a51c', praga: '#1973ba',
+  exprit: '#e67424', kosmic: '#8647bb', prema: '#d42438', vanamersfoort: '#e77726',
+  us: '#187744', race: '#164987', mp: '#ed781e', mucke: '#236ab0', jenzer: '#2360ab',
+  ironlynx: '#d8a824', kic: '#257bbb', cram: '#cf273e', trident: '#13854d',
+  art: '#e03a3e', hitech: '#777e90', campos: '#ee7920', rodin: '#d8a527',
+  aix: '#30aa87', dams: '#1867c6', invicta: '#c29b31',
+};
+const offerTeamColor = id => TEAM_COLOR[id] ?? BASE_TEAM_COLOR[id] ?? 'var(--signal)';
 
 let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
@@ -149,8 +161,8 @@ async function downloadFile(filename, text) {
 // --- transições ------------------------------------------------------------
 
 function run(fn) {
+  const before = state;
   try {
-    const before = state;
     state = fn(state);
     if (state !== before) { undoStack.push(before); if (undoStack.length > UNDO_MAX) undoStack.shift(); trackProgress(before, state); }
     ui.error = null;
@@ -158,7 +170,9 @@ function run(fn) {
   } catch (e) {
     ui.error = e.message || String(e);
   }
-  render();
+  const raceAdvanced = state?.f1?.season?.raceIndex !== before?.f1?.season?.raceIndex;
+  const phaseChanged = state?.pendingDecision?.type !== before?.pendingDecision?.type;
+  render(raceAdvanced || phaseChanged);
 }
 
 function undo() {
@@ -385,30 +399,20 @@ function settle(s) {
   return cur;
 }
 
-const decide = (answer) => run((s) => {
-  let next = settle(applyDecision(s, answer));
-  // Após uma escolha no modo contextual, não interromper por etapas rotineiras da mesma corrida.
-  if (ui.contextFlow && s.phase === 'F1_FIM_DE_SEMANA' && next.phase === s.phase
-      && next.f1.season.raceIndex === s.f1.season.raceIndex
-      && !['weekend_approach', 'story_event', 'home_race'].includes(next.pendingDecision?.type)) {
-    next = advanceRaces(next, { limit: 1, stop: 'important', autoSingle: ui.autoSingle }).state;
-  }
-  return next;
-});
+const decide = (answer) => run(s => settle(applyDecision(s, answer)));
 
 // Simula até n corridas no modo equilibrado. Para sozinho numa decisão com escolha real
 // (evento, ordem de equipe) ou no fim da temporada, e diz por que parou.
 // Por padrão a simulação decide sozinha os eventos de corrida (opção cautelosa de cada um) e as ordens de
 // equipe (obedece), e diz o que decidiu. Com "Parar nas decisões" marcado, ela para em cada uma.
 // Notícias de temporada com escolha (meio e fim do ano) sempre param: são decisões de carreira.
-function simRaces(n, mode = null, delegateCurrent = false) {
-  ui.contextFlow = mode === 'important';
+function simRaces(n, mode = null) {
   run((s) => {
     const before = getView(s).f1.races.length;
-    const result = advanceRaces(s, { limit: n, stop: mode ?? (ui.simStop ? 'all' : 'none'), autoSingle: ui.autoSingle, delegateCurrent });
+    const result = advanceRaces(s, { limit: n, stop: mode ?? (ui.simStop ? 'all' : 'none'), autoSingle: ui.autoSingle });
     const ran = getView(result.state).f1.races.slice(before);
     const positions = ran.map(r => r.missed ? 'fora' : r.playerPos ? `P${r.playerPos}` : 'abandono').join(' · ');
-    const stage = { race_strategy: 'estratégia de pneus', race_start: 'largada', race_finale: 'final de corrida', team_order: 'ordem de equipe', race_event: 'evento de corrida', story_event: 'notícia com escolha', home_race: 'decisão do GP de casa' }[result.state.pendingDecision?.type];
+    const stage = { race_strategy: 'estratégia de pneus', race_start: 'largada', race_pit: 'janela de box', race_finale: 'final de corrida', team_order: 'ordem de equipe', race_event: 'evento de corrida', story_event: 'notícia com escolha', home_race: 'decisão do GP de casa' }[result.state.pendingDecision?.type];
     ui.notice = `${ran.length ? `${ran.length} corrida(s), etapas ${ran[0].n}–${ran.at(-1).n}: ${positions}. ` : ''}${stage ? `Parou: ${stage}. ` : ''}${result.reason}`;
     return result.state;
   });
@@ -461,12 +465,40 @@ function teamTag(f1) {
 // No DOM a decisão vem primeiro (no celular é o que aparece no topo); no desktop o CSS posiciona as colunas.
 
 function layout(view, main, aside = '') {
+  const map = raceMapCard(view.f1?.map);
   return `${header(view)}${ladder(view)}
   <div class="layout">
-    <div class="col-main">${main}</div>
+    <div class="col-main">${map ? `<div class="map-mobile">${map}</div>` : ''}${main}</div>
     <div class="col-ficha">${ficha(view)}</div>
-    <div class="col-side">${aside}</div>
+    <div class="col-side">${map ? `<div class="map-desktop">${map}</div>` : ''}${aside}</div>
   </div>`;
+}
+
+function raceMapCard(map) {
+  if (!map) return '';
+  const position = map.cars.findIndex(car => car.isPlayer) + 1;
+  if (map.phase === 'finish') {
+    const podium = map.cars.slice(0, 3).map((car, i) => `<li>
+      <span class="pill trophy p${i + 1}">P${i + 1}</span>
+      <span class="podium-team" style="--podium-team:${esc(TEAM_COLOR[car.team] ?? 'var(--line)')}"><b>${esc(car.name)}</b>${car.isPlayer ? ' · Você' : ''}</span>
+    </li>`).join('');
+    const result = position ? `P${position}` : map.missed ? 'Não disputou' : 'Abandono';
+    return `<section class="card race-podium" aria-label="Pódio da corrida">
+      <h3>Pódio · ${esc(map.circuit.gp)}</h3>
+      ${podium ? `<ol>${podium}</ol>` : '<p>Sem classificados.</p>'}
+      <div class="podium-your-result"><span>Seu resultado</span><strong>${esc(result)}</strong></div>
+    </section>`;
+  }
+  if (!TRACKS[map.circuit.id]) return '';
+  const phase = map.phase === 'waiting' ? 'Antes da corrida' : WEEKEND_STAGE[map.phase];
+  return `<section class="card race-visual" aria-label="Mapa da corrida">
+    <h3>${esc(map.circuit.gp)}</h3>
+    <p class="small">${esc(phase)}${position ? ` · Você em P${position}` : ''}</p>
+    <svg role="img" aria-label="Traçado com carros nas cores das equipes"></svg>
+    <p class="small mute">Contorno branco: seu carro</p>
+    <div class="map-controls" hidden><button class="btn small">Acelerar ×2</button>
+    <button class="btn ghost small">Pular animação</button></div>
+  </section>`;
 }
 
 // Fase da carreira: quando o declínio começa e quanto custa o próximo ano (previsível, sem sorteio).
@@ -539,6 +571,9 @@ function ficha(view) {
   const c = p.career;
   const f1 = view.f1;
   const trustPct = f1 ? Math.round(f1.trust) : 0;
+  const current = f1?.standings.find(d => d.isPlayer);
+  const mate = f1?.standings.find(d => !d.isPlayer && d.team === f1.team.id);
+  const lead = current && mate ? current.points - mate.points : 0;
   const team = f1
     ? `<div class="ficha-team">${teamTag(f1)}<span class="mute small">carro: ${esc(f1.team.carLabel)} (#${esc(f1.team.carRank)})</span></div>`
     : `<div class="ficha-team"><b>${esc(view.base.team)}</b><span class="mute small">${esc(view.base.category)} · temporada ${esc(view.base.seasonInCategory)}</span></div>`;
@@ -551,7 +586,8 @@ function ficha(view) {
       ${f1.rival ? `<span class="chip">rival: ${esc(f1.rival)}</span>` : ''}</div>
     <p class="mute small">${esc(STATUS_TEXT[f1.status] ?? 'Seu status na equipe é definido no início da temporada.')}${f1.statusWhy ? ` <b>Por quê:</b> ${esc(f1.statusWhy)}` : ''}</p>
     <div><div class="row" style="justify-content:space-between"><small class="mute">CONFIANÇA DA EQUIPE</small><span class="num">${trustPct}</span></div>
-      <div class="bar-meter"><i style="width:${trustPct}%"></i></div></div>` : '';
+      <div class="bar-meter"><i style="width:${trustPct}%"></i></div></div>
+    ${lead > 0 ? `<p class="small"><b>P${esc(current.pos)} no Mundial</b> · ${esc(lead)} pts à frente de ${esc(mate.name)}.${f1.trustReview.releaseChance < f1.trustReview.baseReleaseChance ? ' Esse desempenho reduz o risco de perder a vaga por confiança baixa.' : ''}</p>` : ''}` : '';
   return `<section class="card ficha" aria-label="Ficha do piloto">
     <div class="ficha-top">
       ${skillDial(p)}
@@ -711,8 +747,17 @@ function screenBase(view) {
   const pd = view.decision;
   let body = '';
   if (pd?.type === 'kart_offer') {
-    const cards = pd.payload.options.map(o => `<button class="opt" data-act="kart-offer" data-id="${esc(o.id)}"><strong>${esc(o.teamName)}</strong><span class="pill">${esc(o.label)}</span><span>${esc(o.car)}</span><span>${esc(o.description)}</span></button>`).join('');
-    return layout(view, `<section class="card focus"><h2>Seu primeiro kart</h2><p>Três equipes querem você para a estreia. Escolha onde correr e como se desenvolver.</p><div class="grid2">${cards}</div></section>`);
+    const cards = pd.payload.options.map(o => {
+      const [car, pressure] = o.car.split(' · ');
+      return `<button class="opt kart-offer" data-act="kart-offer" data-id="${esc(o.id)}" style="--offer-team:${esc(offerTeamColor(o.teamId))}">
+        <span class="kart-project">${esc(o.label)}</span>
+        <strong>${esc(o.teamName)}</strong>
+        <span class="kart-traits"><b>${esc(car)}</b><b>${esc(pressure ?? '')}</b></span>
+        <span class="kart-description">${esc(o.description)}</span>
+        <span class="kart-cta">Escolher equipe →</span>
+      </button>`;
+    }).join('');
+    return layout(view, `<section class="card focus"><h2>Seu primeiro kart</h2><p>Três equipes querem você para a estreia. Escolha onde correr e como se desenvolver.</p><div class="kart-offers">${cards}</div></section>`);
   }
   if (pd?.type === 'kart_return') {
     body = eventCard(pd);
@@ -731,11 +776,10 @@ function screenBase(view) {
       const sub = o.kind === 'up'
         ? `Carro: ${o.carLabel} (#${o.carRank})${o.academy ? ' · ligada à sua academia' : ''}`
         : o.consequence;
-      const color = o.category === 'f1' && o.kind === 'up' ? TEAM_COLOR[o.teamId] : null;
-      const label = color ? `<span class="team"><i style="background:${esc(color)}"></i>${esc(o.label)}</span>` : esc(o.label);
-      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}" data-tier="${esc(o.profile?.id ?? '')}"><strong>${label}</strong><span>${esc(sub)}</span>${profileBlock(o.profile)}${o.why ? `<span class="why">${esc(o.why)}</span>` : ''}${proscons(o)}</button>`;
+      const action = o.kind === 'up' ? `Subir para ${CATEGORIES[o.category]?.name ?? o.category}` : 'Ficar na equipe';
+      return careerOfferCard(o, action, sub);
     }).join('');
-    body = `<section class="card focus"><h2>Ofertas</h2><div class="grid2">${cards}</div></section>`;
+    body = `<section class="card focus"><h2>Ofertas</h2><div class="career-offers">${cards}</div></section>`;
   }
   const rivals = view.base.rivals.length
     ? `<section class="card"><h3>Seus rivais</h3><ul class="log">${view.base.rivals.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></section>` : '';
@@ -773,13 +817,25 @@ function raceResultCard(r) {
 
 const WEEKEND_STAGE = {
   weekend_approach: 'Antes da corrida', home_race: 'Antes da corrida',
-  race_strategy: 'Classificação encerrada', race_start: 'Largada',
+  race_strategy: 'Classificação encerrada', race_start: 'Largada', race_pit: 'Janela de box',
   race_event: 'Corrida em andamento', team_order: 'Corrida em andamento',
   race_finale: 'Voltas finais', story_event: 'Entre corridas',
 };
 
 // Perfil da equipe (ponta, meio, fundo): pressão e desenvolvimento em bolinhas e palavras, mais uma frase.
 // Só <span>: o cartão inteiro é um <button>, que só aceita conteúdo inline.
+function careerOfferCard(o, action, summary) {
+  return `<button class="opt kart-offer career-offer" data-act="offer" data-id="${esc(o.id)}" data-tier="${esc(o.profile?.id ?? '')}" data-kind="${esc(o.kind)}" style="--offer-team:${esc(offerTeamColor(o.teamId))}">
+    <span class="kart-project">${esc(action)}</span>
+    <strong>${esc(o.teamName ?? o.label)}</strong>
+    <span class="kart-traits">${esc(summary)}</span>
+    ${profileBlock(o.profile)}
+    ${o.why ? `<span class="why">${esc(o.why)}</span>` : ''}
+    ${proscons(o)}
+    <span class="kart-cta">Escolher proposta →</span>
+  </button>`;
+}
+
 function profileBlock(pf) {
   if (!pf) return '';
   const pips = (n) => '●'.repeat(n) + '○'.repeat(3 - n);
@@ -800,34 +856,26 @@ function proscons(o) {
 }
 
 
-function eventCard(pd, position = null) {
+function trustNotice(f1) {
+  const { threshold, releaseChance, baseReleaseChance, strongSeasonTop } = f1.trustReview;
+  return `<aside class="note trust-notice">
+    <strong>Confiança da equipe · ${esc(f1.trust)}/100</strong>
+    <p>Se terminar a temporada abaixo de ${esc(threshold)} de confiança, você pode perder o status de primeiro piloto e a vaga. Com a classificação atual, o risco de perder a vaga seria de <b>${esc(Math.round(releaseChance * 100))}%</b>.</p>
+    <p>Terminar no top ${esc(strongSeasonTop)} e à frente do companheiro em pontos reduz esse risco, que normalmente é de ${esc(Math.round(baseReleaseChance * 100))}%.</p>
+  </aside>`;
+}
+
+function eventCard(pd, position = null, notice = '') {
   const p = pd.payload;
   return `<section class="card focus"><h3>${pd.type === 'race_event' ? 'Na pista' : 'Notícia'}</h3><h2>${esc(p.title)}</h2>
     ${position ? `<p class="chip"><strong>Posição atual · P${esc(position)}</strong></p>` : ''}
     <p>${esc(p.text)}</p>
+    ${notice}
     <div class="grid2">${p.options.map((o) => `<button class="opt" data-act="event" data-id="${esc(o.id)}"><strong>${esc(o.label)}</strong>${o.description ? `<span>${esc(o.description)}</span>` : ''}</button>`).join('')}</div></section>`;
 }
 
 function lastEventCard(f1) {
   return f1.lastEvent ? `<section class="card"><h3>${esc(f1.lastEvent.title)}</h3><p>${esc(f1.lastEvent.text)}</p></section>` : '';
-}
-
-// Contorno da pista (decorativo): linha do traçado e um ponto na linha de largada.
-function trackSvg(c) {
-  const t = TRACKS[c.id];
-  if (!t) return '';
-  return `<svg class="track" viewBox="0 0 ${TRACK_BOX.w} ${TRACK_BOX.h}" role="img" aria-label="Traçado de ${esc(c.venue)}">
-    <path class="track-line" d="${t.d}"/><circle class="track-start" cx="${t.start[0]}" cy="${t.start[1]}" r="5"/></svg>`;
-}
-
-// Cartão da pista da etapa: nome do GP, local, características e chance de chuva.
-function circuitCard(c) {
-  if (!c) return '';
-  const chips = [...c.tags.map((t) => `<span class="chip">${esc(t)}</span>`), `<span class="chip">${c.rain >= 20 ? '🌧 ' : ''}chuva ${esc(c.rain)}%</span>`];
-  if (c.home) chips.unshift('<span class="pill trophy p1">GP de casa</span>');
-  return `<section class="card circuit">${trackSvg(c)}
-    <div><h2>${flagImg(c.flag, { alt: false, h: 20 })} ${esc(c.gp)}</h2><p class="mute small">${esc(c.venue)}</p><div class="chips-row">${chips.join('')}</div>
-    ${c.hints?.length ? `<p class="mute small" style="margin-top:6px">${esc(c.hints.join(' '))}</p>` : ''}</div></section>`;
 }
 
 // Classificação feita: grid de largada, clima e a escolha de pneus.
@@ -838,7 +886,7 @@ function strategyCard(p) {
       <td class="car"><i style="background:${esc(TEAM_COLOR[r.team] ?? 'var(--line)')}"></i></td><td class="name">${flagImg(r.nat, { alt: false, h: 11 })} ${esc(r.name)}</td></tr>`;
   }).join('');
   const poleLine = p.grid === 1 ? 'Você larga na pole!' : `Você larga em P${p.grid} de ${p.gridSize}.`;
-  return `${circuitCard(p.circuit)}
+  return `
     <section class="card focus"><h2>Classificação</h2>
       <div class="row"><b>${esc(poleLine)}</b><span class="chip">${p.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span></div>
       <div class="scroll-x"><table class="tower" aria-label="Grid de largada"><tbody>${rows}</tbody></table></div>
@@ -854,7 +902,7 @@ function finaleCard(p) {
   const pace = (defending
     ? { faster: 'Você tem mais ritmo: há uma boa chance de segurar a posição.', slower: 'O rival está mais rápido: defender será mais difícil.', even: 'O ritmo é parecido: a disputa pode ir para qualquer lado.' }
     : { faster: 'Você parece mais rápido que ele: o ataque tem boa chance.', slower: 'Ele parece mais rápido que você: atacar é arriscado.', even: 'O ritmo de vocês é parecido: é uma aposta.' })[p.pace];
-  return `${circuitCard(p.circuit)}
+  return `
     <section class="card focus"><h2>Últimas voltas</h2>
       <p>Você está em <b>P${esc(p.pos)}</b>. ${defending ? 'Pressionando logo atrás vem' : 'Logo à frente vem'} <b>${flagImg(p.rival.nat, { alt: false, h: 14 })} ${esc(p.rival.name)}</b> (${esc(p.rival.teamName)}).</p>
       <p class="mute">${esc(pace)}</p>
@@ -912,56 +960,84 @@ function seasonPulseCard(goal, final = false) {
     <details><summary>Disputas e cobrança da equipe</summary><ul class="log">${goal.lines.map(line => `<li>${esc(line)}</li>`).join('')}</ul><p class="mute small">${esc(goal.consequence)}</p></details></section>`;
 }
 
+function raceDashboard(f1, pd, stage) {
+  const { done, total, circuit } = f1.race;
+  const between = pd.type === 'story_event';
+  const phase = pd.type === 'race_strategy' || pd.type === 'race_start';
+  const mapPosition = f1.map?.cars.findIndex(car => car.isPlayer) + 1;
+  const position = phase ? pd.payload.grid : pd.payload.position ?? pd.payload.pos ?? pd.payload.fromPosition ?? mapPosition;
+  const showPosition = !between && !['weekend_approach', 'home_race'].includes(pd.type) && position > 0;
+  const title = between ? (done >= total ? 'Fim do campeonato' : 'Intervalo entre etapas') : circuit?.gp ?? 'Fim de semana';
+  const pit = f1.pitUpdate ? esc(f1.pitUpdate).replace(/\bP\d+\b/g, '<strong>$&</strong>') : '';
+  return `<section class="card race-dashboard">
+    <div class="race-dashboard-head">
+      <div><span class="race-phase">${esc(stage)}</span>
+        <h2>${!between && circuit ? flagImg(circuit.flag, { alt: false, h: 20 }) : ''} ${esc(title)}</h2>
+        ${!between && circuit ? `<p class="mute small">${esc(circuit.venue)} · Etapa ${done + 1} de ${total}</p>` : ''}
+        ${pd.payload.circuit?.home ? '<span class="pill trophy p1">GP de casa</span>' : ''}</div>
+      ${showPosition ? `<div class="race-current-position"><small>${phase ? 'Largada' : 'Posição atual'}</small><strong>P${esc(position)}</strong></div>` : ''}
+    </div>
+    ${pit ? `<div class="race-pit-report"><b>Última decisão · Boxes</b><p>${pit}</p></div>` : ''}
+    <div class="race-progress"><span>Temporada ${esc(f1.worldSeason)}</span><b>${done}/${total} etapas concluídas</b></div>
+    <div class="bar-meter"><i style="width:${Math.round((done / total) * 100)}%"></i></div>
+    ${!between && circuit ? `<details class="small"><summary>Informações do circuito</summary><p>${esc(circuit.tags.join(' · '))} · Chance de chuva: ${esc(circuit.rain)}%</p><p class="mute">${esc(circuit.hints.join(' '))}</p></details>` : ''}
+  </section>`;
+}
+
 function screenF1(view) {
   const f1 = view.f1;
   const pd = view.decision;
   let body = '';
   let title = '';
-  const r = f1.race;
   if (view.screen === 'F1_PRE_TEMPORADA') {
     title = `Pré-temporada ${f1.worldSeason + 1}`;
     body = pd.type === 'story_event' ? eventCard(pd)
       : `${marketCard(f1.marketMoves)}<section class="card focus"><h2>Foco do ano</h2><p class="mute">Uma escolha por temporada.</p>${planControl(f1, "season-plan")}<label class="field">Área de treino (se escolher Treinar)<select id="training-focus">${f1.trainingOptions.map(t => `<option value="${esc(t.id)}" ${t.id === f1.trainingFocus ? 'selected' : ''}>${esc(t.label)}</option>`).join('')}</select></label>${optionCards(pd.payload.options, 'focus')}</section>`;
   } else if (view.screen === 'F1_FIM_DE_SEMANA' && pd) {
     const stage = WEEKEND_STAGE[pd.type] ?? 'Fim de semana';
-    const upcoming = ['weekend_approach', 'home_race'].includes(pd.type);
-    const circuit = r.circuit && pd.type !== 'story_event' ? ` · ${r.circuit.gp}` : '';
-    title = r.done >= r.total ? 'Fim do campeonato' : `${upcoming ? 'Próxima etapa' : stage}${circuit}`;
-    const prog = `<div class="bar-meter"><i style="width:${Math.round((r.done / r.total) * 100)}%"></i></div>`;
+    title = '';
     if (pd.type === 'home_race') {
-      body = circuitCard(pd.payload.circuit) + eventCard(pd);
+      body = eventCard(pd);
     } else if (pd.type === 'story_event' || pd.type === 'race_event') {
-      body = eventCard(pd, f1.eventPosition);
+      body = eventCard(pd, f1.eventPosition, pd.payload.eventId === 'chamada_estrategia' ? trustNotice(f1) : '');
     } else if (pd.type === 'race_strategy') {
       body = strategyCard(pd.payload);
     } else if (pd.type === 'race_start') {
       const p = pd.payload;
-      body = `${circuitCard(p.circuit)}<section class="card focus"><h2>Apagam-se as luzes</h2>
+      body = `<section class="card focus"><h2>Apagam-se as luzes</h2>
         <p>Você larga em <b>P${esc(p.grid)}</b>. ${p.wet ? 'A pista está molhada: cuidado com a primeira curva.' : 'Escolha como abordar a primeira curva.'}</p>
         ${optionCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'start')}</section>`;
+    } else if (pd.type === 'race_pit') {
+      const p = pd.payload;
+      body = `<section class="card focus"><h2>Janela de box</h2>
+        <p><strong>Posição atual · P${esc(p.position)}</strong> · ${esc(p.tyre)} · condição estimada ${esc(p.condition)}%</p>
+        <p>${p.wet ? 'Pista molhada.' : 'Pista seca.'} ${p.changes ? 'A condição da pista mudou desde a largada.' : p.clearAir ? 'Seu ritmo favorece ficar na pista.' : 'Parar cedo pode ajudar a superar o tráfego.'} ${p.rival ? `À frente: ${esc(p.rival)}.` : ''}</p>
+        ${optionCards(Object.fromEntries(p.options.map(o => [o.id, o])), 'pit')}</section>`;
     } else if (pd.type === 'race_finale') {
       body = finaleCard(pd.payload);
     } else if (pd.type === 'team_order') {
       const p = pd.payload;
       body = `<section class="card focus"><h2>Ordem de equipe</h2>
         <p>Rádio: <b>"${esc(p.p1)} é mais rápido. Deixe-o passar."</b> Você está em P${esc(p.fromPosition)}.</p>
+        ${trustNotice(f1)}
         <div class="grid2">${p.options.map((o) => `<button class="opt" data-act="order" data-id="${o.id}"><strong>${esc(o.label)}</strong><span>${esc(o.description)}</span></button>`).join('')}</div></section>`;
     } else {
-      body = `${circuitCard(pd.payload.circuit)}<section class="card focus"><h2>${pd.payload.out ? 'Acompanhar do box' : 'Plano do fim de semana'}</h2>
+      body = `<section class="card focus"><h2>${pd.payload.out ? 'Acompanhar do box' : 'Plano do fim de semana'}</h2>
         ${planControl(f1, 'race-plan')}
         <p class="mute">A equipe segue este plano nas próximas etapas. Você decide quando houver uma disputa relevante; pode mudar o plano antes de qualquer corrida.</p>
-        <div class="row"><button class="btn" data-act="simimportant">Avançar até próxima decisão</button><button class="btn ghost" data-act="simnext">Acompanhar próxima corrida</button></div>
+        <div class="row"><button class="btn" data-act="simnext">Acompanhar etapa</button><button class="btn ghost" data-act="simimportant">Só decisões importantes</button></div>
+        <p class="mute small">Acompanhar etapa pausa em cada escolha. Só decisões importantes delega a rotina e para na próxima escolha relevante ou na bandeirada. Os dois botões avançam no máximo uma etapa.</p>
         <details><summary>Controles de acompanhamento</summary>
         <div class="row"><button class="btn ghost small" data-act="sim5">Simular 5 corridas</button><button class="btn ghost small" data-act="simrest">Simular o resto da temporada</button></div>
         <label class="row"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho situações sem escolha</label>
-        <label class="row"><input type="checkbox" id="t-stop" ${ui.simStop ? 'checked' : ''}> Acompanhar passo a passo: parar em todas as decisões</label>
+        <label class="row"><input type="checkbox" id="t-stop" ${ui.simStop ? 'checked' : ''}> Pausar nas decisões ao simular várias etapas</label>
         <p class="mute small">Simular etapas delega as decisões à equipe, com seu plano e as mesmas regras do modo manual. Notícias da carreira sempre pedem sua atenção.</p></details></section>`;
     }
     const advice = f1.advice;
     const context = advice && pd.type !== 'weekend_approach' && pd.type !== 'story_event'
-      ? `<aside class="decision-context note"><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar à equipe e seguir</button>` : ''}</aside>` : '';
+      ? `<aside class="decision-context note"><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar esta escolha</button>` : ''}</aside>` : '';
     body = body.replace(/(<section class="card focus">[\s\S]*?<\/h2>)/, `$1${context}`);
-    body = `<div class="row weekend-stage"><span class="pill">${esc(stage)}</span><span class="mute small">Temporada ${esc(f1.worldSeason)} · ${esc(r.done)} de ${esc(r.total)} etapas concluídas</span></div>${prog}${body}`;
+    body = raceDashboard(f1, pd, stage) + body;
   }
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
@@ -969,7 +1045,8 @@ function screenF1(view) {
   const last = weekend ? raceResultCard(f1.lastRace) : '';
   const betweenRaces = ['weekend_approach', 'home_race', 'story_event'].includes(pd?.type);
   const event = lastEventCard(f1);
-  return layout(view, `${betweenRaces ? last : ''}<h2>${esc(title)}</h2>${body}${event}${weekend && !betweenRaces ? last : ''}${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`, seasonPanel(view));
+  const previous = last && !betweenRaces ? `<details class="card previous-race"><summary>Resultado da etapa anterior · ${esc(f1.lastRace.circuit?.gp ?? '')}</summary>${last}</details>` : '';
+  return layout(view, `${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`, seasonPanel(view));
 }
 
 function screenEndSeason(view) {
@@ -994,9 +1071,11 @@ function screenOffers(view) {
       <p class="mute">${esc(pd.payload.seasons)} temporada(s) na F1. Continuar ou encerrar a carreira?</p>
       <div class="row"><button class="btn" data-act="retire" data-id="continue">Continuar</button><button class="btn ghost" data-act="retire" data-id="retire">Encerrar a carreira</button></div></section>`;
   } else if (pd.type === 'offer_pick') {
-    body = `<section class="card focus"><h2>Mercado de pilotos</h2><div class="grid2">${pd.payload.options.map((o) => {
-      const verb = o.kind === 'renew' ? 'Renovar com' : o.kind === 'keep' ? 'Cumprir contrato com' : 'Assinar com';
-      return `<button class="opt" data-act="offer" data-id="${esc(o.id)}" data-tier="${esc(o.profile?.id ?? '')}"><strong>${verb} ${esc(o.teamName)}</strong><span>Carro: ${esc(o.carLabel)} (#${esc(o.carRank)})${o.mate ? ` · Companheiro: ${esc(o.mate)}` : ''}</span>${profileBlock(o.profile)}${o.why ? `<span class="why">${esc(o.why)}</span>` : ''}${proscons(o)}</button>`;
+    body = `<section class="card focus"><h2>Mercado de pilotos</h2>
+    ${pd.payload.releasedBy ? `<p class="note">A ${esc(pd.payload.releasedBy)} decidiu não renovar após avaliar sua relação com a equipe. As demais equipes avaliaram seu desempenho recente para fazer propostas.</p>` : ''}
+    <div class="career-offers">${pd.payload.options.map((o) => {
+      const action = o.kind === 'renew' ? 'Renovar contrato' : o.kind === 'keep' ? 'Cumprir contrato' : 'Mudar de equipe';
+      return careerOfferCard(o, action, `Carro: ${o.carLabel} (#${o.carRank})${o.mate ? ` · Companheiro: ${o.mate}` : ''}`);
     }).join('')}</div></section>`;
   } else if (pd.type === 'contract_terms') {
     const o = pd.payload.options;
@@ -1059,9 +1138,9 @@ function focusHeading(root) {
   h.focus({ preventScroll: true });
 }
 
-function render() {
+function render(animateMap = false) {
   const el = $app();
-  el.className = state ? 'wrap wide' : 'wrap home';
+  el.className = state ? `wrap wide${state.phase === 'F1_FIM_DE_SEMANA' ? ' race-page' : ''}` : 'wrap home';
   if (!state) { el.innerHTML = panels() + screenCreate() + footer(); document.body.classList.toggle('modal-open', !!anyModal()); return; }
   const view = getView(state);
   let html;
@@ -1079,6 +1158,10 @@ function render() {
   if (ui.notice) html = `<div class="note" role="status">${esc(ui.notice)}</div>${html}`;
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
   el.innerHTML = panels() + html + footer();
+  const map = view.f1?.map;
+  if (map) for (const panel of el.querySelectorAll('.race-visual')) {
+    paintRaceMap(panel, map, TEAM_COLOR, animateMap === true);
+  }
   document.body.classList.toggle('modal-open', !!anyModal());
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
   if (key !== lastKey) { lastKey = key; scrollToTop(); focusHeading(el); }
@@ -1120,7 +1203,6 @@ function startCareer() {
 
 // Volta ao menu sem apagar nada: a carreira já está gravada no slot.
 function toMenu() {
-  ui.contextFlow = false;
   ui.end = freshEnd();
   state = null; activeSlot = null; undoStack = []; ui.confirmNew = false; ui.confirmDel = null; ui.baseOpt = null; ui.error = null; ui.saveWarn = false; lastKey = '';
   render();
@@ -1216,11 +1298,16 @@ document.addEventListener('click', (e) => {
     case 'strategy': return decide({ id });
     case 'finale': return decide({ id });
     case 'start': return decide({ id });
+    case 'pit': return decide({ id });
     case 'event': return decide({ id });
     case 'order': return decide({ id });
-    case 'simnext': return simRaces(1, ui.simStop ? 'all' : 'important');
-    case 'simimportant': return simRaces(Infinity, 'important');
-    case 'delegate': return simRaces(1, 'important', true);
+    case 'simnext': return simRaces(1, 'all');
+    case 'simimportant': return simRaces(1, 'important');
+    case 'delegate': {
+      const answer = getView(state).f1.advice?.answer;
+      if (answer) return decide(answer);
+      return;
+    }
     case 'simrest': return simRaces(Infinity);
     case 'sim5': return simRaces(5);
     case 'next': return run((s) => settle(advance(s)));

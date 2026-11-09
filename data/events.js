@@ -285,10 +285,10 @@ export const RACE_EVENTS = [
     id: 'chamada_estrategia', phase: 'race', safe: 'confiar', weight: 2,
     cond: (c) => c.pos !== null,
     title: 'Estratégia pelo rádio',
-    text: (c) => `Rádio: "${c.player.name}, temos uma estratégia alternativa. Confia na gente ou vai do seu jeito?"`,
+    text: (c) => `Rádio: "${c.player.name}, nossa proposta é manter o ritmo, poupar os pneus e defender P${c.pos}. Se quiser buscar posições agora, vai ter que forçar mais o carro."`,
     options: [
-      { id: 'confiar', label: 'Confiar na equipe', description: '+5 de confiança, resultado neutro.', outcomes: [{ p: 1, effects: { trust: 5 }, text: 'Você obedece e a equipe agradece.' }] },
-      { id: 'seu_jeito', label: 'Fazer do seu jeito', description: '50% de +2 posições, 50% de -2; -5 de confiança nos dois casos.', outcomes: [
+      { id: 'confiar', label: 'Administrar a posição', description: 'Mantenha o ritmo e a posição nesta decisão. A equipe ganha 5 pontos de confiança em você.', outcomes: [{ p: 1, effects: { trust: 5 }, text: 'Você administra a posição como combinado com a equipe.' }] },
+      { id: 'seu_jeito', label: 'Forçar o ritmo', description: '50% de chance de ganhar até duas posições e 50% de perder até duas. A confiança da equipe cai 5 pontos em ambos os casos.', outcomes: [
         { p: 0.5, effects: { shift: 2, trust: -5 }, text: 'Você ganha posições, mas a equipe não gostou de ser contrariada.' },
         { p: 0.5, effects: { shift: -2, trust: -5 }, text: 'Você perde posições, e a equipe questiona sua decisão.' },
       ] },
