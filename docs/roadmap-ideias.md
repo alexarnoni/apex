@@ -334,7 +334,7 @@ Imagem é inspiração, não especificação copiada. Fechar os efeitos e a cali
 
 ## Tela de corrida estilo manager
 
-Direção definida em 2026-11-09: o jogo deve funcionar como um F1 Manager/Football Manager do piloto. A corrida vira a "tela de partida", com decisões do piloto pausando a prova. A etapa visual foi publicada na v0.13 e ganhou acabamento na v0.14 local.
+Direção definida em 2026-11-09: o jogo deve funcionar como um F1 Manager/Football Manager do piloto. A corrida vira a "tela de partida", com decisões do piloto pausando a prova. A etapa visual foi publicada na v0.13 e ganhou acabamento na v0.14 publicada.
 
 **Etapa 1 — tela ilustrativa (só interface).** Usa a ordem por fase que a engine já calcula; não muda regras, saves nem balanceamento.
 
@@ -349,8 +349,8 @@ Limites da etapa 1: ao simular várias etapas, só a última bandeirada é anima
 
 **Fim de semana da v0.14.**
 
-- [x] ~~Treino livre por etapa.~~ **Feito localmente em 2026-11-09.** Acerto influencia ritmo, teste de pneus influencia a condição estimada. A escolha vale para um GP.
-- [x] ~~Neutralizações na janela de box.~~ **Feito localmente em 2026-11-09.** Safety car e bandeira vermelha abrem escolha de pneus antes da retomada. Os efeitos são resolvidos por fase antes dos pontos.
+- [x] ~~Treino livre por etapa.~~ **Feito e publicado na v0.14 em 2026-11-09.** Acerto influencia ritmo, teste de pneus influencia a condição estimada. A escolha vale para um GP.
+- [x] ~~Neutralizações na janela de box.~~ **Feito e publicado na v0.14 em 2026-11-09.** Safety car e bandeira vermelha abrem escolha de pneus antes da retomada. Os efeitos são resolvidos por fase antes dos pontos.
 
 **Etapa 2 — simulação volta a volta (engine, liga com D.2).** Pacote grande, exige recalibrar.
 
@@ -359,13 +359,13 @@ Limites da etapa 1: ao simular várias etapas, só a última bandeirada é anima
 - [ ] Diferenças reais em segundos, ar sujo e ultrapassagem dependente de ritmo e pista.
 - [ ] Decisões abertas em voltas específicas, no lugar das fases fixas. Alterações continuam antes da atribuição dos pontos, com determinismo por seed e decisões.
 - [ ] Torre com diferença para o da frente e pneu de cada carro; narração volta a volta para o grid inteiro ("Volta 12: Teste passa Albon na chicane").
-- [ ] Safety car e bandeira vermelha compactando o pelotão (a v0.14 local tem neutralizações por fase, sem diferenças em segundos).
+- [ ] Safety car e bandeira vermelha compactando o pelotão (a v0.14 publicada tem neutralizações por fase, sem diferenças em segundos).
 - [ ] Definir o que acontece com saves no meio de uma corrida no formato antigo.
 
 **Ideias para evoluir a tela de corrida (2026-11-09).** Só interface, salvo indicação.
 
-- [x] ~~Resultado só depois da cena.~~ **Feito localmente em 2026-11-09.** Pódio e resultado aparecem ao concluir ou pular a animação.
-- [x] ~~Bandeirada um a um.~~ **Feito localmente em 2026-11-09.** Os carros cruzam a linha em sequência na cena ilustrativa e a torre recebe o título final ao fim.
+- [x] ~~Resultado só depois da cena.~~ **Feito e publicado na v0.14 em 2026-11-09.** Pódio e resultado aparecem ao concluir ou pular a animação.
+- [x] ~~Bandeirada um a um.~~ **Feito e publicado na v0.14 em 2026-11-09.** Os carros cruzam a linha em sequência na cena ilustrativa e a torre recebe o título final ao fim.
 - [ ] Número do carro e rótulo dos três primeiros no mapa.
 - [ ] Destaque no mapa do rival citado na decisão de ataque ou defesa.
 - [ ] Pit stop visível, com pit lane desenhada (os traçados atuais só têm a pista).

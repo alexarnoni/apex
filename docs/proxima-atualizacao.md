@@ -44,7 +44,7 @@ O mapa lateral acompanha **Acompanhar próxima corrida** e **Avançar até próx
 - **Consequência na pista.** Mostrar a saída dos boxes e o efeito da escolha. No seco, testar a vantagem de parar antes do rival ou de ficar na pista com ritmo e ar livre. Com mudança de clima, decidir quando trocar o composto.
 - **Modo rápido.** A equipe usa as mesmas regras e o plano de corrida para decidir quando o jogador delega. O relato e a bandeirada mostram o que aconteceu.
 
-## v0.14 — treino e neutralizações (implementada localmente)
+## v0.14 — treino e neutralizações (publicada em 2026-11-09)
 
 - **Treino livre.** Programa opcional por GP. Acerto melhora o ritmo na classificação e na corrida. Teste de pneus melhora a condição estimada na janela de box.
 - **Safety car.** Agrupa os carros no mapa. Escolha entre parar com custo reduzido ou manter os pneus para a relargada.
