@@ -9,6 +9,7 @@ import { createSaves } from './saves.js';
 import { flagImg, COUNTRY, countryList } from './flags.js';
 import { TRACKS } from '../data/trackPaths.js';
 import { raceScene, paintRaceScene } from './race-visual.js';
+import { soundOn, toggleSound, playRadio } from './sound.js';
 import { buildFeedback, careerSnapshot, sendUrl, feedbackPayload, sendFeedback, FEEDBACK_KINDS } from './feedback.js';
 
 // Destino opcional do feedback (ex.: página "nova issue" de um repositório), definido no build
@@ -98,7 +99,10 @@ function cycleTheme() {
   applyTheme(theme);
   try { window.localStorage.setItem('bandeirada.theme', theme); } catch { /* sem armazenamento: vale só nesta sessão */ }
 }
-const themeBtn = () => `<button class="btn ghost small" data-act="theme" title="Trocar tema: automático, claro ou escuro" aria-label="Tema: ${esc(THEME_LABEL[theme])}">${THEME_LABEL[theme]}</button>`;
+const themeBtn = () => `<button class="btn ghost small" data-act="theme" title="Trocar tema: automático, claro ou escuro" aria-label="Tema: ${esc(THEME_LABEL[theme])}">${THEME_LABEL[theme]}</button>`
+  + `<button class="btn ghost small" data-act="sound" aria-pressed="${soundOn()}" title="Ligar ou desligar o som do rádio" aria-label="Som do rádio">${soundOn() ? '🔊 Som' : '🔇 Mudo'}</button>`;
+// Recado do engenheiro que já tocou o bip: evita repetir a cada render da mesma decisão.
+let radioHeard = null;
 
 // --- salvamento (slots no localStorage) ---------------------------------------
 
@@ -1226,6 +1230,9 @@ function render(animateMap = false) {
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
   el.innerHTML = panels() + html + footer();
   if (map) paintRaceScene(el, map, TEAM_COLOR);
+  const radio = el.querySelector('.decision-context.radio p')?.textContent ?? null;
+  if (radio && radio !== radioHeard) playRadio();
+  radioHeard = radio;
   document.body.classList.toggle('modal-open', !!anyModal());
   const key = `${view.screen}|${view.decision?.type ?? ''}|${view.year}|${view.f1?.race?.done ?? ''}`;
   if (key !== lastKey) { lastKey = key; scrollToTop(); focusHeading(el); }
@@ -1381,6 +1388,7 @@ document.addEventListener('click', (e) => {
     case 'copy': return copySummary();
     case 'undo': return undo();
     case 'theme': cycleTheme(); render(); return undefined;
+    case 'sound': toggleSound(); render(); return undefined;
     case 'copy-error': return copyErrorReport();
     case 'about-open': ui.aboutOpen = true; ui.helpOpen = false; ui.fb.open = false; render(); focusModal(); return undefined;
     case 'help-open': track('ajuda-aberta'); ui.aboutOpen = false; ui.helpOpen = true; ui.fb.open = false; render(); focusModal(); return undefined;
