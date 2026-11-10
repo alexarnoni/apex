@@ -1,6 +1,6 @@
 # Retomada — Bandeirada
 
-Atualizado em **2026-11-09**, v0.14 publicada.
+Atualizado em **2026-11-09**, v0.14 publicada e v0.14.1 local.
 
 - Repo `alexarnoni/apex`; push na main aciona GitHub Pages. Site: https://bandeirada.alexarnoni.com.
 - v0.11 publicada no commit `9e9738e`. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42538364924); HTTP 200, versão, perfis, treino, GoatCounter, Worker e hashes CSP conferidos no HTML servido.
@@ -51,6 +51,11 @@ Plano por versões (v0.15 a v1.0) proposto em 2026-11-09 no topo de `roadmap-ide
 
 Som de rádio publicado em 2026-11-09 (commit `adcd8f4`, [deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42733226495); HTTP 200 e HTML servido com o botão de som e o áudio embutido): bip no recado do engenheiro e botão Som/Mudo, em `ui/sound.js` com `ui/assets/radio.mp3` embutido em base64, sem mudar a CSP. Arquivo fornecido pelo usuário como livre para uso; origem não documentada. 183 testes Node, 28 Playwright (Chrome) e build aprovados; o som não foi ouvido na verificação, só a decodificação e o botão.
 
-Revisão das mudanças após a v0.14: build e diff limpo de espaços conferidos. Pendências identificadas: deduplicar o bip pela identidade da decisão, validar áudio em aparelho real e reconciliar o plano com o bip publicado e a exportação/importação JSON existente.
+## v0.14.1 local
+
+- Rádio usa a identidade da decisão para evitar bip duplicado em re-render e tocar em recados iguais de decisões diferentes. Mudo persistente. Áudio em aparelho real pendente.
+- No celular, fase, posição e escolha aparecem acima do mapa compacto. Torre recolhida mostra os três primeiros e o jogador, com expansão para o grid. Roadmap reconciliado com o bip publicado e backup JSON existente.
+
+- Validação: 183 testes Node, build e 30 Playwright no Chrome em desktop e celular emulado. Próximo passo: publicação e teste em aparelho real.
 
 Confira `git status --short` e `git log -3 --oneline`. Referências: `v0.11.md`, `proxima-atualizacao.md`, `roadmap-ideias.md` e `DECISIONS.md`.

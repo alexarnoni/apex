@@ -13,7 +13,7 @@ Decisões ainda abertas com o usuário: tradução cedo (v0.16) ou só na 1.0; v
 
 ### Agora — pendências curtas, sem versão
 
-- [ ] Som de rádio: publicar o bip que está local (ver v0.18).
+- [x] ~~Publicar o bip do rádio.~~ **Feito em 2026-11-09**, commit `adcd8f4`. Efeitos adicionais seguem na v0.18.
 - [ ] Com o usuário, fora do código: 2FA no GitHub e na Cloudflare (S.7), verificar o domínio no GitHub (S.5), e-mail "noreply" nos commits (S.9), renomear o repositório (R.10), conferir marca e domínio (R.11), revisar os textos dos eventos (1.3), jogar uma carreira em celular real (B.11), acompanhar o painel do GoatCounter.
 - [ ] Conferir o cartão de compartilhamento aparecendo de verdade no WhatsApp (resto do B.3).
 - [ ] Limite de envios do Worker (S.6), cabeçalhos HTTP (S.8), PRs do Dependabot. Proteção da `main` (S.10) segue opcional.
@@ -33,7 +33,7 @@ Tudo o que dá cara de manager sem mudar o resultado das corridas.
 ### v0.16 — Alicerce
 
 - [ ] Migração de saves (B.7) e captura de erros (B.9).
-- [ ] **Novo:** exportar e importar save em arquivo, para backup e troca de aparelho.
+- [x] ~~Exportar e importar save em arquivo.~~ **Feito**, já disponível antes da v0.14.1, conferido em 2026-11-09. Migração de formato segue em B.7.
 - [ ] **Novo:** Web Worker para simular fora da thread da tela. Pré-requisito prático do volta a volta.
 - [ ] Teste de desempenho em carreira longa e celular fraco (F.17); mais testes de regressão das fórmulas (seção "Pendências de qualidade").
 - [ ] Pipeline único de publicação (F.14).
@@ -64,7 +64,7 @@ Só interface, salvo indicação.
 - [ ] Número e rótulos no mapa, destaque do rival da decisão, pit lane, barra de progresso, ícones na narração, classificação animada, torre recolhida no celular, carros devagar na pausa, traçados suavizados e câmera (seção "Ideias para evoluir a tela de corrida" e "Depois").
 - [ ] Narrativa da corrida, parte que falta (D.4).
 - [ ] **Novo:** som sintetizado com Web Audio (D.15, 2.8): luzes de largada, motor e batida. Sem arquivos de áudio. Desligável.
-- [ ] **Novo:** som de rádio no estilo das transmissões de F1 a cada recado do engenheiro. **Parcial (2026-11-09, local, não publicado):** o bip toca quando o recado do engenheiro aparece numa decisão, com botão Som/Mudo no cabeçalho (`ui/sound.js`, `ui/assets/radio.mp3`). O arquivo foi fornecido pelo usuário, que o informou como livre para uso; a origem e a licença não estão documentadas no repositório e entram na revisão prevista antes de monetizar. Vai em base64 no bundle e é decodificado pelo Web Audio, sem mudar a CSP. Falta: bip de fechamento, chiado, filtro de voz e tocar também na narração da cena.
+- [ ] **Novo:** som de rádio no estilo das transmissões de F1 a cada recado do engenheiro. **Parcial (bip publicado em 2026-11-09):** o bip toca quando o recado do engenheiro aparece numa decisão, com botão Som/Mudo no cabeçalho (`ui/sound.js`, `ui/assets/radio.mp3`). O arquivo foi fornecido pelo usuário, que o informou como livre para uso; a origem e a licença não estão documentadas no repositório e entram na revisão prevista antes de monetizar. Vai em base64 no bundle e é decodificado pelo Web Audio, sem mudar a CSP. Falta: bip de fechamento, chiado, filtro de voz e tocar também na narração da cena.
 - [ ] **Novo:** rádio falado opcional com SpeechSynthesis em pt-BR. Desligado por padrão.
 - [ ] **Novo:** vibração no celular nas luzes e em batidas; tela sempre ligada (Wake Lock) e tela cheia durante a cena.
 - [ ] **Novo:** transições entre telas (View Transitions) no lugar do corte a cada render.
@@ -504,7 +504,7 @@ Limites da etapa 1: ao simular várias etapas, só a última bandeirada é anima
 - [ ] Carros circulando devagar durante a pausa, no lugar de congelados. Decidir com o usuário.
 - [ ] Suavizar os traçados sem trocar a fonte dos dados.
 - [ ] Barra de progresso da corrida (largada, meio, final) enquanto não há número de volta.
-- [ ] Torre recolhida no celular: três primeiros e o jogador, com botão para abrir.
+- [x] ~~Torre recolhida no celular.~~ **Feito localmente na v0.14.1 (2026-11-09).** Três primeiros e jogador, com opção de abrir o grid.
 - [ ] Narração com ícone por tipo (ultrapassagem, abandono, rádio).
 - [ ] Classificação animada: volta rápida com setores coloridos e torre se montando. Reaproveita a cena.
 - [ ] Atalhos de teclado: espaço pausa, números mudam a velocidade, setas escolhem a opção.

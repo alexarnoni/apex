@@ -5,7 +5,6 @@ import radioB64 from './assets/radio.mp3';
 const KEY = 'bandeirada.sound';
 let on = readSound();
 let ctx = null;
-let buffer = null;
 let loading = null;
 
 function readSound() {
@@ -24,7 +23,7 @@ export function toggleSound() {
 function load() {
   if (loading) return loading;
   const bytes = Uint8Array.from(atob(radioB64), (c) => c.charCodeAt(0));
-  loading = ctx.decodeAudioData(bytes.buffer).then((b) => { buffer = b; return b; });
+  loading = ctx.decodeAudioData(bytes.buffer).catch((error) => { loading = null; throw error; });
   return loading;
 }
 
@@ -36,8 +35,8 @@ export function playRadio() {
   if (!Ctx || navigator.userActivation?.hasBeenActive === false) return;
   try {
     ctx ??= new Ctx();
-    if (ctx.state === 'suspended') ctx.resume();
-    load().then((b) => {
+    const ready = ctx.state === 'running' ? Promise.resolve() : ctx.resume();
+    Promise.all([ready, load()]).then(([, b]) => {
       if (!on) return;
       const src = ctx.createBufferSource();
       const gain = ctx.createGain();

@@ -59,6 +59,12 @@ As três fases se apoiam no fluxo de corrida e na janela de box da v0.13. O ritm
 
 **Carreira de chefe de equipe (modo manager futuro).** Inclui o comando de dois carros, o desenvolvimento da equipe e a gestão de orçamento e contratos.
 
+## v0.14.1 — rádio e tela de corrida no celular
+
+- Bip por decisão, inclusive quando dois recados têm o mesmo texto. Mudo salvo no navegador.
+- Fase, posição e ações acima do mapa no celular. Mapa compacto e torre com os três primeiros e o jogador, expansível.
+- Teste em aparelho real segue pendente.
+
 ## Outros candidatos seguintes
 
 1. **Rotas alternativas jogáveis:** pedido recente do usuário inclui WEC e NASCAR, além de IndyCar/FE/Super Fórmula; especificar ofertas por desempenho/experiência, adaptação, estatísticas e retorno possível à F1. Não implementado.

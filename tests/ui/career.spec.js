@@ -340,3 +340,26 @@ test('treino direcionado fica salvo e o perfil acompanha a evolução', async ({
   await page.locator('.pilot-profile summary').click();
   await expect(page.locator('.pilot-profile')).toContainText('Gestão de pneus');
 });
+test('o mudo do rádio persiste e a torre é expansível no celular', async ({ page }, info) => {
+  await importCareer(page, fixture('race_start'));
+  const sound = page.getByRole('button', { name: 'Som do rádio' });
+  await expect(sound).toHaveAttribute('aria-pressed', 'true');
+  await sound.click();
+  await page.reload();
+  await page.locator('[data-act="continue"][data-slot="1"]').click();
+  await expect(sound).toHaveAttribute('aria-pressed', 'false');
+
+  const tower = page.getByRole('region', { name: 'Torre de posições' });
+  const rows = tower.locator('.race-tower li:visible');
+  if (info.project.name === 'mobile') {
+    const dashboard = await page.locator('.race-dashboard').boundingBox();
+    const decision = await page.locator('.race-lead .focus').boundingBox();
+    const map = await page.locator('.race-visual').boundingBox();
+    expect(dashboard.y).toBeLessThan(decision.y);
+    expect(decision.y).toBeLessThan(map.y);
+    expect(await rows.count()).toBeLessThanOrEqual(4);
+    await expect(rows.locator('.name').filter({ hasText: 'TesteUI' })).toBeVisible();
+    await tower.getByText('Abrir grid completo').click();
+  }
+  expect(await rows.count()).toBeGreaterThan(4);
+});

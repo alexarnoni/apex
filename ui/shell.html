@@ -452,6 +452,18 @@ h2::before { display: none; }
 .race-feed li:first-child { border-inline-start-color: var(--signal); }
 .race-feed li.fresh { display: none; }
 .race-feed b { color: var(--signal-text); margin-inline-end: 4px; }
+.race-lead { display: flex; flex-direction: column; gap: 16px; }
+.tower-expand { display: none; }
+@media (max-width: 699px) {
+  .race-lead > .race-dashboard { order: -2; }
+  .race-lead > .focus { order: -1; }
+  .race-visual svg { max-height: 145px; }
+  .tower-expand { display: block; }
+  .tower-expand:not([open]) .tower-open,
+  .tower-expand[open] .tower-closed,
+  .tower-expand:not([open]) + .race-tower .tower-extra { display: none; }
+  .tower-expand summary { min-height: 44px; align-content: center; }
+}
 .race-tower { list-style: none; margin: 0; padding: 0; font-size: .9rem; }
 .race-tower li { display: flex; align-items: center; gap: 6px; padding: 3px 4px; border-top: 1px solid var(--line); }
 .race-tower li > i { flex: none; width: 4px; height: 18px; border-radius: 1px; }

@@ -469,12 +469,12 @@ function teamTag(f1) {
 // --- layout em colunas: decisão no centro, ficha à esquerda, painel da temporada à direita ----
 // No DOM a decisão vem primeiro (no celular é o que aparece no topo); no desktop o CSS posiciona as colunas.
 
-function layout(view, main, aside = '') {
+function layout(view, main, aside = '', raceLead = '') {
   const map = view.f1?.map;
   const podium = podiumCard(map);
   return `${header(view)}${ladder(view)}
   <div class="layout">
-    <div class="col-main">${podium ? `<div class="map-mobile">${podium}</div>` : ''}${raceSceneCard(map)}${main}</div>
+    <div class="col-main">${podium ? `<div class="map-mobile">${podium}</div>` : ''}${raceLead ? `<div class="race-lead">${raceSceneCard(map)}${raceLead}</div>` : raceSceneCard(map)}${main}</div>
     <div class="col-ficha">${raceTower(map)}${carPanel(view)}${ficha(view)}</div>
     <div class="col-side">${podium ? `<div class="map-desktop">${podium}</div>` : ''}${aside}</div>
   </div>`;
@@ -531,13 +531,14 @@ function raceTower(map) {
   const rows = map.cars.map((car, i) => {
     const delta = deltas[car.name] ?? 0;
     const arrow = delta ? `<span class="delta ${delta > 0 ? 'up' : 'down'}" aria-label="${delta > 0 ? 'ganhou' : 'perdeu'} ${Math.abs(delta)}">${delta > 0 ? '▲' : '▼'}${Math.abs(delta)}</span>` : '';
-    return `<li class="${car.isPlayer ? 'you' : ''}"${delta ? ` data-delta="${delta}"` : ''}><span class="pos">${i + 1}</span><i style="background:${colour(car)}"></i>
+    return `<li class="${car.isPlayer ? 'you' : ''}${i >= 3 && !car.isPlayer ? ' tower-extra' : ''}"${delta ? ` data-delta="${delta}"` : ''}><span class="pos">${i + 1}</span><i style="background:${colour(car)}"></i>
       <span class="name">${esc(car.name)}</span>${arrow}</li>`;
   }).join('');
-  const gone = out.map(car => `<li class="out ${car.isPlayer ? 'you' : ''}"><span class="pos">—</span><i style="background:${colour(car)}"></i>
+  const gone = out.map(car => `<li class="out ${car.isPlayer ? '' : 'tower-extra'} ${car.isPlayer ? 'you' : ''}"><span class="pos">—</span><i style="background:${colour(car)}"></i>
     <span class="name">${esc(car.name)}</span><span class="delta">ABD</span></li>`).join('');
   const title = map.phase === 'finish' ? (sceneModel?.playing ? '<span data-finish-reveal hidden>Classificação final</span><span data-finish-pending>Bandeirada em andamento</span>' : 'Classificação final') : ['race_strategy', 'race_start'].includes(map.phase) ? 'Grid de largada' : 'Posições na pista';
   return `<section class="card race-tower-card" aria-label="Torre de posições"><h3>${title}</h3>
+    <details class="tower-expand"><summary><span class="tower-closed">Abrir grid completo</span><span class="tower-open">Recolher grid</span></summary></details>
     <ol class="race-tower">${rows}${gone}</ol>
     ${Object.keys(deltas).length ? '<p class="small mute">Setas: posições ganhas ou perdidas no último trecho.</p>' : ''}
   </section>`;
@@ -1053,6 +1054,7 @@ function screenF1(view) {
   const pd = view.decision;
   let body = '';
   let title = '';
+  let raceLead = '';
   if (view.screen === 'F1_PRE_TEMPORADA') {
     title = `Pré-temporada ${f1.worldSeason + 1}`;
     body = pd.type === 'story_event' ? eventCard(pd)
@@ -1106,7 +1108,11 @@ function screenF1(view) {
       ? `<aside class="decision-context note radio"><small class="radio-tag">Rádio · engenheiro</small><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar esta escolha</button>` : ''}</aside>` : '';
     body = body.replace(/(<section class="card focus">[\s\S]*?<\/h2>)/, `$1${context}`);
     const inRace = ['race_strategy', 'race_start', 'race_event', 'race_pit', 'team_order', 'race_finale'].includes(pd.type);
-    body = inRace ? body + raceDashboard(f1, pd, stage) : raceDashboard(f1, pd, stage) + body;
+    const dashboard = raceDashboard(f1, pd, stage);
+    if (inRace) {
+      raceLead = body + dashboard;
+      body = '';
+    } else body = dashboard + body;
   }
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
@@ -1115,7 +1121,7 @@ function screenF1(view) {
   const betweenRaces = ['weekend_approach', 'home_race', 'story_event'].includes(pd?.type);
   const event = lastEventCard(f1);
   const previous = last && !betweenRaces ? `<details class="card previous-race"><summary>Resultado da etapa anterior · ${esc(f1.lastRace.circuit?.gp ?? '')}</summary>${last}</details>` : '';
-  return layout(view, `${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`, seasonPanel(view));
+  return layout(view, `${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`, seasonPanel(view), raceLead);
 }
 
 function screenEndSeason(view) {
@@ -1210,7 +1216,7 @@ function focusHeading(root) {
 function render(animateMap = false) {
   const el = $app();
   el.className = state ? `wrap wide${state.phase === 'F1_FIM_DE_SEMANA' ? ' race-page' : ''}` : 'wrap home';
-  if (!state) { el.innerHTML = panels() + screenCreate() + footer(); document.body.classList.toggle('modal-open', !!anyModal()); return; }
+  if (!state) { radioHeard = null; el.innerHTML = panels() + screenCreate() + footer(); document.body.classList.toggle('modal-open', !!anyModal()); return; }
   const view = getView(state);
   const map = view.f1?.map;
   sceneModel = map ? raceScene(map, `${view.year}|${map.circuit.id}`, animateMap === true) : null;
@@ -1230,7 +1236,7 @@ function render(animateMap = false) {
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
   el.innerHTML = panels() + html + footer();
   if (map) paintRaceScene(el, map, TEAM_COLOR);
-  const radio = el.querySelector('.decision-context.radio p')?.textContent ?? null;
+  const radio = el.querySelector('.decision-context.radio') ? state.pendingDecision : null;
   if (radio && radio !== radioHeard) playRadio();
   radioHeard = radio;
   document.body.classList.toggle('modal-open', !!anyModal());
