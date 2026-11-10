@@ -504,7 +504,7 @@ Limites da etapa 1: ao simular várias etapas, só a última bandeirada é anima
 - [ ] Carros circulando devagar durante a pausa, no lugar de congelados. Decidir com o usuário.
 - [ ] Suavizar os traçados sem trocar a fonte dos dados.
 - [ ] Barra de progresso da corrida (largada, meio, final) enquanto não há número de volta.
-- [x] ~~Torre recolhida no celular.~~ **Feito localmente na v0.14.1 (2026-11-09).** Três primeiros e jogador, com opção de abrir o grid.
+- [x] ~~Torre recolhida no celular.~~ **Feito e publicado na v0.14.1 (2026-11-09).** Três primeiros e jogador, com opção de abrir o grid.
 - [ ] Narração com ícone por tipo (ultrapassagem, abandono, rádio).
 - [ ] Classificação animada: volta rápida com setores coloridos e torre se montando. Reaproveita a cena.
 - [ ] Atalhos de teclado: espaço pausa, números mudam a velocidade, setas escolhem a opção.
