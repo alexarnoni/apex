@@ -49,6 +49,6 @@ Próximos candidatos: grid real de 2026 por data de corte e retrospectiva com An
 
 Plano por versões (v0.15 a v1.0) proposto em 2026-11-09 no topo de `roadmap-ideias.md`, com todos os itens abertos encaixados numa versão. Ainda é proposta: três decisões de ordem estão listadas lá para o usuário fechar.
 
-Som de rádio (local, não commitado nem publicado): bip no recado do engenheiro e botão Som/Mudo, em `ui/sound.js` com `ui/assets/radio.mp3` embutido em base64, sem mudar a CSP. Arquivo fornecido pelo usuário como livre para uso; origem não documentada. 183 testes Node, 28 Playwright (Chrome) e build aprovados; o som não foi ouvido na verificação, só a decodificação e o botão.
+Som de rádio (commit `adcd8f4`, ainda não publicado: falta o push): bip no recado do engenheiro e botão Som/Mudo, em `ui/sound.js` com `ui/assets/radio.mp3` embutido em base64, sem mudar a CSP. Arquivo fornecido pelo usuário como livre para uso; origem não documentada. 183 testes Node, 28 Playwright (Chrome) e build aprovados; o som não foi ouvido na verificação, só a decodificação e o botão.
 
 Confira `git status --short` e `git log -3 --oneline`. Referências: `v0.11.md`, `proxima-atualizacao.md`, `roadmap-ideias.md` e `DECISIONS.md`.
