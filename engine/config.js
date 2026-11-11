@@ -262,7 +262,7 @@ export const CONFIG = {
     // Uma decisão binária de pré-temporada por categoria: presente vs futuro.
     choices: {
       kart: {
-        A: { label: 'Chassi alugado', description: '+2 de carro nesta temporada.', carBonus: 2 },
+        A: { label: 'Chassi alugado', description: '+2 de kart nesta temporada.', carBonus: 2 },
         B: { label: 'Treinador', description: '+1 de habilidade permanente.', skillGain: 1 },
       },
       f4: {
@@ -274,7 +274,7 @@ export const CONFIG = {
         B: { label: 'Networking de academias', description: 'Você fica bem mais visível: aumenta bastante a chance de uma academia te convidar.', academyChanceBonus: 0.15 },
       },
       f2: {
-        A: { label: 'Foco total no título', description: '+1.5 de desempenho nesta temporada.', perfBonus: 1.5 },
+        A: { label: 'Foco total no título', description: '+1,5 de desempenho nesta temporada.', perfBonus: 1.5 },
         B: { label: 'Dias de teste de F1', description: '+2 na avaliação dos olheiros.', scoutingBonus: 2 },
       },
     },
@@ -292,7 +292,7 @@ export const CONFIG = {
     playerGrowthRate: 0.0,                // gap até o potencial fechado por ano na F1, além da curva de idade
     focus: {                              // season_focus: uma decisão por ano
       train: { label: 'Treinar', description: '+1 de habilidade extra no ano.', skillGain: 1 },
-      develop: { label: 'Ajudar o desenvolvimento', description: '+0.03 no pSuccess de desenvolvimento da equipe.', devBonus: 0.03 },
+      develop: { label: 'Ajudar o desenvolvimento', description: 'Seu retorno técnico aumenta a chance de a equipe acertar os pacotes do carro.', devBonus: 0.03 },
       image: { label: 'Trabalhar imagem', description: '+2 de fama.', fameGain: 2 },
     },
     approach: {                           // weekend_approach: uma decisão por corrida

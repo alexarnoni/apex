@@ -53,7 +53,7 @@ const PRESSURE_WORD = (p) => (p >= 0.9 ? 'alta' : p > 0 ? 'média' : 'nenhuma');
 const DEV_WORD = (d) => (d > 1.1 ? 'rápido' : d >= 0.95 ? 'médio' : 'lento');
 const TEXT = {
   ponta: 'Muita pressão: a equipe espera resultado e cobra. Se você for bem, evolui rápido.',
-  meio: 'Pouca pressão e desenvolvimento médio. Um meio-termo tranquilo para crescer.',
+  meio: 'Pressão moderada e desenvolvimento médio. Um meio-termo tranquilo para crescer.',
   fundo: 'Sem pressão nenhuma, mas o desenvolvimento é mais lento. Quem se destaca num carro fraco chama muita atenção.',
 };
 

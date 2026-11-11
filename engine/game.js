@@ -325,7 +325,7 @@ function openOffers(s, rng) {
     teamId: team.id,
     teamName: team.name,
     carRank: rank,
-    carLabel: rankLabel(rank, n),
+    carLabel: nextId === 'f1' ? f1RankLabel(rank) : rankLabel(rank, n),
     profile: profileView(nextId === 'f1' ? tierOf(rank, n, CONFIG.f1.carTierRank) : tierOf(rank, n)),
     academy: !!s.player.academy && (nextId === 'f1' ? team.id === s.player.academy.teamId : team.academy === s.player.academy.teamId),
     label: `Subir para ${CATEGORIES[nextId].name} pela ${team.name}`,
@@ -370,6 +370,12 @@ function upNotes(s, team, rank, n, nextId) {
   if (ac && (nextId === 'f1' ? team.id === ac : team.academy === ac)) pros.push('Ligada à sua academia: bônus na avaliação dos olheiros.');
   if (nextId === 'f1') pros.push('É a Fórmula 1: o objetivo da carreira de base.');
   return { pros, cons };
+}
+
+// Na F1 o rótulo do carro usa os mesmos cortes do perfil da equipe, para os dois não se contradizerem.
+function f1RankLabel(rank) {
+  const T = CONFIG.f1.carTierRank;
+  return rank <= T.top ? 'equipe de ponta' : rank <= T.mid ? 'meio do pelotão' : 'zebra';
 }
 
 function rankLabel(rank, n) {
@@ -518,8 +524,8 @@ function rivalLine(r, playerPos) {
   if (!r.lastResult) return `${r.name} ainda não correu contra você.`;
   const { category, year, position } = r.lastResult;
   const catName = CATEGORIES[category].name;
-  if (position < playerPos) return `${r.name} te venceu na ${catName} em ${year}.`;
-  return `Você venceu ${r.name} na ${catName} em ${year}.`;
+  if (position < playerPos) return `${r.name} te venceu ${catName === 'Kart' ? 'no' : 'na'} ${catName} em ${year}.`;
+  return `Você venceu ${r.name} ${catName === 'Kart' ? 'no' : 'na'} ${catName} em ${year}.`;
 }
 
 export function getView(state) {

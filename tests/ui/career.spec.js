@@ -140,7 +140,8 @@ test('simular cinco e resto resolve largada e defesa até pausa narrativa ou fim
   expect(after.f1.season.races.length - state.f1.season.races.length).toBe(5);
   expect(after.pendingDecision.type).toBe('weekend_approach');
   await expect(page.getByRole('status')).toContainText('5');
-  await page.getByText('Controles de acompanhamento', { exact: true }).click();
+  // O painel continua aberto depois de simular: não é preciso reabrir.
+  await expect(page.locator('[data-act="simrest"]')).toBeVisible();
   await page.locator('[data-act="simrest"]').click();
   after = await saved(page);
   expect(after.f1.season.races.length).toBeGreaterThan(5);

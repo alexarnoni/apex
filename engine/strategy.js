@@ -14,10 +14,10 @@ const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const LABELS = {
   soft:   { label: 'Macios', description: 'Ataque cedo: rendem mais em pista de rua e para quem larga atrás, mas gastam rápido.' },
   medium: { label: 'Médios', description: 'A escolha segura: nem ganha nem perde nada de especial.' },
-  hard:   { label: 'Duros', description: 'Aguentam mais voltas: bons em pista técnica e para adiar a primeira parada.' },
+  hard:   { label: 'Duros', description: 'Aguentam mais voltas: bons em pista técnica e para esticar o primeiro stint.' },
   inters: { label: 'Pneus de chuva', description: 'A pista está molhada: é a escolha que a equipe recomenda.' },
   wait:   { label: 'Esperar a pista secar', description: 'Fica com o que tem e aposta que a chuva passa logo.' },
-  slicks: { label: 'Arriscar pneus de pista seca', description: 'Aposta alta: se a pista secar, você voa; se não, perde muito.' },
+  slicks: { label: 'Arriscar slicks', description: 'Aposta alta: se a pista secar, você voa; se não, perde muito.' },
 };
 
 // Encaixe de cada opção com a situação (tags da pista, posição de largada, clima).
@@ -41,10 +41,10 @@ export function strategyOptions(ctx) {
 const GOOD = {
   soft: 'Os macios deram o ataque que você queria',
   medium: 'A equipe acertou o tempo da parada',
-  hard: 'Os duros aguentaram e você passou rivais no fim do trecho',
+  hard: 'Os duros aguentaram e você passou rivais no fim do stint',
   inters: 'Você foi dos primeiros a trocar para pneus de chuva',
   wait: 'Esperar compensou: a pista secou na hora certa',
-  slicks: 'A aposta ousada nos pneus de pista seca funcionou',
+  slicks: 'A aposta ousada nos slicks funcionou',
 };
 const BAD = {
   soft: 'Os macios acabaram cedo e você perdeu ritmo',
@@ -52,7 +52,7 @@ const BAD = {
   hard: 'Os duros demoraram a esquentar',
   inters: 'A pista secou antes do esperado e os pneus de chuva sofreram',
   wait: 'A chuva apertou e você demorou a trocar',
-  slicks: 'Os pneus de pista seca não seguraram na pista molhada',
+  slicks: 'Os slicks não seguraram na pista molhada',
 };
 
 // --- Final de corrida (versão enxuta) ---------------------------------------------------------------

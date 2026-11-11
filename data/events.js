@@ -164,7 +164,7 @@ export const NARRATIVE_EVENTS = [
     title: 'Conselho de família',
     text: () => 'Seu pai quer opinar na sua temporada, como faz desde o kart. Ele ainda enxerga detalhes que você não vê.',
     options: [
-      { id: 'ouvir', label: 'Ouvir com atenção', description: '+0.5 de habilidade.', outcomes: [{ p: 1, effects: { skill: 0.5 }, text: 'Duas ou três dicas dele valem o ano.' }] },
+      { id: 'ouvir', label: 'Ouvir com atenção', description: '+0,5 de habilidade.', outcomes: [{ p: 1, effects: { skill: 0.5 }, text: 'Duas ou três dicas dele valem o ano.' }] },
       { id: 'espaco', label: 'Pedir espaço', description: '+2 de confiança da equipe.', outcomes: [{ p: 1, effects: { trust: 2 }, text: 'A equipe vê um profissional dono das próprias decisões.' }] },
     ],
   },
@@ -288,8 +288,8 @@ export const RACE_EVENTS = [
     text: (c) => `Rádio: "${c.player.name}, nossa proposta é manter o ritmo, poupar os pneus e defender P${c.pos}. Se quiser buscar posições agora, vai ter que forçar mais o carro."`,
     options: [
       { id: 'confiar', label: 'Administrar a posição', description: 'Mantenha o ritmo e a posição nesta decisão. A equipe ganha 5 pontos de confiança em você.', outcomes: [{ p: 1, effects: { trust: 5 }, text: 'Você administra a posição como combinado com a equipe.' }] },
-      { id: 'seu_jeito', label: 'Forçar o ritmo', description: '50% de chance de ganhar até duas posições e 50% de perder até duas. A confiança da equipe cai 5 pontos em ambos os casos.', outcomes: [
-        { p: 0.5, effects: { shift: 2, trust: -5 }, text: 'Você ganha posições, mas a equipe não gostou de ser contrariada.' },
+      { id: 'seu_jeito', label: 'Forçar o ritmo', description: '50% de chance de ganhar até duas posições e 50% de perder até duas. Se der errado, a confiança da equipe cai 5 pontos.', outcomes: [
+        { p: 0.5, effects: { shift: 2 }, text: 'Você ganha posições, e a equipe aceita o resultado.' },
         { p: 0.5, effects: { shift: -2, trust: -5 }, text: 'Você perde posições, e a equipe questiona sua decisão.' },
       ] },
     ],

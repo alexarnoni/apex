@@ -487,7 +487,7 @@ function openPitWindow(s, rng, w, absent, eventId = null) {
       { id: 'extend', label: 'Manter os pneus', description: 'Preserve a posição. Se os pneus estiverem gastos ou inadequados, você pode perder terreno na relargada.' },
     ] : [
       { id: 'pit', label: 'Parar agora', description: changes ? 'Trocar para pneus adequados à nova condição da pista.' : 'Trocar pneus cedo para tentar ganhar tempo antes dos rivais.' },
-      { id: 'extend', label: 'Adiar a parada', description: changes ? 'Ficar com o composto atual enquanto avalia a pista.' : 'Adiar a troca e aproveitar o ritmo em pista livre.' },
+      { id: 'extend', label: 'Estender o stint', description: changes ? 'Ficar com o composto atual enquanto avalia a pista.' : 'Adiar a troca e aproveitar o ritmo em pista livre.' },
     ],
   } };
 }
@@ -510,7 +510,7 @@ export function resolveRacePit(s, rng, answer) {
   const detail = p.interruption === 'red_flag' && pit ? `Você colocou ${compound} durante a suspensão.`
     : p.interruption && !pit ? 'Você manteve os pneus.'
     : pit ? `Você parou, colocou ${compound} e voltou em P${position}.`
-    : `Você adiou a parada e ficou em P${position} após a janela de paradas.`;
+    : `Você estendeu o stint e ficou em P${position} após a janela de paradas.`;
   const restart = p.interruption ? ` ${p.interruption === 'red_flag' ? 'Bandeira vermelha' : 'Safety car'}: retomada em P${position}.` : '';
   season.cur.pit = { id: answer.id, text: detail + restart };
   season.pendingRace = null;
@@ -856,7 +856,7 @@ function openOffers(s) {
 
   // Contrato em vigor e sem cláusula de saída: nada a decidir.
   if (!expired && !p.exitClause) {
-    log(s, 'contract', `Contrato com a ${teamName(world, p.team)} segue por mais ${p.contract} ano(s).`);
+    log(s, 'contract', `Contrato com a ${teamName(world, p.team)} segue por mais ${p.contract} ${p.contract === 1 ? 'ano' : 'anos'}.`);
     return startNextYear(s);
   }
 
@@ -1010,7 +1010,7 @@ export function resolveContractTerms(s, rng, answer) {
   p.statusClause = granted;
   p.contract = years;
   p.exitClause = exitClause;
-  log(s, 'contract', `Contrato de ${years} ano(s)${granted ? `, status ${granted}` : ''}${exitClause ? ', com cláusula de saída' : ''}.`);
+  log(s, 'contract', `Contrato de ${years} ${years === 1 ? 'ano' : 'anos'}${granted ? `, status ${granted}` : ''}${exitClause ? ', com cláusula de saída' : ''}.`);
   return startNextYear(s);
 }
 
@@ -1090,7 +1090,9 @@ export function f1View(s) {
   // Relato parcial da corrida em andamento, com os mesmos textos que entram no relato final.
   const cur = season?.cur;
   const notes = [
-    cur?.strategy && { when: `Estratégia (${cur.strategy.label})`, text: cur.strategy.text },
+    // O efeito da estratégia é calculado na escolha, mas só vira narração depois da janela de box:
+    // antes disso o relato contaria um desgaste ou uma parada que ainda não aconteceu na cena.
+    cur?.strategy && { when: `Estratégia (${cur.strategy.label})`, text: cur.pit || decision?.type === 'race_finale' ? cur.strategy.text : 'Plano de pneus definido para a largada.' },
     cur?.event && { when: cur.event, text: cur.eventText ?? 'Você teve de decidir na pista.' },
     cur?.pit && { when: 'Janela de box', text: cur.pit.text },
   ].filter(Boolean);

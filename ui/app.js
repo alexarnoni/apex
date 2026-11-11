@@ -494,7 +494,8 @@ function raceSceneCard(map) {
   return `<section class="card race-visual${map.cars.length ? '' : ' solo'}" aria-label="Mapa da corrida">
     <div class="scene-head"><h3>${esc(map.circuit.gp)}</h3>
       <span class="chip">${esc(phase)}${position ? ` · P${position}` : ''}</span>
-      ${map.cars.length ? `<span class="chip">${map.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span>` : ''}</div>
+      ${map.cars.length ? `<span class="chip">${map.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span>` : ''}
+      ${map.circuit.tags?.length ? `<span class="chip" title="${esc((map.circuit.hints ?? []).join(' '))}">${esc(map.circuit.tags.join(' · '))}</span>` : ''}</div>
     <div class="scene-body">
       <svg role="img" aria-label="Traçado com carros nas cores das equipes"></svg>
       <div class="scene-side">
@@ -1085,7 +1086,7 @@ function screenF1(view) {
         </label>`}
         <div class="row"><button class="btn" data-act="simnext">Acompanhar etapa</button><button class="btn ghost" data-act="simimportant">Só decisões importantes</button></div>
         <p class="mute small">Acompanhar etapa pausa em cada escolha. Só decisões importantes delega a rotina e para na próxima escolha relevante ou na bandeirada. Os dois botões avançam no máximo uma etapa.</p>
-        <details><summary>Controles de acompanhamento</summary>
+        <details data-keep="sim"><summary>Controles de acompanhamento</summary>
         <div class="row"><button class="btn ghost small" data-act="sim5">Simular 5 corridas</button><button class="btn ghost small" data-act="simrest">Simular o resto da temporada</button></div>
         <label class="row"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho situações sem escolha</label>
         <label class="row"><input type="checkbox" id="t-stop" ${ui.simStop ? 'checked' : ''}> Pausar nas decisões ao simular várias etapas</label>
@@ -1131,7 +1132,7 @@ function screenOffers(view) {
   let body = '';
   if (pd.type === 'retire_or_continue') {
     body = `<section class="card focus"><h2>Fim de temporada, ${esc(pd.payload.age)} anos</h2>
-      <p class="mute">${esc(pd.payload.seasons)} temporada(s) na F1. Continuar ou encerrar a carreira?</p>
+      <p class="mute">${esc(pd.payload.seasons)} ${pd.payload.seasons === 1 ? 'temporada' : 'temporadas'} na F1. Continuar ou encerrar a carreira?</p>
       <div class="row"><button class="btn" data-act="retire" data-id="continue">Continuar</button><button class="btn ghost" data-act="retire" data-id="retire">Encerrar a carreira</button></div></section>`;
   } else if (pd.type === 'offer_pick') {
     body = `<section class="card focus"><h2>Mercado de pilotos</h2>
@@ -1144,7 +1145,7 @@ function screenOffers(view) {
     const o = pd.payload.options;
     const t = ui.terms;
     body = `<section class="card focus"><h2>Contrato · ${esc(pd.payload.teamName)}</h2>
-      <h3>Duração</h3><div class="radio">${o.years.map((y) => `<label><input type="radio" name="t-years" value="${y}" ${t.years === y ? 'checked' : ''}>${y} ano(s)</label>`).join('')}</div>
+      <h3>Duração</h3><div class="radio">${o.years.map((y) => `<label><input type="radio" name="t-years" value="${y}" ${t.years === y ? 'checked' : ''}>${y} ${y === 1 ? 'ano' : 'anos'}</label>`).join('')}</div>
       <p class="mute" style="font-size:14px">Mais longo dá segurança. Mais curto deixa você livre para surfar o mercado.</p>
       <h3>Status na equipe</h3><div class="radio">${o.clauses.map((c) => `<label><input type="radio" name="t-clause" value="${c}" ${t.clause === c ? 'checked' : ''}>${esc(CLAUSE_TEXT[c])}</label>`).join('')}</div>
       <p class="mute" style="font-size:14px">A equipe só aceita piloto 1 se você for claramente melhor que o companheiro. Pode haver contraproposta.</p>
@@ -1171,9 +1172,9 @@ function screenLegacy(view) {
   const l = view.legacy;
   const main = `<section class="card focus"><h2>${l.how === 'voluntary' ? 'Carreira encerrada' : 'Sem lugar no grid'} · aos ${esc(l.retiredAge)} anos</h2>
       <div class="row" style="align-items:flex-end;gap:24px"><div class="big">${esc(l.score)}</div><small class="mute">NOTA DE LEGADO</small></div>
-      <div class="stats">${stat('Títulos F1', l.titlesF1)}${stat('Vice', l.vice)}${stat('Vitórias', l.wins)}${stat('Pódios', l.podiums)}${stat('Poles', l.poles)}${stat('Pontos', l.points)}${stat('Temporadas', l.seasons)}${stat('Títulos na base', l.baseTitles)}</div>
+      <div class="stats">${stat('Títulos F1', l.titlesF1)}${stat('Vice', l.vice)}${stat('Vitórias na F1', l.wins)}${stat('Pódios na F1', l.podiums)}${stat('Poles na F1', l.poles)}${stat('Pontos na F1', l.points)}${stat('Temporadas na F1', l.seasons)}${stat('Títulos na base', l.baseTitles)}</div>
       <div class="row"><button class="btn" data-act="copy">Copiar resumo</button><button class="btn ghost" data-act="newgame-yes">Nova carreira</button></div>
-      <p class="mute" style="font-size:14px" id="copy-msg">Cole o resumo no chat de quem está testando, junto com o que achou da carreira.</p>
+      <p class="mute" style="font-size:14px" id="copy-msg">O resumo traz a seed e os números da carreira, pronto para colar em qualquer conversa.</p>
       <textarea id="summary" readonly rows="4" style="font:12px var(--f-mono);width:100%;background:var(--panel2);color:var(--fg);border:1px solid var(--line);border-radius:3px;padding:8px">${esc(summaryText(view))}</textarea></section>${careerFeedbackCard()}`;
   const timeline = `<section class="card"><h3>Linha do tempo</h3><div class="scroll-x"><table class="tower"><tbody>
       ${view.f1.seasons.map((s) => `<tr><td class="pos">${esc(s.year)}</td><td class="car"><i style="background:${esc(TEAM_COLOR[s.team] ?? 'var(--line)')}"></i></td><td class="name">${esc(s.teamName)}</td><td class="pts">${ord(s.position)} · ${esc(s.points)} pts${s.position === 1 ? ' ★' : ''}</td></tr>`).join('')}
@@ -1222,7 +1223,10 @@ function render(animateMap = false) {
   }
   if (ui.notice) html = `<div class="note" role="status">${esc(ui.notice)}</div>${html}`;
   if (ui.error) html = `<div class="note err" role="alert">${esc(ui.error)} <button class="btn ghost small" data-act="copy-error">Copiar relatório do erro</button> <span class="mute" id="err-msg"></span></div>${html}`;
+  // Painéis recolhíveis marcados com data-keep continuam abertos depois de redesenhar a tela.
+  const kept = new Set([...el.querySelectorAll('details[data-keep][open]')].map((d) => d.dataset.keep));
   el.innerHTML = panels() + html + footer();
+  for (const d of el.querySelectorAll('details[data-keep]')) if (kept.has(d.dataset.keep)) d.open = true;
   if (map) paintRaceScene(el, map, TEAM_COLOR);
   const radio = el.querySelector('.decision-context.radio') ? state.pendingDecision : null;
   if (radio && radio !== radioHeard) playRadio();
