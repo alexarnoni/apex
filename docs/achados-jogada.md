@@ -102,7 +102,7 @@ Jogado em https://bandeirada.alexarnoni.com, do kart à segunda corrida de F1, a
 
 Funcionou: versão 0.14.5; abas Paddock, Piloto e Campeonato, ausentes durante a corrida; ficha larga; "Acompanhar etapa" visível sem rolar antes da corrida; narração vazia antes da largada e nota de estratégia só depois da janela de box; decisão recolhida durante a cena e revelada ao fim do trecho, em tempo real, e também pelo botão "Pular animação" do aviso; pódio e resultado só depois da bandeirada; duas opções lado a lado e inteiras na tela do celular; rótulo da Ferrari coerente; "Estender o stint" de volta; descrição nova de "Ajudar o desenvolvimento".
 
-Achados novos. Os itens 36 e 43 foram corrigidos localmente em 2026-11-11 (pacote v0.14.6, não publicado): botão "Continuar" no pódio depois da bandeirada, que redesenha a tela com o próximo passo no topo, e fim do espaço vazio acima da cena. Os demais seguem abertos:
+Achados novos. Os itens 36 e 43 foram corrigidos e publicados na v0.14.6 em 2026-11-11: botão "Continuar" no pódio depois da bandeirada, que redesenha a tela com o próximo passo no topo, e fim do espaço vazio acima da cena. Os demais seguem abertos:
 
 36. **Depois da bandeirada, o botão da próxima etapa fica longe.** A cena fica no topo enquanto a bandeirada é exibida e continua lá depois; no celular "Acompanhar etapa" vai para baixo do pódio, da cena e do resultado (página de cerca de 2.200 px). Acontece a cada corrida. Saída possível: botão "Próxima etapa" no cartão do pódio, ou redesenhar a tela quando a cena termina.
 37. **A etiqueta da cena adianta o resultado.** Durante as luzes de largada ela já mostra "Bandeirada · P8" ou a posição depois da largada.
