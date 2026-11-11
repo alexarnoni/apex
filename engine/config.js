@@ -50,7 +50,7 @@ export const CONFIG = {
   // Perfil da equipe (base e F1): cada perfil troca pressão por desenvolvimento (engine/profile.js).
   //   ponta: muita pressão, mas quem vai bem evolui rápido. meio: pouca pressão, desenvolvimento médio.
   //   fundo: nenhuma pressão, desenvolvimento mais lento; em troca, quem se destaca num carro fraco chama mais atenção (exposure).
-  // pressure multiplica as penalidades por ficar abaixo do esperado para o carro (nota de scouting na base, confiança na F1);
+  // pressure multiplica as penalidades por ficar abaixo do esperado para o carro (avaliação dos olheiros na base, confiança na F1);
   // development multiplica o crescimento de habilidade e o ganho de teto por treino.
   teamProfile: {
     ponta: { label: 'Equipe de ponta', pressure: 1.0, development: 1.15, exposure: 1.0 },   // o bônus só vale se você corresponder ao esperado (effectiveDev)
@@ -222,8 +222,8 @@ export const CONFIG = {
 
   // Hierarquia piloto 1 / piloto 2 e ordens de equipe (só F1)
   status: {
-    statusSkillGap: 2,           // diferença de skill para atribuir p1/p2 (senão equal)
-    statusP1FlatPerf: 2.5,       // bônus de performance do p1 em quali e corrida
+    statusSkillGap: 2,           // diferença de habilidade para atribuir p1/p2 (senão equal)
+    statusP1FlatPerf: 2.5,       // bônus de desempenho do p1 em quali e corrida
     statusP1GridBonusExtra: 0.15,// bônus extra de largada por posição para o p1
     ordersMinRace: 10,           // ordens de equipe só disparam após esta corrida
     ordersTopN: 5,               // só emite ordem se o p1 estiver no top 5 do campeonato
@@ -263,19 +263,19 @@ export const CONFIG = {
     choices: {
       kart: {
         A: { label: 'Chassi alugado', description: '+2 de carro nesta temporada.', carBonus: 2 },
-        B: { label: 'Treinador', description: '+1 de skill permanente.', skillGain: 1 },
+        B: { label: 'Treinador', description: '+1 de habilidade permanente.', skillGain: 1 },
       },
       f4: {
-        A: { label: 'Simulador profissional', description: '+1 de skill permanente.', skillGain: 1 },
+        A: { label: 'Simulador profissional', description: '+1 de habilidade permanente.', skillGain: 1 },
         B: { label: 'Assessoria de mídia', description: '+2 de fama.', fameGain: 2 },
       },
       f3: {
-        A: { label: 'Teste privado', description: '+1 de skill permanente.', skillGain: 1 },
+        A: { label: 'Teste privado', description: '+1 de habilidade permanente.', skillGain: 1 },
         B: { label: 'Networking de academias', description: 'Você fica bem mais visível: aumenta bastante a chance de uma academia te convidar.', academyChanceBonus: 0.15 },
       },
       f2: {
-        A: { label: 'Foco total no título', description: '+1.5 de performance nesta temporada.', perfBonus: 1.5 },
-        B: { label: 'Dias de teste de F1', description: '+2 na nota de scouting.', scoutingBonus: 2 },
+        A: { label: 'Foco total no título', description: '+1.5 de desempenho nesta temporada.', perfBonus: 1.5 },
+        B: { label: 'Dias de teste de F1', description: '+2 na avaliação dos olheiros.', scoutingBonus: 2 },
       },
     },
   },
@@ -291,14 +291,14 @@ export const CONFIG = {
     entry: { goodPool: 4, badPool: 3 },
     playerGrowthRate: 0.0,                // gap até o potencial fechado por ano na F1, além da curva de idade
     focus: {                              // season_focus: uma decisão por ano
-      train: { label: 'Treinar', description: '+1 de skill extra no ano.', skillGain: 1 },
+      train: { label: 'Treinar', description: '+1 de habilidade extra no ano.', skillGain: 1 },
       develop: { label: 'Ajudar o desenvolvimento', description: '+0.03 no pSuccess de desenvolvimento da equipe.', devBonus: 0.03 },
       image: { label: 'Trabalhar imagem', description: '+2 de fama.', fameGain: 2 },
     },
     approach: {                           // weekend_approach: uma decisão por corrida
-      risky: { label: 'Arriscado', description: 'Mais rápido (+2 de performance), mas com mais risco de abandonar a corrida.', perfBonus: 2, dnfDelta: 0.03 },
+      risky: { label: 'Arriscado', description: 'Mais rápido (+2 de desempenho), mas com mais risco de abandonar a corrida.', perfBonus: 2, dnfDelta: 0.03 },
       balanced: { label: 'Equilibrado', description: 'Sem ajustes.', perfBonus: 0, dnfDelta: 0 },
-      conservative: { label: 'Conservador', description: 'Um pouco mais lento (-1 de performance), mas com menos risco de abandonar a corrida.', perfBonus: -1, dnfDelta: -0.02 },
+      conservative: { label: 'Conservador', description: 'Um pouco mais lento (-1 de desempenho), mas com menos risco de abandonar a corrida.', perfBonus: -1, dnfDelta: -0.02 },
     },
     fame: { title: 5, top3: 2, points: 0.5 },   // fama por temporada: campeão / top 3 / pontuou
     retireDecisionAge: 30,                // a partir daqui toda offseason pergunta se aposenta

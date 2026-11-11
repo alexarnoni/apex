@@ -97,20 +97,18 @@ test('início prioriza novo piloto e usa laterais somente no desktop', async ({ 
   await page.screenshot({ path: test.info().outputPath('inicio-v010.png'), fullPage: true });
 });
 
-test('largada responde, desfaz e retoma o save na decisão pendente', async ({ page }) => {
+test('largada retoma o save na decisão pendente e registra a resposta sem desfazer', async ({ page }) => {
   const state = fixture('race_start', (s) => s.pendingDecision.payload.grid > 1);
   await importCareer(page, state);
   await expect(page.getByRole('heading', { name: 'Apagam-se as luzes' })).toBeVisible();
   await page.screenshot({ path: test.info().outputPath('largada.png'), fullPage: true });
-  await page.locator('[data-act="start"][data-id="hold"]').click();
-  expect((await saved(page)).history.at(-1).type).toBe('race_start');
-  await page.locator('[data-act="undo"]').click();
-  await expect(page.getByRole('heading', { name: 'Apagam-se as luzes' })).toBeVisible();
-  const undone = await saved(page);
-  expect(undone).toEqual(state);
+  await expect(page.locator('[data-act="undo"]')).toHaveCount(0);
+  expect(await saved(page)).toEqual(state);
   await page.reload();
   await page.locator('[data-act="continue"][data-slot="1"]').click();
   await expect(page.getByRole('heading', { name: 'Apagam-se as luzes' })).toBeVisible();
+  await page.locator('[data-act="start"][data-id="hold"]').click();
+  expect((await saved(page)).history.at(-1).type).toBe('race_start');
 });
 
 test('defesa mostra perseguidor e ceder entra no relato', async ({ page }) => {

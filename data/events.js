@@ -24,9 +24,9 @@ export const NARRATIVE_EVENTS = [
   {
     id: 'lesao_treino', phase: 'season_start', weight: 2,
     cond: () => true,
-    title: 'Distensão na academia',
+    title: 'Distensão no treino físico',
     text: () => 'Último treino de força antes do campeonato. A coxa estala no leg press e o médico fecha a conversa com duas corridas de molho.',
-    options: ok([{ p: 1, effects: { missRaces: 2, skillTemp: -1 }, text: 'Você assiste às duas primeiras corridas do box e começa o ano com um ponto a menos de skill.' }], 'Ficar de molho'),
+    options: ok([{ p: 1, effects: { missRaces: 2, skillTemp: -1 }, text: 'Você assiste às duas primeiras corridas do box e começa o ano com um ponto a menos de habilidade.' }], 'Ficar de molho'),
   },
   {
     id: 'mecanico_genial', phase: 'season_start', weight: 2,
@@ -50,7 +50,7 @@ export const NARRATIVE_EVENTS = [
     title: 'Dor depois da batida',
     text: () => 'O pescoço travou durante a madrugada e o fisioterapeuta quer você parado. A equipe deixa a decisão com você.',
     options: [
-      { id: 'sacrificio', label: 'Correr no sacrifício', description: '-2 de performance nas próximas 3 corridas.', outcomes: [{ p: 1, effects: { perfBuff: { value: -2, races: 3 } }, text: 'Você aperta os dentes e sente cada curva.' }] },
+      { id: 'sacrificio', label: 'Correr no sacrifício', description: '-2 de desempenho nas próximas 3 corridas.', outcomes: [{ p: 1, effects: { perfBuff: { value: -2, races: 3 } }, text: 'Você aperta os dentes e sente cada curva.' }] },
       { id: 'pular', label: 'Pular uma corrida', description: 'Zero ponto na próxima corrida.', outcomes: [{ p: 1, effects: { missRaces: 1 }, text: 'Você descansa e volta inteiro.' }] },
     ],
   },
@@ -67,7 +67,7 @@ export const NARRATIVE_EVENTS = [
     title: 'Provocação',
     text: (c) => `${c.rival.name} disse na coletiva que você só anda por causa do carro. A frase está em todas as manchetes.`,
     options: [
-      { id: 'responder', label: 'Responder na pista', description: '+2 de performance nas próximas 3 corridas e +1 de fama.', outcomes: [{ p: 1, effects: { perfBuff: { value: 2, races: 3 }, fame: 1 }, text: (c) => `Você guarda a raiva para a pista e promete uma resposta a ${c.rival.name}.` }] },
+      { id: 'responder', label: 'Responder na pista', description: '+2 de desempenho nas próximas 3 corridas e +1 de fama.', outcomes: [{ p: 1, effects: { perfBuff: { value: 2, races: 3 }, fame: 1 }, text: (c) => `Você guarda a raiva para a pista e promete uma resposta a ${c.rival.name}.` }] },
       { id: 'ignorar', label: 'Ignorar', description: '+5 de confiança da equipe.', outcomes: [{ p: 1, effects: { trust: 5 }, text: 'A equipe gostou da maturidade.' }] },
     ],
   },
@@ -125,8 +125,8 @@ export const NARRATIVE_EVENTS = [
     title: 'Gala da FIA',
     text: () => 'Campeão! A FIA quer você no palco da gala e a imprensa quer você em todo lugar.',
     options: [
-      { id: 'midia', label: 'Circuito completo de mídia', description: '+2 de fama.', outcomes: [{ p: 1, effects: { fame: 2 }, text: 'Você deu entrevista até sonhar com microfone.' }] },
-      { id: 'ferias', label: 'Férias', description: '+1 de skill: o descanso vira treino.', outcomes: [{ p: 1, effects: { skill: 1 }, text: 'Você sumiu do mapa e voltou descansado.' }] },
+      { id: 'midia', label: 'Maratona de entrevistas', description: '+2 de fama.', outcomes: [{ p: 1, effects: { fame: 2 }, text: 'Você deu entrevista até sonhar com microfone.' }] },
+      { id: 'ferias', label: 'Férias', description: '+1 de habilidade: o descanso vira treino.', outcomes: [{ p: 1, effects: { skill: 1 }, text: 'Você sumiu do mapa e voltou descansado.' }] },
     ],
   },
 
@@ -135,7 +135,7 @@ export const NARRATIVE_EVENTS = [
     id: 'patrocinador_novo', phase: 'season_start', weight: 2,
     cond: (c) => c.player.fame >= 3,
     title: 'Proposta de patrocínio',
-    text: () => 'Uma marca grande quer o seu capacete e a sua cara num outdoor. O contrato traz uma agenda de mídia pesada.',
+    text: () => 'Uma marca grande quer o seu capacete e a sua cara num outdoor. O contrato traz uma agenda de compromissos pesada.',
     options: [
       { id: 'fechar', label: 'Fechar com a marca', description: '+2 de fama, -3 de confiança (a equipe fica de olho no seu foco).', outcomes: [{ p: 1, effects: { fame: 2, trust: -3 }, text: 'Seu rosto aparece em todo lugar, e a equipe começa a cobrar foco.' }] },
       { id: 'recusar', label: 'Recusar e focar nas pistas', description: '+3 de confiança.', outcomes: [{ p: 1, effects: { trust: 3 }, text: 'A equipe gostou de ver o foco na pista.' }] },
@@ -154,7 +154,7 @@ export const NARRATIVE_EVENTS = [
     title: 'Horas extras no simulador',
     text: (c) => `A ${c.teamName} liberou horários extras no simulador antes do campeonato.`,
     options: [
-      { id: 'treinar', label: 'Treinar até cansar', description: '+1 de skill.', outcomes: [{ p: 1, effects: { skill: 1 }, text: 'Você chega à primeira corrida mais afiado.' }] },
+      { id: 'treinar', label: 'Treinar até cansar', description: '+1 de habilidade.', outcomes: [{ p: 1, effects: { skill: 1 }, text: 'Você chega à primeira corrida mais afiado.' }] },
       { id: 'rotina', label: 'Manter a rotina', description: '+2 de confiança (a equipe valoriza o equilíbrio).', outcomes: [{ p: 1, effects: { trust: 2 }, text: 'Você preservou o corpo e a cabeça.' }] },
     ],
   },
@@ -164,7 +164,7 @@ export const NARRATIVE_EVENTS = [
     title: 'Conselho de família',
     text: () => 'Seu pai quer opinar na sua temporada, como faz desde o kart. Ele ainda enxerga detalhes que você não vê.',
     options: [
-      { id: 'ouvir', label: 'Ouvir com atenção', description: '+0.5 de skill.', outcomes: [{ p: 1, effects: { skill: 0.5 }, text: 'Duas ou três dicas dele valem o ano.' }] },
+      { id: 'ouvir', label: 'Ouvir com atenção', description: '+0.5 de habilidade.', outcomes: [{ p: 1, effects: { skill: 0.5 }, text: 'Duas ou três dicas dele valem o ano.' }] },
       { id: 'espaco', label: 'Pedir espaço', description: '+2 de confiança da equipe.', outcomes: [{ p: 1, effects: { trust: 2 }, text: 'A equipe vê um profissional dono das próprias decisões.' }] },
     ],
   },
@@ -214,7 +214,7 @@ export const RACE_EVENTS = [
     title: 'Garoa na volta 40',
     text: (c) => `Rádio: "${c.player.name}, começou a garoar na curva 3. Boxes agora ou fica na pista?"`,
     options: [
-      { id: 'pit', label: 'Pit agora', description: '60% de ganhar 3 posições, 40% de perder 2.', outcomes: [
+      { id: 'pit', label: 'Parar agora', description: '60% de ganhar 3 posições, 40% de perder 2.', outcomes: [
         { p: 0.6, effects: { shift: 3 }, text: 'A troca de pneus sai perfeita e você pula três carros.' },
         { p: 0.4, effects: { shift: -2 }, text: 'A garoa parou, você perdeu tempo no box e dois carros passam.' },
       ] },
@@ -228,7 +228,7 @@ export const RACE_EVENTS = [
     id: 'safety_restart', phase: 'race', safe: 'segurar', weight: 3,
     cond: (c) => c.pos !== null && c.pos >= 2 && c.pos <= 6,
     title: 'Relargada',
-    text: () => 'Safety car entrando. Pneus quentes, todo mundo colado na sua traseira. Como você sai na relargada?',
+    text: () => 'O safety car recolhe nesta volta. Pneus frios, todo mundo colado na sua traseira. Como você sai na relargada?',
     options: [
       { id: 'ataque', label: 'Ataque total', description: '50% de ganhar 1 posição, 20% de abandonar.', outcomes: [
         { p: 0.5, effects: { shift: 1 }, text: 'Você mergulha por dentro e ganha a posição.' },
@@ -258,7 +258,7 @@ export const RACE_EVENTS = [
     text: (c) => `${c.rival.name} está logo à sua frente, de novo. A arquibancada levanta.`,
     options: [
       { id: 'mergulho', label: 'Mergulho', description: '55% de ultrapassar (+1 de fama), 15% de os dois abandonarem.', outcomes: [
-        { p: 0.55, effects: { shift: 1, fame: 1 }, text: (c) => `Você fecha a porta de ${c.rival.name} e passa na entrada da curva.` },
+        { p: 0.55, effects: { shift: 1, fame: 1 }, text: (c) => `Você mergulha por dentro e passa ${c.rival.name} na entrada da curva.` },
         { p: 0.15, effects: { dnf: true, dnfRival: true }, text: (c) => `Toque. Você e ${c.rival.name} terminam na brita.` },
         { p: 0.3, effects: {}, text: (c) => `${c.rival.name} fecha a porta primeiro.` },
       ] },

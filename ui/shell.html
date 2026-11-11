@@ -522,6 +522,21 @@ h2::before { display: none; }
     grid-template-columns: minmax(190px, 16%) minmax(0, 1fr) minmax(275px, 24%);
   }
 }
+/* Modo corrida: durante a etapa a tela mostra só pista, torre, decisão e carro. */
+.bar-short { display: none; }
+@media (min-width: 700px) {
+  /* No desktop a cena já traz GP, fase e posição; o painel repetido sai. */
+  .in-race .race-lead > .race-dashboard { display: none; }
+}
+@media (max-width: 699px) {
+  .bar { gap: 6px; padding-block: 8px 2px; }
+  .bar .btn.small { padding: 6px 9px; font-size: 12px; min-height: 0; }
+  .bar-extra, .bar-long { display: none; }
+  .bar-short { display: inline; }
+  .race-page .ladder { display: none; }
+  .in-race .race-dashboard .race-progress, .in-race .race-dashboard .bar-meter, .in-race .race-dashboard details, .in-race .race-dashboard-head p { display: none; }
+  .in-race .race-dashboard-head h2 { font-size: 1.35rem; margin-block: .1rem; }
+}
 [data-finish-reveal][hidden], [data-finish-pending][hidden] { display: none; }
 .race-podium ol { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
 .race-podium li { display: flex; align-items: center; gap: 8px; }

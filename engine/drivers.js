@@ -93,7 +93,7 @@ function rollIdentity(rng) {
   return { nat, name: `${first[0]}. ${surname}` };
 }
 
-// origin: rótulo narrativo ("campeão da F2", "veio da IndyCar", "rival de karting")
+// origin: rótulo narrativo ("campeão da F2", "veio da IndyCar", "rival do kart")
 // names: lista antiga de sobrenomes, mantida na assinatura por compatibilidade (os nomes agora vêm de NAME_POOLS).
 export function makeRookie(names, rng, origin = 'F2') {
   void names;

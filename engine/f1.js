@@ -239,7 +239,7 @@ function beginSeason(s, rng) {
   delete myTeam.devBonus;
   s.f1.devBonus = 0;
 
-  // Rival do ano: o piloto de skill mais próxima da sua (fora o companheiro).
+  // Rival do ano: o piloto de habilidade mais próxima da sua (fora o companheiro).
   const others = world.drivers.filter((d) => d !== p && d.team !== p.team);
   const rival = others.reduce((a, b) => (Math.abs(a.skill - p.skill) <= Math.abs(b.skill - p.skill) ? a : b));
   resetSeasonStats(world.drivers);
@@ -487,7 +487,7 @@ function openPitWindow(s, rng, w, absent, eventId = null) {
       { id: 'extend', label: 'Manter os pneus', description: 'Preserve a posição. Se os pneus estiverem gastos ou inadequados, você pode perder terreno na relargada.' },
     ] : [
       { id: 'pit', label: 'Parar agora', description: changes ? 'Trocar para pneus adequados à nova condição da pista.' : 'Trocar pneus cedo para tentar ganhar tempo antes dos rivais.' },
-      { id: 'extend', label: 'Estender o stint', description: changes ? 'Ficar com o composto atual enquanto avalia a pista.' : 'Adiar a troca e aproveitar o ritmo em pista livre.' },
+      { id: 'extend', label: 'Adiar a parada', description: changes ? 'Ficar com o composto atual enquanto avalia a pista.' : 'Adiar a troca e aproveitar o ritmo em pista livre.' },
     ],
   } };
 }
@@ -510,7 +510,7 @@ export function resolveRacePit(s, rng, answer) {
   const detail = p.interruption === 'red_flag' && pit ? `Você colocou ${compound} durante a suspensão.`
     : p.interruption && !pit ? 'Você manteve os pneus.'
     : pit ? `Você parou, colocou ${compound} e voltou em P${position}.`
-    : `Você estendeu o stint e ficou em P${position} após a janela de paradas.`;
+    : `Você adiou a parada e ficou em P${position} após a janela de paradas.`;
   const restart = p.interruption ? ` ${p.interruption === 'red_flag' ? 'Bandeira vermelha' : 'Safety car'}: retomada em P${position}.` : '';
   season.cur.pit = { id: answer.id, text: detail + restart };
   season.pendingRace = null;
@@ -1065,7 +1065,7 @@ function devNarrative(world, devLog) {
   return lines;
 }
 
-// Por que o jogador tem o status atual (espelha as regras de assignStatus, sem mostrar números de skill).
+// Por que o jogador tem o status atual (espelha as regras de assignStatus, sem mostrar números de habilidade).
 export function statusWhy(world, p) {
   if (!p.status) return null;
   const mate = world.drivers.find((d) => d.team === p.team && d !== p);

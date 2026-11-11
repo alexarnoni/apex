@@ -98,7 +98,7 @@ export function createCareer({ surname, number, flag = null, style, seed, age = 
     const [lo, hi] = CONFIG.base.rivalSkillRange;
     const rivals = [];
     for (let i = 0; i < CONFIG.base.rivalCount; i++) {
-      const r = makeRookie(SURNAMES, rng, 'rival de karting');
+      const r = makeRookie(SURNAMES, rng, 'rival do kart');
       r.age = player.age;
       r.skill = rng.range(lo, hi);
       r.lastResult = null;
@@ -331,8 +331,8 @@ function openOffers(s, rng) {
     label: `Subir para ${CATEGORIES[nextId].name} pela ${team.name}`,
     consequence: null,
     why: tier === 'top'
-      ? 'Sua nota de scouting foi alta: equipes de ponta querem você.'
-      : 'Sua nota de scouting só convenceu equipes do fundo do grid.',
+      ? 'Sua avaliação dos olheiros foi alta: equipes de ponta querem você.'
+      : 'Sua avaliação dos olheiros só convenceu equipes do fundo do grid.',
     ...upNotes(s, team, rank, n, nextId),
   }));
   s.pendingDecision = {
@@ -342,9 +342,9 @@ function openOffers(s, rng) {
       tier,
       options: [
         ...ups,
-        { id: 'stay', kind: 'stay', category: bc.category, teamId: bc.teamId, teamName: curTeam.name, profile: profileView(baseTierOf(bc.category, bc.teamId).tier), label: `Ficar na ${curTeam.name}`, consequence: `Mais um ano em ${curName}.`, why: 'Ficar dá mais um ano para melhorar a nota de scouting.',
+        { id: 'stay', kind: 'stay', category: bc.category, teamId: bc.teamId, teamName: curTeam.name, profile: profileView(baseTierOf(bc.category, bc.teamId).tier), label: `Ficar na ${curTeam.name}`, consequence: `Mais um ano em ${curName}.`, why: 'Ficar dá mais um ano para melhorar a avaliação dos olheiros.',
           pros: ['Você já conhece a equipe e o carro.'],
-          cons: ['Cada ano a mais na categoria aumenta a pressão de idade na nota de scouting.'] },
+          cons: ['Cada ano a mais na categoria aumenta a pressão de idade na avaliação dos olheiros.'] },
       ],
     },
   };
@@ -367,7 +367,7 @@ function upNotes(s, team, rank, n, nextId) {
   if (rank > n - 3) cons.push('Carro do fundo do grid: bons resultados são raros.');
   if (rank <= 3) cons.push('A equipe cobra resultado: ficar abaixo do esperado derruba a sua nota.');
   const ac = s.player.academy?.teamId;
-  if (ac && (nextId === 'f1' ? team.id === ac : team.academy === ac)) pros.push('Ligada à sua academia: bônus na nota de scouting.');
+  if (ac && (nextId === 'f1' ? team.id === ac : team.academy === ac)) pros.push('Ligada à sua academia: bônus na avaliação dos olheiros.');
   if (nextId === 'f1') pros.push('É a Fórmula 1: o objetivo da carreira de base.');
   return { pros, cons };
 }
@@ -500,7 +500,7 @@ export function potentialBand(potential) {
 const num1 = (n) => (Math.round(n * 10) / 10).toLocaleString('pt-BR');
 const signed = (n) => `${n >= 0 ? '+' : '−'}${num1(Math.abs(n))}`;
 
-// Uma linha com o porquê da nota de scouting da temporada (parcelas somadas) e o que cada oferta exige.
+// Uma linha com o porquê da avaliação dos olheiros da temporada (parcelas somadas) e o que cada oferta exige.
 export function scoutingWhy(sum) {
   const pr = sum.scoutingParts;
   if (!pr) return null;
