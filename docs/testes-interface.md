@@ -19,7 +19,7 @@ No Linux de CI, a instalação usa `npx playwright install --with-deps chromium 
 - Consultar piloto reserva, seis atributos e preservar seleção após renderização.
 - Direcionar treino e retomar atributos persistidos no save.
 - Criar piloto, disputar uma temporada de base e retomar após recarregar.
-- Importar JSON pela interface, responder à largada, desfazer e retomar a decisão pendente.
+- Importar JSON pela interface, retomar a decisão pendente da largada após recarregar e responder; confirma que não há botão Desfazer.
 - Mostrar perseguidor na defesa, ceder e conferir resultado/relato salvo.
 - Simular cinco corridas e o restante até pausa narrativa ou fim da temporada.
 - Ativar parada nas decisões e interromper antes da estratégia de pneus.

@@ -3,137 +3,159 @@
 Lista consolidada de tudo que surgiu até agora, ordenada pelo custo de implementar. Esforço é uma estimativa de trabalho de código + teste + calibração (P = horas, M = alguns dias, G = semanas).
 Itens já registrados como dívida no README estão marcados com (README).
 
-## Plano por versões (proposta de 2026-11-09)
+## Plano do manager imersivo (2026-11-10)
 
-Ordem sugerida a partir da v0.14 publicada. **Todo item aberto deste documento está encaixado aqui**, por identificador ou pelo nome da seção onde está descrito; o detalhe continua nas seções abaixo. Itens marcados como **novo** só existem neste plano. *Engine* indica regra na engine pura, com `npm test` e, se mexer em resultado, calibração. A lista "Falta, por ordem de importância" do resumo abaixo fica superada por este plano.
+**Visão.** Um F1 Manager do piloto no navegador, imersivo até onde o meio permitir: o jogador vive o fim de semana, assiste à corrida como numa transmissão, decide pelo rádio e administra a carreira no paddock.
 
-Regras de ordem: migração de saves vem antes de qualquer sistema que acrescente muitos campos ao save; o volta a volta fica por último entre os pacotes grandes, para não recalibrar duas vezes; nada de servidor antes da 1.0.
+**Todo item aberto deste documento está encaixado aqui**, por identificador ou pelo nome da seção onde está descrito; o detalhe continua nas seções abaixo. *Engine* indica regra na engine pura, com `npm test` e, se mexer em resultado, calibração. A lista "Falta, por ordem de importância" do resumo abaixo fica superada por este plano.
 
-Decisões ainda abertas com o usuário: tradução cedo (v0.16) ou só na 1.0; volta a volta antes do Paddock, por ser a queixa principal, ou no fim; modo fictício como condição da 1.0 ou só de monetização.
+**Pacotes.** Cada fase é entregue em pacotes publicáveis, na ordem programada em `pacotes-1.0.md` (23 pacotes, da v0.15 à v1.0).
+
+**Filtro.** Uma ideia entra numa fase se aumentar a imersão ou ajudar em pelo menos um destes pontos: entender em um minuto; cada sessão curta termina com algo que aconteceu; motivo para voltar; não perder o progresso; vontade de mostrar a alguém. O que não passa vai para "Arquivo".
+
+**Limites do navegador (até onde der).** Arquivo único sem servidor nem conta. Orçamento de peso: até 1 MB no `index.html` (hoje cerca de 350 KB). Cena fluida em celular intermediário; se cair, o efeito é desligado nesse aparelho. Tudo que se move respeita movimento reduzido e pode ser pulado. Som sempre com botão de mudo. Sessão de 5 a 15 minutos precisa fechar uma etapa.
+
+**Decisões de ordem, confirmadas pelo usuário em 2026-11-10.**
+
+- Volta a volta vem **antes** do Paddock: é o coração de um manager e responde à queixa principal ("na F1 fica chato"). Os sistemas do Paddock quase não mexem em ritmo de corrida, então a recalibração dupla é pequena.
+- Tradução: só a separação dos textos entra cedo (Fase 2, v0.20); traduzir fica para a 1.0.
+- Modo fictício: condição de monetizar, não da 1.0.
+- Nada de servidor antes da 1.0.
 
 ### Agora — pendências curtas, sem versão
 
-- [x] ~~Publicar o bip do rádio.~~ **Feito em 2026-11-09**, commit `adcd8f4`. Efeitos adicionais seguem na v0.18.
-- [ ] Com o usuário, fora do código: 2FA no GitHub e na Cloudflare (S.7), verificar o domínio no GitHub (S.5), e-mail "noreply" nos commits (S.9), renomear o repositório (R.10), conferir marca e domínio (R.11), revisar os textos dos eventos (1.3), jogar uma carreira em celular real (B.11), acompanhar o painel do GoatCounter.
+- [x] ~~Publicar o bip do rádio.~~ **Feito em 2026-11-09**, commit `adcd8f4`. Efeitos adicionais seguem na Fase 3.
+- [ ] Com o usuário, fora do código: 2FA no GitHub e na Cloudflare (S.7), verificar o domínio no GitHub (S.5), e-mail "noreply" nos commits (S.9), renomear o repositório (R.10), conferir marca e domínio (R.11), revisar os textos dos eventos (1.3), jogar uma carreira em celular real (B.11), ouvir o rádio em aparelho real, acompanhar o painel do GoatCounter.
+- [ ] v0.14.2, revisão de termos: inglês não adaptado e tradução literal nos textos (parte do 1.3). Trocas aplicadas localmente em 2026-11-10 (lista em `pacotes-1.0.md`), ainda não publicadas; falta a leitura frase a frase das telas.
+- [ ] v0.14.3, modo corrida: primeira arrumação aplicada localmente em 2026-11-10 (sem Desfazer, tela de corrida enxuta, cabeçalho compacto no celular), ainda não publicada. Falta o modo paddock com abas e a ficha em página larga; detalhes em `pacotes-1.0.md`. O botão Desfazer (F.6) foi removido a pedido do usuário.
 - [ ] Conferir o cartão de compartilhamento aparecendo de verdade no WhatsApp (resto do B.3).
 - [ ] Limite de envios do Worker (S.6), cabeçalhos HTTP (S.8), PRs do Dependabot. Proteção da `main` (S.10) segue opcional.
 
-### v0.15 — Vida de piloto
+### Fase 1 (v0.15 a v0.18) — Entre corridas
 
-Tudo o que dá cara de manager sem mudar o resultado das corridas.
+O intervalo entre etapas hoje é o trecho mais vazio. Quase tudo é interface. **Pronto quando:** depois de cada bandeirada o jogador tem algo novo para ler e sabe se foi bem.
 
-- [ ] Caixa de entrada, duelo com o companheiro, briefing antes da largada, linha do tempo, radar de atributos, gráfico da temporada, página da equipe e recordes do mundo (seção "Ideias de manager do piloto").
-- [ ] Estatísticas completas da carreira (2.1), gráfico de evolução ano a ano (2.2), companheiros de base visíveis (2.3).
-- [ ] Estatísticas do GP de casa (seção "GP de casa do jogador").
-- [ ] Metas e tensão de temporada, parte que falta (D.5).
+- [ ] Caixa de entrada: propostas, recados do chefe, notícias e convites (seção "Ideias de manager do piloto").
+- [ ] **Novo:** nota de 1 a 10 por corrida para cada piloto e "piloto do dia".
+- [ ] Duelo com o companheiro e briefing antes da largada (seção "Ideias de manager do piloto").
+- [ ] **Novo:** conta do título: quantos pontos faltam e o que acontece em cada cenário. Com a parte que falta de metas e tensão (D.5).
+- [ ] **Novo:** manchete de jornal em vitórias, títulos e transferências.
+- [ ] Página da equipe, gráfico da temporada, linha do tempo, radar de atributos e recordes do mundo (seção "Ideias de manager do piloto"); estatísticas completas (2.1), evolução ano a ano (2.2), companheiros de base visíveis (2.3), GP de casa (seção "GP de casa do jogador").
+- [ ] Tutorial na primeira corrida (seção "Ideias de manager do piloto") e **novo:** glossário de F1 em dicas.
 - [ ] Talento visível na ficha e troca dos quatro contadores (R.16). Ficha em faixa horizontal (R.17) segue como ideia guardada.
 - [ ] Histórico navegável da base e de campeonatos anteriores (seção "Imersão e aproveitamento de tela").
 - [ ] Restos de itens já entregues: perfil da equipe atual na ficha e perfil do companheiro (D.17); bandeira nas tabelas de equipes (D.7).
+- [ ] **Novo:** "enquanto você esteve fora" ao reabrir o save e avisos de marco (primeiro pódio, 100 GPs).
 
-### v0.16 — Alicerce
+### Fase 2 (v0.19 e v0.20) — Alicerce
+
+Protege o progresso e prepara o volta a volta. **Pronto quando:** um save da v0.14 abre em qualquer versão futura e a simulação não trava a tela.
 
 - [ ] Migração de saves (B.7) e captura de erros (B.9).
 - [x] ~~Exportar e importar save em arquivo.~~ **Feito**, já disponível antes da v0.14.1, conferido em 2026-11-09. Migração de formato segue em B.7.
-- [ ] **Novo:** Web Worker para simular fora da thread da tela. Pré-requisito prático do volta a volta.
+- [ ] **Novo:** aviso de duas abas no mesmo save e pedido de armazenamento persistente ao navegador.
+- [ ] **Novo:** Web Worker para simular fora da thread da tela.
 - [ ] Teste de desempenho em carreira longa e celular fraco (F.17); mais testes de regressão das fórmulas (seção "Pendências de qualidade").
 - [ ] Pipeline único de publicação (F.14).
+- [ ] **Novo:** ajustador automático de calibração: roda as simulações, compara com as metas de `calibracao.md` e propõe valores para `engine/config.js`. Ferramenta de desenvolvimento, sem IA e fora do navegador; a mudança só entra com aprovação.
+- [ ] Separar os textos do código, primeira metade do F.18.
 - [ ] Atalhos de teclado (seção "Ideias para evoluir a tela de corrida").
 - [ ] **Novo:** acessibilidade além da cor: padrão por equipe, alto contraste e tamanho de fonte. Junto com "cores com significado" (seção "Imersão").
 - [ ] Fontes hospedadas no próprio site (B.6, R.9).
 - [ ] README para jogadores, changelog e canal da comunidade (B.13).
 
-### v0.17 — Paddock
+### Fase 3 (v0.21 a v0.24) — Transmissão
 
-Relações, mercado e contrato. Quase tudo é *engine*.
+A corrida passa a parecer TV. Só interface, salvo indicação. **Pronto quando:** uma captura da corrida é reconhecida como transmissão de F1 e o jogo soa como uma.
 
-- [ ] Entrevistas, empresário e reputação por equipe, paddock e torcida (seção "Ideias de manager do piloto").
+- [ ] **Novo, câmera e carro:** câmera de TV (mapa inclinado em perspectiva, seguindo o carro com zoom); carro com forma (asas, rodas, luz de freio e de chuva); partículas (spray, fumaça de pneu, faíscas, brita). Traçados suavizados (seção "Ideias para evoluir a tela de corrida" e "Depois").
+- [ ] **Novo, gráficos de transmissão:** faixa com nome, barra de distância no duelo, volta mais rápida em roxo; volante do piloto com marcha e luzes de giro; pneus vistos de cima; telemetria ilustrativa.
+- [ ] Número e rótulos no mapa, destaque do rival da decisão, pit lane, barra de progresso, ícones na narração, classificação animada e carros devagar na pausa (seção "Ideias para evoluir a tela de corrida"). Torre recolhida no celular já publicada na v0.14.1.
+- [ ] **Novo, som:** som sintetizado com Web Audio (D.15, 2.8) para luzes de largada, motor, batida e torcida, sem arquivos de áudio.
+- [ ] **Novo:** som de rádio no estilo das transmissões de F1 a cada recado do engenheiro. **Parcial (bip publicado em 2026-11-09):** o bip toca quando o recado do engenheiro aparece numa decisão, com botão Som/Mudo no cabeçalho (`ui/sound.js`, `ui/assets/radio.mp3`). O arquivo foi fornecido pelo usuário, que o informou como livre para uso; a origem e a licença não estão documentadas no repositório e entram na revisão prevista antes de monetizar. Vai em base64 no bundle e é decodificado pelo Web Audio, sem mudar a CSP. Falta: bip de fechamento, chiado, filtro de voz e tocar também na narração da cena.
+- [ ] **Novo, pista e ambiente:** entorno gerado a partir do traçado (grama, brita, arquibancadas, boxes, zonas de ultrapassagem); corrida noturna com refletores; sombra de nuvem, chuva variável e trilho seco; borracha e marcas de freada.
+- [ ] Narrativa da corrida, parte que falta (D.4).
+- [ ] **Novo:** gráfico de posições ao final, melhores momentos e replay em câmera lenta do lance decisivo; modo foto da cena.
+- [ ] **Novo:** transições entre telas (View Transitions); tela sempre ligada (Wake Lock) e tela cheia durante a cena.
+- [ ] **Novo:** radar de chuva com previsão incerta antes da janela de box. *Engine se a incerteza afetar a escolha.*
+- [ ] **Novo:** reflexo nas luzes de largada: o tempo de reação vira uma faixa de decisão (boa, média, ruim). *Engine; a faixa entra como decisão para manter o determinismo.*
+- [ ] **Novo:** cena em canvas, só se o SVG não sustentar câmera e partículas.
+
+### Fase 4 (v0.25 a v0.27) — Volta a volta
+
+A corrida passa a ser simulada de verdade. *Engine*, com recalibração completa e jogo real como referência (seção "Pendências de qualidade"). **Pronto quando:** a torre mostra diferença em segundos e pneu de cada carro, e as decisões abrem em voltas específicas.
+
+- [ ] Etapa 2 da seção "Tela de corrida estilo manager"; fecha a corrida em momentos (D.2) e a calibração completa da largada (resto do D.2.b).
+- [ ] Modelo de tempo de volta, pit stops e pneus de verdade, duelo roda a roda (5.5, 5.6, 5.7).
+- [ ] Meteorologia dinâmica (5.3) e regras da FIA: limites de pista, punições e investigações (5.4).
+- [ ] Fim de semana completo (5.2): **novo** detalhamento em Q1, Q2 e Q3 com eliminação e fim de semana sprint.
+- [ ] **Novo:** acerto simples por pista (asa alta ou baixa) e bateria ou modo de ataque como decisão do piloto.
+- [ ] Confiabilidade por componente, troca e punição de grid (4.7).
+- [ ] **Novo:** replay de qualquer corrida a partir de seed e decisões guardadas.
+- [ ] **Novo, imersão que depende do volta a volta:** câmera onboard em falso 3D nos momentos-chave (largada, ultrapassagem, bandeirada) e volta fantasma contra o companheiro.
+
+### Fase 5 (v0.28 a v0.30) — Paddock
+
+Relações, mercado e contrato. Quase tudo é *engine*. **Pronto quando:** duas carreiras com o mesmo desempenho em pista terminam diferentes por causa das escolhas fora dela.
+
+- [ ] Contratos mais ricos (3.7), com **novo:** status de 1º ou 2º piloto, duração, multa, salário e bônus. Empresário (seção "Ideias de manager do piloto").
 - [ ] Rival persistente e rivalidades na história (3.1, 3.2); gatilhos por histórico salvo e convites com conflito de calendário (seção "Imersão").
+- [ ] Entrevistas e reputação por equipe, paddock e torcida (seção "Ideias de manager do piloto"); **novo:** promessa pública antes da temporada.
 - [ ] Moral e confiança da equipe (3.5); efeito do perfil da equipe nos eventos de equipe (resto do D.17).
-- [ ] Contratos mais ricos (3.7), com **novo:** status de 1º ou 2º piloto, duração, multa, salário e bônus.
+- [ ] **Novo:** direção do carro: o piloto dá o feedback que decide se o carro evolui em reta ou em curva.
+- [ ] **Novo:** relação com o engenheiro de corrida, afetando a qualidade do recado no rádio.
+- [ ] **Novo:** jogo que se adapta ao jogador, sem IA: rivais que aprendem o padrão de decisões (por exemplo, sempre atacar na largada) e passam a responder a ele. Estatística guardada no save, com determinismo por seed e decisões. *Engine.* A dificuldade adaptativa entra com o seletor de dificuldade (F.10), na Fase 6.
 - [ ] Mercado, parte 2 (D.8), silly season (D.14), notícias e rumores (3.8), pedir uma equipe específica (2.4).
 - [ ] Equipes-satélite (3.3) e academias de verdade (3.4).
 - [ ] Ofertas: estrelas e etiqueta de perfil (R.7) e os itens da seção "Entrada no kart por propostas".
 - [ ] **Novo:** dinheiro e patrocínio pessoal.
-- [ ] **Novo:** relação com o engenheiro de corrida, afetando a qualidade do recado no rádio.
 - [ ] **Novo:** capacete e número fixos na carreira, exibidos no mapa e na torre. Junto com a tela própria de criação (R.8).
 
-### v0.18 — Corrida com acabamento
+### Fase 6 (v0.31 a v0.33) — Mundo e base
 
-Só interface, salvo indicação.
+**Pronto quando:** nenhuma carreira termina em beco sem saída e os anos de base têm corridas.
 
-- [ ] Número e rótulos no mapa, destaque do rival da decisão, pit lane, barra de progresso, ícones na narração, classificação animada, torre recolhida no celular, carros devagar na pausa, traçados suavizados e câmera (seção "Ideias para evoluir a tela de corrida" e "Depois").
-- [ ] Narrativa da corrida, parte que falta (D.4).
-- [ ] **Novo:** som sintetizado com Web Audio (D.15, 2.8): luzes de largada, motor e batida. Sem arquivos de áudio. Desligável.
-- [ ] **Novo:** som de rádio no estilo das transmissões de F1 a cada recado do engenheiro. **Parcial (bip publicado em 2026-11-09):** o bip toca quando o recado do engenheiro aparece numa decisão, com botão Som/Mudo no cabeçalho (`ui/sound.js`, `ui/assets/radio.mp3`). O arquivo foi fornecido pelo usuário, que o informou como livre para uso; a origem e a licença não estão documentadas no repositório e entram na revisão prevista antes de monetizar. Vai em base64 no bundle e é decodificado pelo Web Audio, sem mudar a CSP. Falta: bip de fechamento, chiado, filtro de voz e tocar também na narração da cena.
-- [ ] **Novo:** rádio falado opcional com SpeechSynthesis em pt-BR. Desligado por padrão.
-- [ ] **Novo:** vibração no celular nas luzes e em batidas; tela sempre ligada (Wake Lock) e tela cheia durante a cena.
-- [ ] **Novo:** transições entre telas (View Transitions) no lugar do corte a cada render.
-- [ ] **Novo:** gráfico de posições da corrida ao final e melhores momentos reexibidos depois da bandeirada.
-- [ ] **Novo:** radar de chuva com previsão incerta antes da janela de box. *Engine se a incerteza afetar a escolha.*
-- [ ] **Novo:** cena em canvas, caso o SVG pese com o grid completo e câmera.
-- [ ] **Novo, realismo em 2D (prioridade sugerida):** câmera de TV (mapa inclinado em perspectiva, seguindo o carro com zoom); carro com forma (asas, rodas, luz de freio e de chuva); partículas (spray, fumaça de pneu, faíscas, brita).
-- [ ] **Novo, pista e ambiente:** entorno gerado a partir do traçado (grama, brita, arquibancadas, boxes, zonas de ultrapassagem); corrida noturna com refletores; sombra de nuvem, chuva variável e trilho seco; borracha e marcas de freada.
-- [ ] **Novo, cara de transmissão:** gráficos de TV (faixa com nome, barra de distância no duelo, volta mais rápida em roxo); volante do piloto com marcha e luzes de giro; telemetria ilustrativa e pneus vistos de cima; replay em câmera lenta do lance decisivo; modo foto da cena.
-
-### v0.19 — Base viva e mundo real
-
+- [ ] Rotas alternativas em versão leve (3.11, B.12), para as carreiras que caem em "Fim da linha".
 - [ ] Mini calendário na base (D.3).
 - [ ] Grid real de 2026 e campeões na retrospectiva (seção "Atualizar o grid inicial da F1 em 2026").
 - [ ] Pilotos reais na F2 e F3, salto excepcional F4–F2, evolução dos carros da base no save e pacotes da F1 ao longo do calendário (seção "Evolução da carreira de piloto").
 - [ ] Orçamento de equipe seguindo o sucesso (3.6).
-- [ ] Rotas alternativas (3.11, B.12) e a seção "Continuidade fora da F1": WEC, NASCAR, IndyCar, Fórmula E e Super Fórmula, com carreira jogável e retorno possível.
 - [ ] Seletor de dificuldade ou modo assistido (F.10).
+- [ ] **Novo:** superlicença por pontos; agenda entre corridas (simulador, físico, patrocinador ou descanso, com fadiga); lesões e forma física; testes de pré-temporada. *Engine e calibração.*
 - [ ] Restos e limites conhecidos: nacionalidade nos rivais de base (D.7, D.12), revisão da idade mínima da F2 (D.10), calendário real de 22 etapas contra as 24 do jogo, e dinastia máxima de 9 títulos em parte das sementes (calibração).
-- [ ] **Novo:** agenda entre corridas: semana com simulador, físico, patrocinador ou descanso, com fadiga. *Engine e calibração.*
-- [ ] **Novo:** superlicença por pontos na subida para a F1. *Engine.*
-- [ ] **Novo:** lesões e forma física. *Engine.*
 
-### v0.20 — Volta a volta
+### Reta final (v0.34 a v0.36) e v1.0 — Lançamento
 
-- [ ] Fecha a corrida em momentos (D.2) e a calibração completa da largada (resto do D.2.b).
-- [ ] Etapa 2 da seção "Tela de corrida estilo manager", com recalibração completa e jogo real como referência (seção "Pendências de qualidade").
-- [ ] Modelo de tempo de volta, pit stops e pneus de verdade, duelo roda a roda (5.5, 5.6, 5.7).
-- [ ] Meteorologia dinâmica (5.3) e regras da FIA: limites de pista, punições e investigações (5.4).
-- [ ] Fim de semana completo (5.2): **novo** detalhamento em Q1, Q2 e Q3 com eliminação e fim de semana sprint.
-- [ ] Confiabilidade por componente, troca e punição de grid (4.7).
-- [ ] **Novo:** bateria e modo de ataque como decisão do piloto.
-- [ ] **Novo, depois do volta a volta:** câmera onboard em falso 3D nos momentos-chave (largada, ultrapassagem, bandeirada) e volta fantasma comparando com o companheiro. Antes disso as posições são ilustrativas e os traçados não têm largura nem relevo.
+**Pronto quando:** quem chega por um link entende, joga, volta e mostra.
 
-### v1.0 — Lançamento
-
-- [ ] Modo fictício (B.14, 3.10) e tradução (F.18).
 - [ ] Desafio da semana por seed e ranking local dos amigos (F.12, 2.5), sem servidor.
+- [ ] **Novo:** resultado em emojis para copiar; cartão de resultado em imagem (seção "Ideias de manager do piloto"); retrospectiva de fim de carreira em imagem.
+- [ ] Conquistas e hall da fama local (F.16).
 - [ ] PWA e modo offline (F.15). Conferir o service worker contra a CSP por hash antes de prometer.
-- [ ] Conquistas e hall da fama local (F.16); cartão de resultado compartilhável e tutorial na primeira corrida (seção "Ideias de manager do piloto").
-- [ ] **Novo:** replay de qualquer corrida a partir de seed e decisões guardadas.
+- [ ] Tradução, segunda metade do F.18.
+- [ ] **Novo:** ponto de virada da temporada, com opção de rejogar dali; cenários prontos (começar no fundo do grid, salvar a carreira aos 30).
 - [ ] **Novo:** mundo persistente: nova carreira no mesmo mundo depois de aposentar, com o piloto antigo no hall da fama ou como mentor. *Engine.*
-- [ ] **Novo:** cenários prontos e modos (começar no fundo do grid, salvar a carreira aos 30, sem desfazer).
-- [ ] **Novo:** retrospectiva de fim de carreira em imagem.
-- [ ] **Novo, 3D leve sem biblioteca (WebGL escrito à mão):** carro girando na garagem com a pintura da equipe e o número, capacete em 3D na criação e pódio em 3D.
+- [ ] **Novo, 3D leve sem biblioteca (WebGL escrito à mão):** carro girando na garagem com a pintura da equipe e o número, capacete em 3D na criação e pódio em 3D. Dentro do orçamento de peso.
 
-### Ideias soltas (2026-11-09), ainda sem versão
+### Talvez — decidir depois de ouvir quem joga
 
-- Reflexo nas luzes de largada: o tempo de reação do jogador vira uma faixa de decisão (boa, média, ruim). *Engine; a faixa entra como decisão para manter o determinismo.*
-- Nota de 1 a 10 por corrida para cada piloto e "piloto do dia".
-- Traços de personalidade do piloto, ganhos por escolhas, com efeito em eventos. *Engine.*
-- Testes de pré-temporada com uma decisão de programa. *Engine.*
-- Paddock como navegação: garagem, motorhome e sala de imprensa no lugar de abas.
-- Mapa-múndi do calendário, com a viagem entre etapas.
-- Manchete de jornal ou capa de revista em vitórias, títulos e transferências.
-- Editor de pintura do capacete.
-- Álbum dos pilotos enfrentados, com o retrospecto contra cada um.
-- Modo espectador: assistir a uma temporada do mundo sem piloto.
-- Comparar carreiras entre os slots e compartilhar a seed do mundo.
-- Apadrinhar um piloto da base no fim da carreira. *Engine.*
-- Glossário de F1 em dicas ao passar o mouse, para quem não acompanha.
-- Som ambiente de torcida, sintetizado.
+- Modo fictício (B.14, 3.10), obrigatório antes de monetizar.
+- "Continuidade fora da F1" completa: WEC, NASCAR, IndyCar, Fórmula E e Super Fórmula com carreira jogável e retorno possível.
+- Rádio falado com SpeechSynthesis em pt-BR; vibração no celular.
+- Traços de personalidade do piloto; empréstimo a equipe menor; ano de reserva jogável; aposta no regulamento novo; pedir ordem de equipe; vácuo combinado na classificação; corridas-convite únicas; turnê de despedida; apadrinhar um piloto da base. *Engine.*
+- Comparador de ofertas lado a lado; calendário com previsão por pista; busca rápida; diário automático da carreira; interface na cor da equipe; apresentação do carro e cena de assinatura; figurinha do piloto.
+- Mundo compartilhado por código entre amigos; resultado codificado no link; título e ícone da aba vivos; gestos no celular.
 
-### Depois da 1.0 — sem data
+### Arquivo — fora do plano, guardado
 
+- Corrida inteira em 3D com câmera livre. Embutida no bundle não muda a CSP; o custo é o peso (biblioteca 3D leva o arquivo para perto de 1 MB, o orçamento inteiro). Só faria sentido com volta a volta e traçados com largura.
+- Aprender com todos os jogadores: usar dados anônimos de partidas para recalibrar o jogo. Depende de servidor e da telemetria (2.6).
+- Conteúdo gerado com IA no desenvolvimento (manchetes, narração, eventos), revisado pelo usuário e publicado como texto fixo. Nada de IA rodando no navegador: estoura o orçamento de peso e exige servidor.
 - Servidor: backend de ranking e compartilhamento (4.1, B.15), página de compartilhamento (4.2), anti-fraude por replay (4.3), save em nuvem (3.12), telemetria anônima (2.6).
-- Mundo: fusões e equipes novas (4.4), pilotos de base com carreira própria (4.5), fornecedor de motor (4.6), teto de custos (5.8), base corrida a corrida (5.9).
+- Mundo profundo: fusões e equipes novas (4.4), pilotos de base com carreira própria (4.5), fornecedor de motor (4.6), teto de custos (5.8), base corrida a corrida (5.9).
 - Modo chefe de equipe (seção "Evolução da carreira de piloto").
-- Corrida inteira em 3D com câmera livre. Embutida no bundle não muda a CSP; o custo é o peso (biblioteca 3D leva o arquivo de cerca de 350 KB para perto de 1 MB). Só faz sentido com volta a volta e traçados com largura.
+- Dois jogadores no mesmo aparelho; modo espectador; corrida em janelinha flutuante.
+- Paddock como navegação; mapa-múndi do calendário; editor de pintura do capacete; álbum dos pilotos enfrentados; dinastia; comparar carreiras entre slots.
 
 ## Resumo do estado (atualizado em 2026-11-08)
 

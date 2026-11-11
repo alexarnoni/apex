@@ -14,3 +14,5 @@ Consulte conforme a tarefa. Estado atual fica no handoff; histórico em versões
 - Academias, equipes irmãs e calendário são simplificações. Saves antigos podem conservar nomes, nacionalidades e decisões antigas. Não prometer atualização retroativa.
 - Preserve UTF-8. PowerShell em pt-BR já gerou vírgula decimal no SVG e quebrou o logo: use geração independente de cultura e `Get-Content -Encoding UTF8` nas leituras.
 - Push na `main` publica no Pages. Confirme o pipeline antes de afirmar sucesso. Segredos/variáveis de plataforma não estão no Git; não enviar feedback real durante testes.
+- Direção (2026-11-10): F1 Manager do piloto no navegador, imersivo até onde o meio permitir. Ordem das fases em `roadmap-ideias.md`, com volta a volta antes do Paddock. Limites: arquivo único de até 1 MB, sem servidor antes da 1.0, cena fluida em celular intermediário. Corrida inteira em 3D fica fora por peso.
+- Sem botão Desfazer (2026-11-10, pedido do usuário): decisão tomada não volta. Não reintroduzir. O histórico de decisões continua no save para o determinismo.

@@ -5,14 +5,14 @@ Tom pedido na spec: segunda pessoa, rádio de equipe e manchete, curto e concret
 
 ## Narrativos (19)
 
-### Distensão na academia  `lesao_treino`
+### Distensão no treino físico  `lesao_treino`
 
 Quando: season_start · peso 2
 
 > Último treino de força antes do campeonato. A coxa estala no leg press e o médico fecha a conversa com duas corridas de molho.
 
 - **Ficar de molho**
-  - Você assiste às duas primeiras corridas do box e começa o ano com um ponto a menos de skill.
+  - Você assiste às duas primeiras corridas do box e começa o ano com um ponto a menos de habilidade.
 
 ### Engenheiro estrela  `mecanico_genial`
 
@@ -38,7 +38,7 @@ Quando: mid_season · peso 3
 
 > O pescoço travou durante a madrugada e o fisioterapeuta quer você parado. A equipe deixa a decisão com você.
 
-- **Correr no sacrifício**: -2 de performance nas próximas 3 corridas.
+- **Correr no sacrifício**: -2 de desempenho nas próximas 3 corridas.
   - Você aperta os dentes e sente cada curva.
 - **Pular uma corrida**: Zero ponto na próxima corrida.
   - Você descansa e volta inteiro.
@@ -58,7 +58,7 @@ Quando: mid_season · peso 4
 
 > Gasly disse na coletiva que você só anda por causa do carro. A frase está em todas as manchetes.
 
-- **Responder na pista**: +2 de performance nas próximas 3 corridas e +1 de fama.
+- **Responder na pista**: +2 de desempenho nas próximas 3 corridas e +1 de fama.
   - Você guarda a raiva para a pista e promete uma resposta a Gasly.
 - **Ignorar**: +5 de confiança da equipe.
   - A equipe gostou da maturidade.
@@ -111,16 +111,16 @@ Quando: season_end · peso 2
 
 > Campeão! A FIA quer você no palco da gala e a imprensa quer você em todo lugar.
 
-- **Circuito completo de mídia**: +2 de fama.
+- **Maratona de entrevistas**: +2 de fama.
   - Você deu entrevista até sonhar com microfone.
-- **Férias**: +1 de skill: o descanso vira treino.
+- **Férias**: +1 de habilidade: o descanso vira treino.
   - Você sumiu do mapa e voltou descansado.
 
 ### Proposta de patrocínio  `patrocinador_novo`
 
 Quando: season_start · peso 2
 
-> Uma marca grande quer o seu capacete e a sua cara num outdoor. O contrato traz uma agenda de mídia pesada.
+> Uma marca grande quer o seu capacete e a sua cara num outdoor. O contrato traz uma agenda de compromissos pesada.
 
 - **Fechar com a marca**: +2 de fama, -3 de confiança (a equipe fica de olho no seu foco).
   - Seu rosto aparece em todo lugar, e a equipe começa a cobrar foco.
@@ -142,7 +142,7 @@ Quando: season_start · peso 2
 
 > A McLaren liberou horários extras no simulador antes do campeonato.
 
-- **Treinar até cansar**: +1 de skill.
+- **Treinar até cansar**: +1 de habilidade.
   - Você chega à primeira corrida mais afiado.
 - **Manter a rotina**: +2 de confiança (a equipe valoriza o equilíbrio).
   - Você preservou o corpo e a cabeça.
@@ -153,7 +153,7 @@ Quando: season_start · peso 2
 
 > Seu pai quer opinar na sua temporada, como faz desde o kart. Ele ainda enxerga detalhes que você não vê.
 
-- **Ouvir com atenção**: +0.5 de skill.
+- **Ouvir com atenção**: +0.5 de habilidade.
   - Duas ou três dicas dele valem o ano.
 - **Pedir espaço**: +2 de confiança da equipe.
   - A equipe vê um profissional dono das próprias decisões.
@@ -208,7 +208,7 @@ Quando: race (chance 10% por corrida) · peso 4
 
 > Rádio: "Teste, começou a garoar na curva 3. Boxes agora ou fica na pista?"
 
-- **Pit agora**: 60% de ganhar 3 posições, 40% de perder 2.
+- **Parar agora**: 60% de ganhar 3 posições, 40% de perder 2.
   - (60%) A troca de pneus sai perfeita e você pula três carros.
   - (40%) A garoa parou, você perdeu tempo no box e dois carros passam.
 - **Ficar na pista**: 40% de ganhar 3 posições, 60% de perder 2.
@@ -219,7 +219,7 @@ Quando: race (chance 10% por corrida) · peso 4
 
 Quando: race · peso 3
 
-> Safety car entrando. Pneus quentes, todo mundo colado na sua traseira. Como você sai na relargada?
+> O safety car recolhe nesta volta. Pneus frios, todo mundo colado na sua traseira. Como você sai na relargada?
 
 - **Ataque total**: 50% de ganhar 1 posição, 20% de abandonar.
   - (50%) Você mergulha por dentro e ganha a posição.
@@ -247,7 +247,7 @@ Quando: race · peso 4
 > Gasly está logo à sua frente, de novo. A arquibancada levanta.
 
 - **Mergulho**: 55% de ultrapassar (+1 de fama), 15% de os dois abandonarem.
-  - (55%) Você fecha a porta de Gasly e passa na entrada da curva.
+  - (55%) Você mergulha por dentro e passa Gasly na entrada da curva.
   - (15%) Toque. Você e Gasly terminam na brita.
   - (30%) Gasly fecha a porta primeiro.
 - **Pressionar**: 25% de ultrapassar.
