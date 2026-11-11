@@ -26,8 +26,8 @@ Itens já registrados como dívida no README estão marcados com (README).
 
 - [x] ~~Publicar o bip do rádio.~~ **Feito em 2026-11-09**, commit `adcd8f4`. Efeitos adicionais seguem na Fase 3.
 - [ ] Com o usuário, fora do código: 2FA no GitHub e na Cloudflare (S.7), verificar o domínio no GitHub (S.5), e-mail "noreply" nos commits (S.9), renomear o repositório (R.10), conferir marca e domínio (R.11), revisar os textos dos eventos (1.3), jogar uma carreira em celular real (B.11), ouvir o rádio em aparelho real, acompanhar o painel do GoatCounter.
-- [ ] v0.14.2, revisão de termos: inglês não adaptado e tradução literal nos textos (parte do 1.3). Trocas aplicadas localmente em 2026-11-10 (lista em `pacotes-1.0.md`), ainda não publicadas; falta a leitura frase a frase das telas.
-- [ ] v0.14.3, modo corrida: primeira arrumação aplicada localmente em 2026-11-10 (sem Desfazer, tela de corrida enxuta, cabeçalho compacto no celular), ainda não publicada. Falta o modo paddock com abas e a ficha em página larga; detalhes em `pacotes-1.0.md`. O botão Desfazer (F.6) foi removido a pedido do usuário.
+- [ ] v0.14.2, revisão de termos: inglês não adaptado e tradução literal nos textos (parte do 1.3). Trocas publicadas na v0.14.3 em 2026-11-10 (lista em `pacotes-1.0.md`); falta a leitura frase a frase das telas.
+- [ ] v0.14.3, modo corrida: primeira arrumação publicada na v0.14.3 em 2026-11-10 (sem Desfazer, tela de corrida enxuta, cabeçalho compacto no celular). Falta o modo paddock com abas e a ficha em página larga; detalhes em `pacotes-1.0.md`. O botão Desfazer (F.6) foi removido a pedido do usuário.
 - [ ] Conferir o cartão de compartilhamento aparecendo de verdade no WhatsApp (resto do B.3).
 - [ ] Limite de envios do Worker (S.6), cabeçalhos HTTP (S.8), PRs do Dependabot. Proteção da `main` (S.10) segue opcional.
 

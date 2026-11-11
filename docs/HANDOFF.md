@@ -1,6 +1,6 @@
 # Retomada — Bandeirada
 
-Atualizado em **2026-11-09**, v0.14.1 publicada.
+Atualizado em **2026-11-10**, v0.14.3 publicada.
 
 - Repo `alexarnoni/apex`; push na main aciona GitHub Pages. Site: https://bandeirada.alexarnoni.com.
 - v0.11 publicada no commit `9e9738e`. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42538364924); HTTP 200, versão, perfis, treino, GoatCounter, Worker e hashes CSP conferidos no HTML servido.
@@ -47,7 +47,7 @@ Próximos candidatos: grid real de 2026 por data de corte e retrospectiva com An
 - Validação: 183 testes Node, build e 28 Playwright no Chrome (desktop e celular emulado). Revalidação da chegada automática a 4× passou nos dois perfis.
 - Publicada em `5b06c56`. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42723753939). HTTP 200 e HTML servido com v0.14.0, treino, neutralizações, bandeirada e GoatCounter. Teste em aparelho real pendente.
 
-Plano do manager imersivo (2026-11-10) no topo de `roadmap-ideias.md`: seis fases com critério de pronto (Entre corridas, Alicerce, Transmissão, Volta a volta, Paddock, Mundo e base), 1.0, Talvez e Arquivo. Ordem confirmada pelo usuário em 2026-11-10, com volta a volta antes do Paddock. Caminho programado em `pacotes-1.0.md`: 23 pacotes da v0.15 à v1.0, nenhum implementado. v0.14.2 "Revisão de termos" aplicada localmente (textos em `data/events.js`, engine e `ui/app.js`), sem commit nem publicação; versão do pacote ainda 0.14.1. v0.14.3 "Modo corrida" também local: Desfazer removido, tela de corrida enxuta e cabeçalho compacto no celular (`ui/app.js`, `ui/shell.html`, teste da largada ajustado). 183 Node, 30 Playwright e build aprovados. Falta modo paddock com abas e ficha larga. Depois: v0.15 "Caixa de entrada".
+Plano do manager imersivo (2026-11-10) no topo de `roadmap-ideias.md`: seis fases com critério de pronto (Entre corridas, Alicerce, Transmissão, Volta a volta, Paddock, Mundo e base), 1.0, Talvez e Arquivo. Ordem confirmada pelo usuário em 2026-11-10, com volta a volta antes do Paddock. Caminho programado em `pacotes-1.0.md`: 23 pacotes da v0.15 à v1.0, nenhum implementado. v0.14.3 publicada em 2026-11-10 (commit `afa8de5`, [deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42938463916)): revisão de termos, Desfazer removido, tela de corrida enxuta e cabeçalho compacto no celular. HTTP 200 e HTML servido com 0.14.3, sem botão Desfazer e com os termos novos. 183 Node, 30 Playwright (Chrome) e build aprovados. Falta leitura frase a frase das telas, modo paddock com abas e ficha larga. Depois: v0.15 "Caixa de entrada".
 
 Som de rádio publicado em 2026-11-09 (commit `adcd8f4`, [deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42733226495); HTTP 200 e HTML servido com o botão de som e o áudio embutido): bip no recado do engenheiro e botão Som/Mudo, em `ui/sound.js` com `ui/assets/radio.mp3` embutido em base64, sem mudar a CSP. Arquivo fornecido pelo usuário como livre para uso; origem não documentada. 183 testes Node, 28 Playwright (Chrome) e build aprovados; o som não foi ouvido na verificação, só a decodificação e o botão.
 
