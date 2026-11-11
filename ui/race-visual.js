@@ -254,6 +254,7 @@ export function paintRaceScene(root, map, colors) {
   for (const button of speeds) button.onclick = () => { scene.speed = Number(button.dataset.sceneSpeed); syncControls(); };
   pause.onclick = () => { scene.paused = !scene.paused; syncControls(); };
   controls.querySelector('[data-scene="skip"]').onclick = finish;
+  for (const button of root.querySelectorAll('[data-scene-skip]')) button.onclick = finish;
   controls.hidden = false;
   panel.classList.remove('flag');
   syncControls();

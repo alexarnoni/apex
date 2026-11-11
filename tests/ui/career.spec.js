@@ -34,6 +34,15 @@ async function importCareer(page, state) {
 }
 
 const saved = (page) => page.evaluate(() => JSON.parse(localStorage.getItem('apex.slot.1')).state);
+// Modo paddock: em tela estreita cada aba mostra só o seu recorte. Abre a aba quando o alvo não está à vista.
+async function show(page, selector, view) {
+  if (!(await page.locator(selector).first().isVisible())) await page.locator(`[data-act="view"][data-id="${view}"]`).click();
+}
+// Durante a cena a decisão fica recolhida; pular a animação a revela.
+async function skipScene(page) {
+  const skip = page.locator('[data-scene-skip]');
+  if (await skip.isVisible()) await skip.click();
+}
 
 test.beforeEach(async ({ page }) => {
   // Sem dependência de fontes externas, analytics ou envio de feedback nos testes.
@@ -227,6 +236,7 @@ test('avanço contextual mostra motivo e permite delegar a decisão atual', asyn
   const after = await saved(page);
   expect(['race_event', 'race_pit', 'race_finale', 'team_order', 'story_event']).toContain(after.pendingDecision.type);
   if (after.pendingDecision.type !== 'story_event') {
+    await skipScene(page);
     if (after.pendingDecision.type === 'race_event') {
       await expect(page.getByText(`Posição atual · P${after.pendingDecision.payload.position}`, { exact: true })).toBeVisible();
     }
@@ -282,7 +292,9 @@ test('carreira inteira por cliques: criação, base, temporadas, contratos e leg
       await page.locator('[data-act="run-base"]').click();
     } else if (pd.type === 'weekend_approach') {
       sawGoal = true;
+      await show(page, '.season-pulse', 'season');
       await expect(page.locator('.season-pulse')).toBeVisible();
+      await show(page, '[data-act="simnext"]', 'paddock');
       await page.getByText('Controles de acompanhamento', { exact: true }).click();
       await page.locator('[data-act="simrest"]').click();
     } else if (pd.type === 'kart_return') {
@@ -311,18 +323,21 @@ test('consulta Hamilton reserva e perfil do jogador sem perder a seleção', asy
   const state = ferrariFixture();
   if (test.info().project.name === 'desktop') await page.setViewportSize({ width: 1920, height: 1080 });
   await importCareer(page, state);
+  await show(page, '.roster-panel', 'season');
   await page.getByText('Pilotos e mercado', { exact: true }).click();
   await page.locator('#roster-driver').selectOption('real-Hamilton');
   await expect(page.locator('.roster-panel')).toHaveAttribute('open', '');
   await expect(page.locator('#roster-driver')).toHaveValue('real-Hamilton');
   await expect(page.locator('.roster-panel')).toContainText('Reserva · Ferrari');
   await expect(page.locator('.roster-panel .profile-stat')).toHaveCount(6);
+  await show(page, '.pilot-profile summary', 'driver');
   await page.locator('.pilot-profile summary').click();
   await expect(page.locator('.pilot-profile .profile-stat')).toHaveCount(6);
   if (test.info().project.name === 'desktop') {
     const width = await page.locator('#app').evaluate(el => el.clientWidth);
     expect(width).toBeGreaterThan(1500);
   }
+  await show(page, '.roster-panel', 'season');
   await page.locator('.roster-panel').scrollIntoViewIfNeeded();
   await page.screenshot({ path: test.info().outputPath('perfis-v011.png'), fullPage: true });
 });
@@ -336,6 +351,7 @@ test('treino direcionado fica salvo e o perfil acompanha a evolução', async ({
   expect(state.player.attributes.tyres).toBeGreaterThan(85);
   await page.reload();
   await page.locator('[data-act="continue"][data-slot="1"]').click();
+  await show(page, '.pilot-profile summary', 'driver');
   await page.locator('.pilot-profile summary').click();
   await expect(page.locator('.pilot-profile')).toContainText('Gestão de pneus');
 });
@@ -361,4 +377,19 @@ test('o mudo do rádio persiste e a torre é expansível no celular', async ({ p
     await tower.getByText('Abrir grid completo').click();
   }
   expect(await rows.count()).toBeGreaterThan(4);
+});
+
+test('modo paddock: abas trocam o recorte e somem durante a corrida', async ({ page }) => {
+  await importCareer(page, fixture('weekend_approach'));
+  await expect(page.locator('.view-tabs .tab')).toHaveCount(3);
+  await expect(page.locator('[data-act="simnext"]')).toBeInViewport();
+  await page.locator('[data-act="view"][data-id="driver"]').click();
+  await expect(page.locator('.ficha')).toBeVisible();
+  await expect(page.locator('.col-main')).toBeHidden();
+  await page.locator('[data-act="view"][data-id="season"]').click();
+  await expect(page.locator('.ficha')).toBeHidden();
+  await expect(page.locator('.col-side')).toBeVisible();
+  await page.locator('[data-act="view"][data-id="paddock"]').click();
+  await page.locator('[data-act="simnext"]').click();
+  if ((await saved(page)).pendingDecision?.type?.startsWith('race_')) await expect(page.locator('.view-tabs')).toHaveCount(0);
 });

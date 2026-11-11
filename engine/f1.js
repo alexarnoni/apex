@@ -1092,7 +1092,7 @@ export function f1View(s) {
   const notes = [
     // O efeito da estratégia é calculado na escolha, mas só vira narração depois da janela de box:
     // antes disso o relato contaria um desgaste ou uma parada que ainda não aconteceu na cena.
-    cur?.strategy && { when: `Estratégia (${cur.strategy.label})`, text: cur.pit || decision?.type === 'race_finale' ? cur.strategy.text : 'Plano de pneus definido para a largada.' },
+    cur?.strategy && (cur.pit || decision?.type === 'race_finale') && { when: `Estratégia (${cur.strategy.label})`, text: cur.strategy.text },
     cur?.event && { when: cur.event, text: cur.eventText ?? 'Você teve de decidir na pista.' },
     cur?.pit && { when: 'Janela de box', text: cur.pit.text },
   ].filter(Boolean);

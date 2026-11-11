@@ -68,7 +68,7 @@ const offerTeamColor = id => TEAM_COLOR[id] ?? BASE_TEAM_COLOR[id] ?? 'var(--sig
 
 let state = null;
 let activeSlot = null; // slot onde a carreira em andamento é gravada a cada transição
-let ui = { tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '', contact: '', status: '' }, end: { rating: null, text: '', include: true, status: '', msg: '' }, autoSingle: true, simStop: false, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', age: 15, style: 'con', seed: '' } };
+let ui = { view: 'paddock', tab: 'standings', stTab: 'drivers', aboutOpen: false, helpOpen: false, fb: { open: false, kind: 'bug', text: '', include: true, full: false, msg: '', contact: '', status: '' }, end: { rating: null, text: '', include: true, status: '', msg: '' }, autoSingle: true, simStop: false, notice: null, baseOpt: null, terms: { years: 2, clause: 'none', exit: false }, fullGrid: false, confirmNew: false, error: null, draft: { surname: '', number: '', flag: 'BR', age: 15, style: 'con', seed: '' } };
 let lastKey = '';
 let sceneModel = null; // setas, abandonos e narração da cena de corrida, calculados a cada render
 
@@ -167,7 +167,7 @@ function run(fn) {
   const before = state;
   try {
     state = fn(state);
-    if (state !== before) trackProgress(before, state);
+    if (state !== before) { trackProgress(before, state); ui.view = 'paddock'; }   // decisão nova: volta para a aba que a mostra
     ui.error = null;
     save();
   } catch (e) {
@@ -460,9 +460,18 @@ function teamTag(f1) {
 function layout(view, main, aside = '', raceLead = '') {
   const map = view.f1?.map;
   const podium = podiumCard(map);
-  return `${header(view)}${ladder(view)}
-  <div class="layout${raceLead ? ' in-race' : ''}">
-    <div class="col-main">${podium ? `<div class="map-mobile">${podium}</div>` : ''}${raceLead ? `<div class="race-lead">${raceSceneCard(map)}${raceLead}</div>` : raceSceneCard(map)}${main}</div>
+  // Modo paddock: fora da corrida, a decisão vem primeiro e a cena da etapa anterior desce.
+  // A cena só fica no topo durante a corrida ou enquanto a bandeirada ainda está sendo exibida.
+  const sceneTop = !!raceLead || !!sceneModel?.playing;
+  // Abas do modo paddock: mesma página, três recortes. Durante a corrida não há abas.
+  const VIEWS = { paddock: 'Paddock', driver: 'Piloto', season: 'Campeonato' };
+  const tab = raceLead ? 'paddock' : (VIEWS[ui.view] ? ui.view : 'paddock');
+  const tabs = raceLead ? '' : `<nav class="tabs view-tabs" aria-label="Seções">${Object.entries(VIEWS).map(([id, label]) =>
+    `<button class="tab ${tab === id ? 'on' : ''}" data-act="view" data-id="${id}" aria-pressed="${tab === id}">${label}</button>`).join('')}</nav>`;
+  const scene = `${podium ? `<div class="map-mobile">${podium}</div>` : ''}${raceLead ? `<div class="race-lead">${raceSceneCard(map)}${raceLead}</div>` : raceSceneCard(map)}`;
+  return `${header(view)}${ladder(view)}${tabs}
+  <div class="layout${raceLead ? ' in-race' : ''}" data-view="${tab}">
+    <div class="col-main">${sceneTop ? scene + main : main + scene}</div>
     <div class="col-ficha">${raceTower(map)}${carPanel(view)}${raceLead ? '' : ficha(view)}</div>
     <div class="col-side">${podium ? `<div class="map-desktop">${podium}</div>` : ''}${aside}</div>
   </div>`;
@@ -492,7 +501,7 @@ function raceSceneCard(map) {
   const lines = feed.map((line, i) => `<li class="${i >= feed.length - fresh ? 'fresh' : ''}"><b>${esc(line.when)}</b> ${esc(line.text)}</li>`).reverse().join('');
   // Mapa compacto à esquerda; estado, controles e narração à direita. No celular, um abaixo do outro.
   return `<section class="card race-visual${map.cars.length ? '' : ' solo'}" aria-label="Mapa da corrida">
-    <div class="scene-head"><h3>${esc(map.circuit.gp)}</h3>
+    <div class="scene-head"><h3>${map.phase === 'finish' && !sceneModel?.playing ? 'Etapa anterior · ' : ''}${esc(map.circuit.gp)}</h3>
       <span class="chip">${esc(phase)}${position ? ` · P${position}` : ''}</span>
       ${map.cars.length ? `<span class="chip">${map.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span>` : ''}
       ${map.circuit.tags?.length ? `<span class="chip" title="${esc((map.circuit.hints ?? []).join(' '))}">${esc(map.circuit.tags.join(' · '))}</span>` : ''}</div>
@@ -1079,13 +1088,13 @@ function screenF1(view) {
         <div class="grid2">${p.options.map((o) => `<button class="opt" data-act="order" data-id="${o.id}"><strong>${esc(o.label)}</strong><span>${esc(o.description)}</span></button>`).join('')}</div></section>`;
     } else {
       body = `<section class="card focus"><h2>${pd.payload.out ? 'Acompanhar do box' : 'Plano do fim de semana'}</h2>
+        <div class="row"><button class="btn" data-act="simnext">Acompanhar etapa</button><button class="btn ghost" data-act="simimportant">Só decisões importantes</button></div>
+        <p class="mute small">Acompanhar etapa pausa em cada escolha. Só decisões importantes delega a rotina e para na próxima escolha relevante ou na bandeirada. Os dois botões avançam no máximo uma etapa. Se quiser, ajuste o plano e o treino abaixo antes de avançar.</p>
         ${planControl(f1, 'race-plan')}
         <p class="mute">A equipe segue este plano nas próximas etapas. Você decide quando houver uma disputa relevante; pode mudar o plano antes de qualquer corrida.</p>
         ${pd.payload.out ? '' : `<label class="field">Treino livre desta etapa
           <select id="race-practice">${Object.entries({ none: 'Programa padrão', setup: 'Trabalhar no acerto · melhora o ritmo', tyres: 'Testar pneus · melhora a condição na janela de box' }).map(([id, label]) => `<option value="${id}" ${pd.payload.practice === id ? 'selected' : ''}>${label}</option>`).join('')}</select>
         </label>`}
-        <div class="row"><button class="btn" data-act="simnext">Acompanhar etapa</button><button class="btn ghost" data-act="simimportant">Só decisões importantes</button></div>
-        <p class="mute small">Acompanhar etapa pausa em cada escolha. Só decisões importantes delega a rotina e para na próxima escolha relevante ou na bandeirada. Os dois botões avançam no máximo uma etapa.</p>
         <details data-keep="sim"><summary>Controles de acompanhamento</summary>
         <div class="row"><button class="btn ghost small" data-act="sim5">Simular 5 corridas</button><button class="btn ghost small" data-act="simrest">Simular o resto da temporada</button></div>
         <label class="row"><input type="checkbox" id="t-auto" ${ui.autoSingle ? 'checked' : ''}> Resolver sozinho situações sem escolha</label>
@@ -1099,9 +1108,12 @@ function screenF1(view) {
     const inRace = ['race_strategy', 'race_start', 'race_event', 'race_pit', 'team_order', 'race_finale'].includes(pd.type);
     const dashboard = raceDashboard(f1, pd, stage);
     if (inRace) {
+      // Com a cena em movimento, a escolha só aparece quando o trecho termina (ou ao pular a animação).
+      if (sceneModel?.playing) body = body.replace('<section class="card focus">', '<section class="card focus" hidden data-finish-reveal>')
+        + `<section class="card scene-wait" data-finish-pending><p><b>Cena em andamento.</b> A decisão aparece quando o trecho terminar.</p><button class="btn ghost small" data-scene-skip>Pular animação</button></section>`;
       raceLead = body + dashboard;
       body = '';
-    } else body = dashboard + body;
+    } else body = body + dashboard;   // plano e botões antes do painel do GP: a ação principal fica visível sem rolar
   }
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
@@ -1110,7 +1122,7 @@ function screenF1(view) {
   const betweenRaces = ['weekend_approach', 'home_race', 'story_event'].includes(pd?.type);
   const event = lastEventCard(f1);
   const previous = last && !betweenRaces ? `<details class="card previous-race"><summary>Resultado da etapa anterior · ${esc(f1.lastRace.circuit?.gp ?? '')}</summary>${last}</details>` : '';
-  return layout(view, `${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}${raceLead ? '' : `${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`}`, seasonPanel(view), raceLead);
+  return layout(view, `${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}`, `${seasonPanel(view)}${raceLead ? '' : `${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`}`, raceLead);
 }
 
 function screenEndSeason(view) {
@@ -1355,6 +1367,7 @@ document.addEventListener('click', (e) => {
     case 'newgame-no': ui.confirmNew = false; return render();
     case 'newgame-yes': return toMenu();
     case 'grid': ui.fullGrid = !ui.fullGrid; return render();
+    case 'view': ui.view = id; return render();
     case 'tab': ui.tab = id; return render();
     case 'sttab': ui.stTab = id; return render();
     case 'pick-base': ui.baseOpt = id; return render();
