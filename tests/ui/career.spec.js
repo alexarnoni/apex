@@ -393,3 +393,16 @@ test('modo paddock: abas trocam o recorte e somem durante a corrida', async ({ p
   await page.locator('[data-act="simnext"]').click();
   if ((await saved(page)).pendingDecision?.type?.startsWith('race_')) await expect(page.locator('.view-tabs')).toHaveCount(0);
 });
+
+test('depois da bandeirada, Continuar leva ao próximo passo sem rolar', async ({ page }) => {
+  const start = fixture('weekend_approach', (s) => advanceRaces(s, { limit: 1 }).state.pendingDecision?.type === 'weekend_approach');
+  await importCareer(page, start);
+  await page.locator('[data-act="simimportant"]').click();
+  expect((await saved(page)).pendingDecision.type).toBe('weekend_approach');
+  await page.locator('[data-scene="skip"]').click();
+  const next = page.locator('[data-act="next-stage"]:visible');
+  await expect(next).toHaveCount(1);
+  await next.click();
+  await expect(page.locator('[data-act="simnext"]')).toBeInViewport();
+  await expect(page.locator('[data-act="next-stage"]')).toHaveCount(0);
+});

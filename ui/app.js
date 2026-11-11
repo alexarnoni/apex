@@ -489,6 +489,7 @@ function podiumCard(map) {
     <h3>Pódio · ${esc(map.circuit.gp)}</h3>
     ${podium ? `<ol>${podium}</ol>` : '<p>Sem classificados.</p>'}
     <div class="podium-your-result"><span>Seu resultado</span><strong>${esc(result)}</strong></div>
+    ${sceneModel?.playing ? '<button class="btn" data-act="next-stage">Continuar</button>' : ''}
   </section>`;
 }
 
@@ -1367,6 +1368,8 @@ document.addEventListener('click', (e) => {
     case 'newgame-no': ui.confirmNew = false; return render();
     case 'newgame-yes': return toMenu();
     case 'grid': ui.fullGrid = !ui.fullGrid; return render();
+    // Depois da bandeirada: redesenha sem a cena no topo e volta ao começo, onde está o próximo passo.
+    case 'next-stage': render(); window.scrollTo(0, 0); $app().scrollTop = 0; return undefined;
     case 'view': ui.view = id; return render();
     case 'tab': ui.tab = id; return render();
     case 'sttab': ui.stTab = id; return render();

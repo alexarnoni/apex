@@ -403,6 +403,8 @@ h2::before { display: none; }
 .race-result details, .weekend-stage { margin-block: .6rem; }
 .map-desktop { display: none; }
 .map-mobile { margin-bottom: 12px; }
+.map-mobile:has(> [hidden]) { display: none; }
+.race-podium > .btn { align-self: flex-start; }
 @media (min-width: 1100px) {
   .map-desktop { display: block; }
   .map-mobile { display: none; }
