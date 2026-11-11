@@ -47,3 +47,4 @@ Os workflows de PR e de publicação foram configurados para instalar o Chromium
 - Fluxos de falha de armazenamento, navegação por teclado/modal e envio de feedback com backend simulado.
 - Fluxos adicionais de escolhas não padronizadas de contrato/ordens.
 - Comparação visual automatizada entre versões; capturas atuais foram inspecionadas, não são golden images.
+- Modo paddock (v0.14.5): os auxiliares `show` e `skipScene` em `tests/ui/career.spec.js` abrem a aba certa em tela estreita e pulam a cena antes de uma decisão de corrida. Há um teste próprio para as abas.

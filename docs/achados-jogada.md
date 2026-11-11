@@ -81,7 +81,7 @@ Política automática de calibração, estilo consistente.
 
 | Achados | Onde fica |
 |---|---|
-| 3 (decisão antes de a cena acabar), 9 a 12 (decisão enterrada, duas etapas na tela) | Modo paddock e segunda arrumação da tela, pacote a abrir antes da v0.15 |
+| 3 (decisão antes de a cena acabar), 9 a 12 (decisão enterrada, duas etapas na tela) | Resolvidos na v0.14.5, aplicada localmente em 2026-11-11 |
 | 15, 17 (marcos e companheiro) | v0.15 e v0.16 |
 | 18, 19 (aposentadoria e legado) | v0.16 e v0.17; retrospectiva na v0.34 |
 | 14 (ano de base em três cliques) | v0.32, mini calendário |
