@@ -95,3 +95,20 @@ Política automática de calibração, estilo consistente.
 ## Ordem sugerida
 
 Erros 1 a 8 e o item 13 cabem num pacote pequeno de correções. Os itens 9 a 12 pedem o modo paddock: cada decisão fora da corrida em tela própria, sem a cena antiga em cima. Os itens 14 a 19 confirmam a Fase 1 (marcos, companheiro, nota) e o mini calendário da base.
+
+## Teste da v0.14.5 no site publicado (2026-11-11)
+
+Jogado em https://bandeirada.alexarnoni.com, do kart à segunda corrida de F1, a 1024 px e em tela de celular emulada (375×812). Sem erros no console.
+
+Funcionou: versão 0.14.5; abas Paddock, Piloto e Campeonato, ausentes durante a corrida; ficha larga; "Acompanhar etapa" visível sem rolar antes da corrida; narração vazia antes da largada e nota de estratégia só depois da janela de box; decisão recolhida durante a cena e revelada ao fim do trecho, em tempo real, e também pelo botão "Pular animação" do aviso; pódio e resultado só depois da bandeirada; duas opções lado a lado e inteiras na tela do celular; rótulo da Ferrari coerente; "Estender o stint" de volta; descrição nova de "Ajudar o desenvolvimento".
+
+Achados novos. Os itens 36 e 43 foram corrigidos localmente em 2026-11-11 (pacote v0.14.6, não publicado): botão "Continuar" no pódio depois da bandeirada, que redesenha a tela com o próximo passo no topo, e fim do espaço vazio acima da cena. Os demais seguem abertos:
+
+36. **Depois da bandeirada, o botão da próxima etapa fica longe.** A cena fica no topo enquanto a bandeirada é exibida e continua lá depois; no celular "Acompanhar etapa" vai para baixo do pódio, da cena e do resultado (página de cerca de 2.200 px). Acontece a cada corrida. Saída possível: botão "Próxima etapa" no cartão do pódio, ou redesenhar a tela quando a cena termina.
+37. **A etiqueta da cena adianta o resultado.** Durante as luzes de largada ela já mostra "Bandeirada · P8" ou a posição depois da largada.
+38. **Plano da próxima etapa aparece junto com a bandeirada da anterior** enquanto a animação roda.
+39. **Evento "Largada confusa" depois da largada.** Com a largada já decidida e narrada, o evento pergunta de novo como abordar a primeira curva.
+40. **Opções presas cobrem o texto da situação no celular.** A descrição do evento fica atrás das duas opções até rolar.
+41. **Corrida com só duas decisões.** A primeira corrida da F1 teve pneus e largada e foi direto à bandeirada.
+42. **Circuitos sem características.** Austrália e China não têm traços cadastrados; a escolha de pneus fala em pista de rua e pista técnica sem dizer qual é o caso.
+43. **Espaço vazio acima da cena** enquanto o pódio está oculto.
