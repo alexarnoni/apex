@@ -62,7 +62,7 @@ Política automática de calibração, estilo consistente.
 
 ## Estado em 2026-11-11
 
-**Corrigido localmente (pacote v0.14.4, não publicado).** 183 testes Node, build e 30 Playwright (Chrome) aprovados.
+**Corrigido e publicado na v0.14.4 (2026-11-11).** 183 testes Node, build e 30 Playwright (Chrome) aprovados.
 
 - 1: o foco "Ajudar o desenvolvimento" descreve o efeito em palavras.
 - 2: o resultado da estratégia de pneus só entra na narração depois da janela de box (ou nas voltas finais); antes aparece "Plano de pneus definido para a largada". Só a view mudou; regra e resultado são os mesmos.
