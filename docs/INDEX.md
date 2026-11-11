@@ -11,6 +11,7 @@ Após o [`AGENTS.md`](../AGENTS.md), leia somente [`HANDOFF.md`](HANDOFF.md) par
 | Documento | Uso |
 |---|---|
 | [`pacotes-1.0.md`](pacotes-1.0.md) | Pacotes de atualização programados da v0.15 à v1.0, com critério de pronto. |
+| [`achados-jogada.md`](achados-jogada.md) | Achados de uma carreira jogada na v0.14.3: erros, telas e decisões fracas. |
 | [`proxima-atualizacao.md`](proxima-atualizacao.md) | Escopo das versões e próximos candidatos. |
 | [`bandeirada-entrega`](../.agents/skills/bandeirada-entrega/SKILL.md) | Skill de retomada, revisão e entrega. |
 | [`v0.11.md`](v0.11.md) | Perfis, mercado, verificações e limites da v0.11.0. |

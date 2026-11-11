@@ -153,7 +153,7 @@ Quando: season_start · peso 2
 
 > Seu pai quer opinar na sua temporada, como faz desde o kart. Ele ainda enxerga detalhes que você não vê.
 
-- **Ouvir com atenção**: +0.5 de habilidade.
+- **Ouvir com atenção**: +0,5 de habilidade.
   - Duas ou três dicas dele valem o ano.
 - **Pedir espaço**: +2 de confiança da equipe.
   - A equipe vê um profissional dono das próprias decisões.
@@ -274,8 +274,8 @@ Quando: race · peso 2
 
 - **Administrar a posição**: Mantenha o ritmo e a posição nesta decisão. A equipe ganha 5 pontos de confiança em você.
   - Você administra a posição como combinado com a equipe.
-- **Forçar o ritmo**: 50% de chance de ganhar até duas posições e 50% de perder até duas. A confiança da equipe cai 5 pontos em ambos os casos.
-  - (50%) Você ganha posições, mas a equipe não gostou de ser contrariada.
+- **Forçar o ritmo**: 50% de chance de ganhar até duas posições e 50% de perder até duas. Se der errado, a confiança da equipe cai 5 pontos.
+  - (50%) Você ganha posições, e a equipe aceita o resultado.
   - (50%) Você perde posições, e a equipe questiona sua decisão.
 
 ### Pressão nas últimas voltas  `defesa_agressiva`
