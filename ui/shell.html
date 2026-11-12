@@ -573,8 +573,8 @@ h2::before { display: none; }
   .layout[data-view="paddock"]:not(.in-race) > :is(.col-ficha, .col-side) { display: none; }
 }
 @media (max-width: 699px) {
-  /* Duas opções lado a lado, presas ao rodapé enquanto o cartão da decisão está na tela. */
-  .in-race .focus .grid2:not(:has(> :nth-child(3))) { position: sticky; bottom: 0; z-index: 2; grid-template-columns: 1fr 1fr; gap: 8px; margin-inline: -8px; padding: 8px; background: var(--panel); border-top: 1px solid var(--line); }
+  /* Duas opções lado a lado, sob o recado: não ficam presas ao rodapé, para não cobrir o texto. */
+  .in-race .focus .grid2:not(:has(> :nth-child(3))) { position: static; grid-template-columns: 1fr 1fr; gap: 8px; margin-inline: -8px; padding: 8px; background: var(--panel); border-top: 1px solid var(--line); }
   .in-race .focus .grid2:not(:has(> :nth-child(3))) .opt { padding: 10px; }
   /* O cartão corta o que sai dele; sem isso as opções não conseguem ficar presas ao rodapé. */
   .in-race .card.focus { overflow: visible; }
