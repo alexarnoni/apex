@@ -7,7 +7,7 @@ Pacote pequeno, quase todo de texto e interface. Leia antes `guia-executor.md`. 
 | T1 etiqueta da cena | **Feito** |
 | T2 plano após bandeirada | **Feito** (`.after-flag`; auxiliar `skipScene` também clica em `[data-scene="skip"]`) |
 | T3 evento "Pelotão embolado" | **Feito** (`npm run events` executado) |
-| T4 ordem no celular | **Feito**, testes passam; **captura 375×812 não feita** |
+| T4 ordem no celular | **Feito**. A primeira versão ainda deixava as opções presas cobrindo o recado; a captura 375×812 mostrou isso e o ajuste está em `033216e` (opções sem sticky no celular). Captura conferida depois do ajuste. |
 | T5 "Pista equilibrada" | **Feito** |
 | T6 rádio que explica | **Feito** |
 | T7 aviso de confiança | **Feito** (`<details>`) |
