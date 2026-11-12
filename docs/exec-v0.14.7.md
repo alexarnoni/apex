@@ -1,6 +1,6 @@
 # Especificação — v0.14.7 "Pendências da carreira jogada"
 
-Pacote pequeno, quase todo de texto e interface. Leia antes `guia-executor.md`. Origem: `achados-jogada.md` (os números entre parênteses são os achados). Estado em 2026-11-11: **executado localmente, não publicado** (commit local; sem push nem alteração de versão). Modelo sugerido: qualquer um; as tarefas são independentes.
+Pacote pequeno, quase todo de texto e interface. Leia antes `guia-executor.md`. Origem: `achados-jogada.md` (os números entre parênteses são os achados). Estado em 2026-11-11: **publicado** em 2026-11-11 como v0.14.7 (commit `c39b4d3`). Modelo sugerido: qualquer um; as tarefas são independentes.
 
 | Tarefa | Estado |
 |---|---|

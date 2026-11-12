@@ -1,6 +1,6 @@
 # Retomada — Bandeirada
 
-Atualizado em **2026-11-11**, v0.14.6 publicada. **v0.14.7 executada localmente, não publicada** (commit local, sem push, versão ainda 0.14.6; pendente: captura do celular da T4 e publicação quando o usuário mandar).
+Atualizado em **2026-11-11**, v0.14.7 publicada em `c39b4d3` ([deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/43131728577)); HTML servido conferido com 0.14.7 e os textos novos. Pendente: captura 375×812 da T4 e teste em aparelho real.
 
 - Repo `alexarnoni/apex`; push na main aciona GitHub Pages. Site: https://bandeirada.alexarnoni.com.
 - v0.11 publicada no commit `9e9738e`. [Deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/42538364924); HTTP 200, versão, perfis, treino, GoatCounter, Worker e hashes CSP conferidos no HTML servido.
