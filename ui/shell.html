@@ -553,7 +553,8 @@ h2::before { display: none; }
   .in-race .race-dashboard-head h2 { font-size: 1.35rem; margin-block: .1rem; }
 }
 /* Abas do modo paddock. */
-.view-tabs { margin-block: 4px 12px; }
+.view-tabs { margin-block: 4px 12px; flex-wrap: wrap; }
+.view-tabs .tab { white-space: nowrap; }
 .scene-wait { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; }
 .scene-wait p { margin: 0; }
 .layout[data-view="driver"], .layout[data-view="season"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; }
