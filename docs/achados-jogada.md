@@ -94,6 +94,13 @@ Política automática de calibração, estilo consistente.
 
 **Resolvidos na v0.14.7 (local, não publicada):** 23, 25, 27, 31, 37, 38, 39, 40, 42. Parciais: 28 (falta "te venceu na Karting"), 30 (faltam os rótulos "Largada" da narração e a ordem do feed; a parada já mostra o composto do plano em pista seca), 32 (`aria-pressed` feito; o restante segue na v0.20).
 
+## Atualização de 2026-11-12 (v0.16 local, não publicada)
+
+- **30 resolvido em parte:** os lances do meio da prova saem como "Primeiras voltas" e "Depois do box"; "Largada" ficou só nas luzes. A ordem do mais novo para o mais antigo foi mantida (feed ao vivo, destaque no mais recente).
+- **Feitos:** 17 (vencedor marcado como companheiro na lista de corridas e duelo no painel), 18 (aposentadoria com títulos, vitórias e declínio), 28 (já estava corrigido: "no Kart"; "primeira corrida em casa" só aparece na F1).
+- **Parcial:** 19 (ficha de aposentado sem contrato nem status; o legado ainda é um número sem faixa, v0.17); 15 (marcos) e 29 (nota opaca) conforme a v0.15.
+- **Seguem abertos e têm pacote:** 32 restante na v0.20; 14, 16, 21, 22, 24, 35, 41 pela tabela acima.
+
 ## Plano de execução (2026-11-11)
 
 As pendências que cabem em texto e interface viraram tarefas em `exec-v0.14.7.md`: achados 23, 25, 27, 28, 30, 31, 32, 37, 38, 39, 40 e 42. Os achados 15, 17 e 29 entram pela v0.15 (`exec-v0.15.md`) e pela v0.16. Os demais continuam com o destino da tabela acima; o 41 (corrida com poucas decisões) e o 24 dependem do volta a volta.

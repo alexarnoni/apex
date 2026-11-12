@@ -37,14 +37,14 @@ O intervalo entre etapas hoje é o trecho mais vazio. Quase tudo é interface. *
 
 - [ ] Caixa de entrada: propostas, recados do chefe, notícias e convites (seção "Ideias de manager do piloto").
 - [ ] **Novo:** nota de 1 a 10 por corrida para cada piloto e "piloto do dia".
-- [ ] Duelo com o companheiro e briefing antes da largada (seção "Ideias de manager do piloto").
-- [ ] **Novo:** conta do título: quantos pontos faltam e o que acontece em cada cenário. Com a parte que falta de metas e tensão (D.5).
+- [x] ~~Duelo com o companheiro e briefing antes da largada (seção "Ideias de manager do piloto").~~ **Feito** (2026-11-12, v0.16 local, não publicada). Briefing não traz o grid.
+- [x] ~~**Novo:** conta do título: quantos pontos faltam e o que acontece em cada cenário.~~ **Feito** (2026-11-12, v0.16 local): pontos do líder, pontos em jogo e média por etapa. **Parcial:** metas na base (D.5) seguem abertas; sem ponto de volta rápida.
 - [ ] **Novo:** manchete de jornal em vitórias, títulos e transferências.
 - [ ] Página da equipe, gráfico da temporada, linha do tempo, radar de atributos e recordes do mundo (seção "Ideias de manager do piloto"); estatísticas completas (2.1), evolução ano a ano (2.2), companheiros de base visíveis (2.3), GP de casa (seção "GP de casa do jogador").
 - [ ] Tutorial na primeira corrida (seção "Ideias de manager do piloto") e **novo:** glossário de F1 em dicas.
-- [ ] Talento visível na ficha e troca dos quatro contadores (R.16). Ficha em faixa horizontal (R.17) segue como ideia guardada.
+- [ ] Talento visível na ficha e troca dos quatro contadores (R.16). **Parcial na v0.16 local (2026-11-12):** talento em faixa e contadores Largadas, Vitórias, Pódios e Pontos; faltam voltas mais rápidas (não existem no save) e o talento de berço. Ficha em faixa horizontal (R.17) segue como ideia guardada.
 - [ ] Histórico navegável da base e de campeonatos anteriores (seção "Imersão e aproveitamento de tela").
-- [ ] Restos de itens já entregues: perfil da equipe atual na ficha e perfil do companheiro (D.17); bandeira nas tabelas de equipes (D.7).
+- [ ] Restos de itens já entregues: bandeira nas tabelas de equipes (D.7).
 - [ ] **Novo:** "enquanto você esteve fora" ao reabrir o save e avisos de marco (primeiro pódio, 100 GPs).
 
 ### Fase 2 (v0.19 e v0.20) — Alicerce
