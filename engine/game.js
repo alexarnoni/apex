@@ -117,9 +117,9 @@ export function createCareer({ surname, number, flag = null, style, seed, age = 
       const sorted = teamsByStrength(kart.id);
       const middle = sorted.find(t => t.id === st.baseCareer.teamId);
       const proposals = [
-        ['winner', sorted[0], 'Projeto vencedor', 'Carro forte · cobrança alta', 'Formação reforçada quando você entrega o resultado esperado.'],
-        ['balanced', middle, 'Projeto equilibrado', 'Carro intermediário · cobrança moderada', 'Desenvolvimento regular ao longo da temporada.'],
-        ['development', sorted.at(-1), 'Programa de formação', 'Carro menos competitivo · sem cobrança', 'Formação reforçada mesmo se o resultado demorar.'],
+        ['winner', sorted[0], 'Projeto vencedor', 'Kart forte · cobrança alta', 'Formação reforçada quando você entrega o resultado esperado.'],
+        ['balanced', middle, 'Projeto equilibrado', 'Kart intermediário · cobrança moderada', 'Desenvolvimento regular ao longo da temporada.'],
+        ['development', sorted.at(-1), 'Programa de formação', 'Kart menos competitivo · sem cobrança', 'Formação reforçada mesmo se o resultado demorar.'],
       ];
       st.baseCareer.teamId = null;
       st.phase = 'BASE_OFERTAS';

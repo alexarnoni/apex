@@ -291,20 +291,20 @@ Quando: race · peso 3
   - (45%) Defesa limpa e posição mantida.
   - (55%) Ele passa com facilidade.
 
-### Largada confusa  `largada_confusa`
+### Pelotão embolado  `largada_confusa`
 
 Quando: race · peso 3
 
-> As luzes se apagam e o pelotão se espreme na primeira curva. Tem espaço por dentro, mas é pouco.
+> Três carros dividem a freada à sua frente. Tem espaço por dentro, mas é pouco.
 
-- **Atacar na primeira curva**: 35% de ganhar 2 posições, 15% de perder 2, 10% de abandonar.
-  - (35%) Você mergulha por dentro e passa dois carros antes da curva 2.
+- **Mergulhar por dentro**: 35% de ganhar 2 posições, 15% de perder 2, 10% de abandonar.
+  - (35%) Você mergulha por dentro e passa dois carros na saída da curva.
   - (15%) Você é espremido e perde duas posições.
-  - (10%) Toque na primeira curva. Pneu furado e corrida encerrada.
+  - (10%) Toque na disputa. Pneu furado e corrida encerrada.
   - (40%) Não havia espaço, e você mantém a posição.
 - **Esperar a poeira baixar**: 20% de ganhar 1 posição.
   - (20%) Dois carros se tocam à sua frente e você herda uma posição.
-  - (80%) Largada limpa, sem mudança.
+  - (80%) Ninguém erra, e tudo segue igual.
 
 ### Bandeira amarela  `bandeira_amarela`
 

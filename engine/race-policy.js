@@ -24,7 +24,7 @@ export function raceAdvice(state) {
       id = [...p.options].sort((a, b) => strategyFit(b.id, circuit) - strategyFit(a.id, circuit))[0].id;
     }
     // Clima fixo: pneus recomendados não justificam uma interrupção a cada etapa.
-    reason = p.wet ? 'Pista molhada: a equipe recomenda pneus de chuva.' : 'Pneus definidos pelo plano e pelas características da pista.';
+    reason = p.wet ? 'Pista molhada: a equipe recomenda pneus de chuva.' : 'Antes da largada você escolhe o pneu do primeiro trecho. A recomendação segue o seu plano e o tipo de pista.';
   } else if (pd.type === 'race_pit') {
     id = !p.interruption && p.changes && plan === 'risky' && !p.wet && p.clearAir ? 'extend' : p.safe;
     important = !!p.interruption || p.changes || !!p.rival;
@@ -34,7 +34,7 @@ export function raceAdvice(state) {
   } else if (pd.type === 'race_start') {
     const street = state.f1.season.pendingRace?.startCtx?.tags.includes('rua');
     id = plan === 'risky' && !p.wet && !street && p.options.some(o => o.id === 'attack') ? 'attack' : 'hold';
-    reason = p.wet || street ? 'Primeira curva de risco: a equipe prioriza margem.' : 'Largada segue o plano escolhido.';
+    reason = p.wet || street ? 'Primeira curva de risco: a equipe prioriza margem.' : 'As luzes vão se apagar. Atacar pode render posição; largar com margem evita toque na primeira curva.';
   } else if (pd.type === 'race_finale') {
     const goal = goalProgress(state);
     const goalUrgent = goal && !goal.met && goal.total - goal.done <= F.goalUrgencyRaces;
@@ -60,7 +60,7 @@ export function raceAdvice(state) {
     }
     if (goalUrgent && relevant) reason += ` Faltam ${goal.total - goal.done} etapas e a meta da equipe ainda não foi alcançada.`;
   } else if (pd.type === 'team_order') { id = 'obey'; important = true; reason = 'Ordem de equipe: sua decisão afeta o resultado e a confiança.'; }
-  else if (pd.type === 'race_event') { important = p.options.length > 1; reason = `${p.title}: uma situação de corrida exige sua escolha.`; }
+  else if (pd.type === 'race_event') { important = p.options.length > 1; reason = `${p.title}: o lance acontece agora e a equipe não decide por você.`; }
   else if (pd.type === 'story_event') { important = p.options.length > 1; id = p.options[0].id; reason = 'Notícia com consequências para a carreira.'; }
   else return null;
   if (!id) { important = true; reason = 'A equipe não tem recomendação segura para esta decisão salva.'; }

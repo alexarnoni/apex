@@ -447,7 +447,7 @@ function stat(label, value) { return `<div class="stat"><b>${esc(value)}</b><sma
 
 function optionCards(options, act, selected = null) {
   return `<div class="grid2">${Object.entries(options).map(([id, o]) =>
-    `<button class="opt ${selected === id ? 'on' : ''}" data-act="${act}" data-id="${esc(id)}"><strong>${esc(o.label)}</strong><span>${esc(o.description ?? '')}</span></button>`).join('')}</div>`;
+    `<button class="opt ${selected === id ? 'on' : ''}" aria-pressed="${selected === id}" data-act="${act}" data-id="${esc(id)}"><strong>${esc(o.label)}</strong><span>${esc(o.description ?? '')}</span></button>`).join('')}</div>`;
 }
 
 function teamTag(f1) {
@@ -471,7 +471,7 @@ function layout(view, main, aside = '', raceLead = '') {
   const scene = `${podium ? `<div class="map-mobile">${podium}</div>` : ''}${raceLead ? `<div class="race-lead">${raceSceneCard(map)}${raceLead}</div>` : raceSceneCard(map)}`;
   return `${header(view)}${ladder(view)}${tabs}
   <div class="layout${raceLead ? ' in-race' : ''}" data-view="${tab}">
-    <div class="col-main">${sceneTop ? scene + main : main + scene}</div>
+    <div class="col-main">${sceneTop ? scene + (sceneTop && !raceLead ? `<div class="after-flag" hidden data-finish-reveal>${main}</div>` : main) : main + scene}</div>
     <div class="col-ficha">${raceTower(map)}${carPanel(view)}${raceLead ? '' : ficha(view)}</div>
     <div class="col-side">${podium ? `<div class="map-desktop">${podium}</div>` : ''}${aside}</div>
   </div>`;
@@ -503,9 +503,9 @@ function raceSceneCard(map) {
   // Mapa compacto à esquerda; estado, controles e narração à direita. No celular, um abaixo do outro.
   return `<section class="card race-visual${map.cars.length ? '' : ' solo'}" aria-label="Mapa da corrida">
     <div class="scene-head"><h3>${map.phase === 'finish' && !sceneModel?.playing ? 'Etapa anterior · ' : ''}${esc(map.circuit.gp)}</h3>
-      <span class="chip">${esc(phase)}${position ? ` · P${position}` : ''}</span>
+      <span class="chip" ${sceneModel?.playing ? 'hidden data-finish-reveal' : ''}>${esc(phase)}${position ? ` · P${position}` : ''}</span>
       ${map.cars.length ? `<span class="chip">${map.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span>` : ''}
-      ${map.circuit.tags?.length ? `<span class="chip" title="${esc((map.circuit.hints ?? []).join(' '))}">${esc(map.circuit.tags.join(' · '))}</span>` : ''}</div>
+      ${map.circuit.tags?.length ? `<span class="chip" title="${esc((map.circuit.hints ?? []).join(' '))}">${esc(map.circuit.tags.join(' · '))}</span>` : '<span class="chip" title="Sem característica marcante: nenhum pneu leva vantagem pelo traçado.">Pista equilibrada</span>'}</div>
     <div class="scene-body">
       <svg role="img" aria-label="Traçado com carros nas cores das equipes"></svg>
       <div class="scene-side">
@@ -710,7 +710,7 @@ function racesList(f1) {
 // Painel da temporada (coluna da direita): classificação de pilotos e construtores, ou corrida a corrida.
 function seasonPanel(view) {
   const f1 = view.f1;
-  const title = view.screen === 'F1_PRE_TEMPORADA' ? 'Grid · classificação do ano anterior' : `Temporada ${f1.worldSeason}`;
+  const title = view.screen === 'F1_PRE_TEMPORADA' ? 'Grid · classificação do ano anterior' : `Temporada ${view.year}`;
   const tabBtn = (act, id, label, cur) => `<button class="tab ${cur === id ? 'on' : ''}" role="tab" aria-selected="${cur === id}" data-act="${act}" data-id="${id}">${label}</button>`;
   const body = ui.tab === 'races'
     ? racesList(f1)
@@ -766,7 +766,7 @@ function screenCreate() {
     </div>
     <h3>Estilo de pilotagem</h3>
     <div class="grid2">${Object.entries(STYLES).map(([id, s]) =>
-      `<button type="button" class="opt ${d.style === id ? 'on' : ''}" data-act="style" data-id="${id}"><strong>${esc(s.name)}</strong><span>${esc(s.text)}</span></button>`).join('')}</div>
+      `<button type="button" class="opt ${d.style === id ? 'on' : ''}" aria-pressed="${d.style === id}" data-act="style" data-id="${id}"><strong>${esc(s.name)}</strong><span>${esc(s.text)}</span></button>`).join('')}</div>
     <p class="mute" style="font-size:14px">Quem começa mais novo tem mais potencial de evolução, mas fica mais anos no kart: no jogo, a progressão exige 15 anos na F4, 16 na F3, 17 na F2 e 18 na F1.</p>
     ${noSlots ? '<div class="note">Os 3 slots estão ocupados. Apague uma carreira acima para começar outra.</div>' : ''}
     ${ui.error ? `<div class="note err">${esc(ui.error)}</div>` : ''}
@@ -797,7 +797,7 @@ function seasonResultCard(view) {
   if (!ls) return '';
   const rivals = ls.rivalResults.map((r) => `${esc(r.name)} ${ord(r.position)}`).join(' · ');
   return `<section class="card">
-    <h3>${esc(ls.year)} · ${esc(ls.category)} · ${esc(ls.teamName)} <span class="chip">carro #${esc(ls.carRank)}</span></h3>
+    <h3>${esc(ls.year)} · ${esc(ls.category)} · ${esc(ls.teamName)} <span class="chip">força do equipamento: ${esc(ls.carRank)}º</span></h3>
     <div class="row" style="align-items:flex-end;gap:24px"><div class="big">${ord(ls.position)}</div>
       <div class="stats">${stat('Pontos', ls.points)}${stat('Vitórias', ls.wins)}</div></div>
     ${ls.champion ? `<p class="mute">Campeão: ${esc(ls.champion)}</p>` : `<p><span class="pill good">Campeão</span></p>`}
@@ -924,8 +924,9 @@ function trustNotice(f1) {
   const { threshold, releaseChance, baseReleaseChance, strongSeasonTop } = f1.trustReview;
   return `<aside class="note trust-notice">
     <strong>Confiança da equipe · ${esc(f1.trust)}/100</strong>
+    <details><summary>O que está em jogo</summary>
     <p>Se terminar a temporada abaixo de ${esc(threshold)} de confiança, você pode perder o status de primeiro piloto e a vaga. Com a classificação atual, o risco de perder a vaga seria de <b>${esc(Math.round(releaseChance * 100))}%</b>.</p>
-    <p>Terminar no top ${esc(strongSeasonTop)} e à frente do companheiro em pontos reduz esse risco, que normalmente é de ${esc(Math.round(baseReleaseChance * 100))}%.</p>
+    <p>Terminar no top ${esc(strongSeasonTop)} e à frente do companheiro em pontos reduz esse risco, que normalmente é de ${esc(Math.round(baseReleaseChance * 100))}%.</p></details>
   </aside>`;
 }
 
@@ -1024,7 +1025,7 @@ function seasonPulseCard(goal, final = false) {
     <details><summary>Disputas e cobrança da equipe</summary><ul class="log">${goal.lines.map(line => `<li>${esc(line)}</li>`).join('')}</ul><p class="mute small">${esc(goal.consequence)}</p></details></section>`;
 }
 
-function raceDashboard(f1, pd, stage) {
+function raceDashboard(f1, pd, stage, year) {
   const { done, total, circuit } = f1.race;
   const between = pd.type === 'story_event';
   const phase = pd.type === 'race_strategy' || pd.type === 'race_start';
@@ -1042,9 +1043,9 @@ function raceDashboard(f1, pd, stage) {
       ${showPosition ? `<div class="race-current-position"><small>${phase ? 'Largada' : 'Posição atual'}</small><strong>P${esc(position)}</strong></div>` : ''}
     </div>
     ${pit ? `<div class="race-pit-report"><b>Última decisão · Boxes</b><p>${pit}</p></div>` : ''}
-    <div class="race-progress"><span>Temporada ${esc(f1.worldSeason)}</span><b>${done}/${total} etapas concluídas</b></div>
+    <div class="race-progress"><span>Temporada ${esc(year)}</span><b>${done}/${total} etapas concluídas</b></div>
     <div class="bar-meter"><i style="width:${Math.round((done / total) * 100)}%"></i></div>
-    ${!between && circuit ? `<details class="small"><summary>Informações do circuito</summary><p>${esc(circuit.tags.join(' · '))} · Chance de chuva: ${esc(circuit.rain)}%</p><p class="mute">${esc(circuit.hints.join(' '))}</p></details>` : ''}
+    ${!between && circuit ? `<details class="small"><summary>Informações do circuito</summary><p>${esc(circuit.tags.length ? circuit.tags.join(' · ') : 'Pista equilibrada')} · Chance de chuva: ${esc(circuit.rain)}%</p><p class="mute">${esc(circuit.hints.join(' '))}</p></details>` : ''}
   </section>`;
 }
 
@@ -1107,7 +1108,7 @@ function screenF1(view) {
       ? `<aside class="decision-context note radio"><small class="radio-tag">Rádio · engenheiro</small><b>Por que decidir agora?</b><p>${esc(advice.reason)}</p>${advice.recommendation ? `<p class="mute">A equipe recomenda: <b>${esc(advice.recommendation)}</b>.</p><button class="btn ghost small" data-act="delegate">Delegar esta escolha</button>` : ''}</aside>` : '';
     body = body.replace(/(<section class="card focus">[\s\S]*?<\/h2>)/, `$1${context}`);
     const inRace = ['race_strategy', 'race_start', 'race_event', 'race_pit', 'team_order', 'race_finale'].includes(pd.type);
-    const dashboard = raceDashboard(f1, pd, stage);
+    const dashboard = raceDashboard(f1, pd, stage, view.year);
     if (inRace) {
       // Com a cena em movimento, a escolha só aparece quando o trecho termina (ou ao pular a animação).
       if (sceneModel?.playing) body = body.replace('<section class="card focus">', '<section class="card focus" hidden data-finish-reveal>')

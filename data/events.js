@@ -313,18 +313,18 @@ export const RACE_EVENTS = [
   {
     id: 'largada_confusa', phase: 'race', safe: 'esperar', weight: 3,
     cond: (c) => c.pos !== null && c.pos >= 5 && c.pos <= 15,
-    title: 'Largada confusa',
-    text: () => 'As luzes se apagam e o pelotão se espreme na primeira curva. Tem espaço por dentro, mas é pouco.',
+    title: 'Pelotão embolado',
+    text: () => 'Três carros dividem a freada à sua frente. Tem espaço por dentro, mas é pouco.',
     options: [
-      { id: 'atacar', label: 'Atacar na primeira curva', description: '35% de ganhar 2 posições, 15% de perder 2, 10% de abandonar.', outcomes: [
-        { p: 0.35, effects: { shift: 2 }, text: 'Você mergulha por dentro e passa dois carros antes da curva 2.' },
+      { id: 'atacar', label: 'Mergulhar por dentro', description: '35% de ganhar 2 posições, 15% de perder 2, 10% de abandonar.', outcomes: [
+        { p: 0.35, effects: { shift: 2 }, text: 'Você mergulha por dentro e passa dois carros na saída da curva.' },
         { p: 0.15, effects: { shift: -2 }, text: 'Você é espremido e perde duas posições.' },
-        { p: 0.1, effects: { dnf: true }, text: 'Toque na primeira curva. Pneu furado e corrida encerrada.' },
+        { p: 0.1, effects: { dnf: true }, text: 'Toque na disputa. Pneu furado e corrida encerrada.' },
         { p: 0.4, effects: {}, text: 'Não havia espaço, e você mantém a posição.' },
       ] },
       { id: 'esperar', label: 'Esperar a poeira baixar', description: '20% de ganhar 1 posição.', outcomes: [
         { p: 0.2, effects: { shift: 1 }, text: 'Dois carros se tocam à sua frente e você herda uma posição.' },
-        { p: 0.8, effects: {}, text: 'Largada limpa, sem mudança.' },
+        { p: 0.8, effects: {}, text: 'Ninguém erra, e tudo segue igual.' },
       ] },
     ],
   },

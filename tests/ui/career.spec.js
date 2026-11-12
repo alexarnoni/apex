@@ -40,7 +40,7 @@ async function show(page, selector, view) {
 }
 // Durante a cena a decisão fica recolhida; pular a animação a revela.
 async function skipScene(page) {
-  const skip = page.locator('[data-scene-skip]');
+  const skip = page.locator('[data-scene-skip]:visible, [data-scene="skip"]:visible').first();
   if (await skip.isVisible()) await skip.click();
 }
 
@@ -149,6 +149,8 @@ test('simular cinco e resto resolve largada e defesa até pausa narrativa ou fim
   expect(after.f1.season.races.length - state.f1.season.races.length).toBe(5);
   expect(after.pendingDecision.type).toBe('weekend_approach');
   await expect(page.getByRole('status')).toContainText('5');
+  // A bandeirada da última etapa pode estar em cena: pular revela o painel de simulação.
+  await skipScene(page);
   // O painel continua aberto depois de simular: não é preciso reabrir.
   await expect(page.locator('[data-act="simrest"]')).toBeVisible();
   await page.locator('[data-act="simrest"]').click();
@@ -284,6 +286,8 @@ test('carreira inteira por cliques: criação, base, temporadas, contratos e leg
       return;
     }
     expect(state.phase).not.toBe('ROTA_ALTERNATIVA');
+    // Com a bandeirada em cena, o plano da etapa seguinte só aparece depois de pular ou terminar a cena.
+    await skipScene(page);
     const pd = state.pendingDecision;
     if (!pd) { await page.locator('[data-act="next"]').click(); continue; }
     const answer = answerFor(state, 'a', { retireAt: 30 });

@@ -279,7 +279,7 @@ function weekendDecision(s) {
     const text = last?.position === null ? `Em ${last.year}, sua corrida aqui terminou em abandono.`
       : win ? `A torcida ainda lembra da sua vitória em ${win.year}.`
       : last ? `Na última vez aqui, você terminou em P${last.position} em ${last.year}.`
-      : 'É sua primeira corrida em casa registrada nesta carreira.';
+      : 'É a sua primeira corrida em casa na F1.';
     return { type: 'home_race', payload: { race, circuit, title: 'GP de casa', text,
       options: [
         { id: 'fans', label: 'Encontrar a torcida', description: 'Entrevistas e encontros com fãs aumentam sua fama.' },
@@ -506,7 +506,9 @@ export function resolveRacePit(s, rng, answer) {
     : p.changes ? (pit ? 1 : -2) : pit ? (p.clearAir ? 0 : 1) : (p.clearAir ? 1 : -1);
   EFFECTS.shift({ w, player: s.player }, edge);
   const position = w.result.indexOf(s.player) + 1;
-  const compound = p.wet ? 'pneus de chuva' : 'pneus de pista seca';
+  // Em pista seca, mostra o composto do plano (macios, médios ou duros) quando ele é de seco; sem mudança de lógica.
+  const dryPlan = ['soft', 'medium', 'hard'].includes(season.cur?.strategy?.id) ? season.cur.strategy.label?.toLowerCase() : null;
+  const compound = p.wet ? 'pneus de chuva' : dryPlan ? `pneus ${dryPlan}` : 'pneus de pista seca';
   const detail = p.interruption === 'red_flag' && pit ? `Você colocou ${compound} durante a suspensão.`
     : p.interruption && !pit ? 'Você manteve os pneus.'
     : pit ? `Você parou, colocou ${compound} e voltou em P${position}.`
