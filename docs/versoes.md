@@ -193,3 +193,7 @@ Os documentos originais continuam onde estavam; este arquivo só resume e aponta
 ## v0.11.0: perfis e mercado vivo
 
 Detalhes em [v0.11.md](v0.11.md). 178 testes Node e 22 de navegador. ENGINE_VERSION 1, atributos inferidos em saves antigos, sem reconstruir pilotos anteriormente apagados. Mercado preserva livres e reservas; transferência mantém grid completo.
+
+## v0.15: caixa de entrada
+
+Aba **Mensagens** derivada do estado (`engine/inbox.js`): cartas do careerLog, uma mensagem por corrida, marcos da temporada (primeira vitória, pódio ou pontos), movimentações de mercado no início da temporada e manchete da última corrida. A nota da corrida (`engine/rating.js`, de 1 a 10) entra como campo opcional `rating` em cada corrida. Mensagens lidas ficam no `localStorage` por slot e seed. Saves antigos continuam abrindo: sem `rating` a corrida aparece só com o GP. Para a manchete de "supera o companheiro", a corrida também grava `teammateGrid`, opcional. ENGINE_VERSION 1 sem mudança. 194 testes Node e 38 de navegador.
