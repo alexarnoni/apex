@@ -92,6 +92,10 @@ Política automática de calibração, estilo consistente.
 | 32 (acessibilidade das escolhas) | v0.20 |
 | 35 (escolha do kart) | Ajustador de calibração, v0.19 |
 
+## Plano de execução (2026-11-11)
+
+As pendências que cabem em texto e interface viraram tarefas em `exec-v0.14.7.md`: achados 23, 25, 27, 28, 30, 31, 32, 37, 38, 39, 40 e 42. Os achados 15, 17 e 29 entram pela v0.15 (`exec-v0.15.md`) e pela v0.16. Os demais continuam com o destino da tabela acima; o 41 (corrida com poucas decisões) e o 24 dependem do volta a volta.
+
 ## Ordem sugerida
 
 Erros 1 a 8 e o item 13 cabem num pacote pequeno de correções. Os itens 9 a 12 pedem o modo paddock: cada decisão fora da corrida em tela própria, sem a cena antiga em cima. Os itens 14 a 19 confirmam a Fase 1 (marcos, companheiro, nota) e o mini calendário da base.

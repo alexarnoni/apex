@@ -10,6 +10,9 @@ Após o [`AGENTS.md`](../AGENTS.md), leia somente [`HANDOFF.md`](HANDOFF.md) par
 
 | Documento | Uso |
 |---|---|
+| [`guia-executor.md`](guia-executor.md) | Para quem vai implementar um pacote especificado: ambiente, armadilhas e entrega. |
+| [`exec-v0.14.7.md`](exec-v0.14.7.md) | Especificação pronta para executar: doze pendências de texto e cena. |
+| [`exec-v0.15.md`](exec-v0.15.md) | Especificação pronta para executar: caixa de entrada, nota da corrida e manchete. |
 | [`pacotes-1.0.md`](pacotes-1.0.md) | Pacotes de atualização programados da v0.15 à v1.0, com critério de pronto. |
 | [`achados-jogada.md`](achados-jogada.md) | Achados de uma carreira jogada na v0.14.3: erros, telas e decisões fracas. |
 | [`proxima-atualizacao.md`](proxima-atualizacao.md) | Escopo das versões e próximos candidatos. |

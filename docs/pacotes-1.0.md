@@ -25,6 +25,8 @@ Nenhum pacote abaixo foi implementado. Não há datas: a ordem é fixa, o ritmo 
 
 - **v0.14.6 — Continuar depois da bandeirada (P, só interface).** **Publicado em 2026-11-11 na v0.14.6**, commit `ade8f95`, [deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/43117287482). Conferido no site em celular emulado: depois da bandeirada o botão aparece no pódio e leva ao plano da próxima etapa, com "Acompanhar etapa" a 533 px. Vindo do teste da v0.14.5 no site: depois da bandeirada o pódio ganha o botão "Continuar", que redesenha a tela com o plano da próxima etapa no topo; o espaço vazio acima da cena sumiu. 183 testes Node, build e 34 Playwright (Chrome), com teste novo. Abertos do mesmo teste: achados 37 a 42 em `achados-jogada.md`.
 
+- **v0.14.7 — Pendências da carreira jogada (P).** Não iniciado. Doze tarefas de texto e cena, sem mudança de regra nem de save, especificadas em `exec-v0.14.7.md`: etiqueta da cena, plano só depois da bandeirada, evento "Pelotão embolado", ordem no celular, pista equilibrada, rádio que explica, aviso de confiança curto, kart, ano da temporada, GP de casa, composto na parada e `aria-pressed`.
+
 ## Fase 1 — Entre corridas
 
 | Pacote | Nome | Tamanho | Tipo |
@@ -34,7 +36,7 @@ Nenhum pacote abaixo foi implementado. Não há datas: a ordem é fixa, o ritmo 
 | v0.17 | Números da carreira | M | Interface |
 | v0.18 | Primeira corrida | P–M | Interface |
 
-- **v0.15 — Caixa de entrada.** Caixa de entrada com propostas, recados do chefe, notícias e convites; nota de 1 a 10 por corrida e piloto do dia; manchete em vitórias, títulos e transferências; "enquanto você esteve fora" e avisos de marco. **Pronto quando:** toda bandeirada gera pelo menos uma mensagem nova e uma nota.
+- **v0.15 — Caixa de entrada.** Especificação pronta para executar em `exec-v0.15.md` (aba Mensagens derivada do estado, nota da corrida como campo opcional, manchete; sem migração de save e sem sorteio novo). Caixa de entrada com propostas, recados do chefe, notícias e convites; nota de 1 a 10 por corrida e piloto do dia; manchete em vitórias, títulos e transferências; "enquanto você esteve fora" e avisos de marco. **Pronto quando:** toda bandeirada gera pelo menos uma mensagem nova e uma nota.
 - **v0.16 — Companheiro e título.** Duelo com o companheiro; briefing antes da largada; conta do título e a parte que falta de metas e tensão (D.5); perfil da equipe atual e do companheiro na ficha (D.17); talento visível e troca dos quatro contadores (R.16). **Pronto quando:** em qualquer etapa o jogador vê o placar contra o companheiro e o que precisa para a meta ou o título.
 - **v0.17 — Números da carreira.** Página da equipe; gráfico da temporada e evolução ano a ano (2.2); linha do tempo; radar de atributos; recordes do mundo; estatísticas completas (2.1); companheiros de base (2.3); GP de casa; histórico navegável da base; bandeira nas tabelas de equipes (D.7). **Pronto quando:** toda estatística que a engine já guarda tem uma tela.
 - **v0.18 — Primeira corrida.** Tutorial na primeira corrida, com o engenheiro explicando cada decisão uma vez; glossário de F1 em dicas. **Pronto quando:** alguém que não acompanha F1 termina a primeira etapa sem ajuda externa.
