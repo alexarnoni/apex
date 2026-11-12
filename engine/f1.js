@@ -17,6 +17,7 @@ import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, finaleS
 import { startOptions, resolveStart } from './start.js';
 import { createSeasonGoal, goalProgress } from './season-goals.js';
 import { racePlan, PLAN_LABELS, raceAdvice } from './race-policy.js';
+import { raceRating } from './rating.js';
 import { raisePotential } from './drivers.js';
 import { tierOf, profileOf, profileView, trustPressure, effectiveDev, expectedPosition } from './profile.js';
 import { assignStatus, applyTrustEvent, evaluateTrustEffects, trustReleaseChance } from './status.js';
@@ -695,6 +696,8 @@ function finishRace(s, rng, w, absent, eventId) {
   const mate = world.drivers.find(d => d.name === season.goal?.teammate);
   race.teammateName = mate?.name ?? null;
   race.teammatePos = mate && a.classified.includes(mate) ? a.classified.indexOf(mate) + 1 : null;
+  race.teammateGrid = mate && w.quali ? (w.quali.indexOf(mate) + 1) || null : null;
+  race.rating = raceRating({ playerPos: race.playerPos, grid: race.grid, carRank: carRank(world, p.team), teammatePos: race.teammatePos, missed: absent });
   const order = season.ordersLog.find((o) => o.race === race.n && (o.p1 === p.name || o.p2 === p.name));
   race.summary = raceSummary(race, season.cur, order, p.name);
   race.story = raceStory(race, season.cur, order, p, w.result.length, carRank(world, p.team), rng);
@@ -1121,7 +1124,7 @@ export function f1View(s) {
     pos: i + 1, id: c.id, name: c.name, points: c.points, isYours: c.id === p.team,
     delta: hasDelta ? (season.prevConPos?.[c.id] ?? i + 1) - (i + 1) : 0,
   }));
-  const isLast = (r) => r && { story: r.story ?? [], n: r.n, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, points: r.points ?? null, summary: r.summary ?? null };
+  const isLast = (r) => r && { story: r.story ?? [], n: r.n, rating: r.rating ?? null, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, points: r.points ?? null, summary: r.summary ?? null };
   return {
     trainingFocus: s.f1.trainingFocus ?? 'balanced',
     trainingOptions: [{ id: 'balanced', label: 'Treino equilibrado' }, ...Object.entries(ATTRIBUTE_LABELS).map(([id, label]) => ({ id, label }))],
@@ -1143,7 +1146,7 @@ export function f1View(s) {
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
-    races: (season?.races ?? []).map((r) => ({ story: r.story ?? [], n: r.n, circuit: circuitView(r.n), playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
+    races: (season?.races ?? []).map((r) => ({ story: r.story ?? [], n: r.n, rating: r.rating ?? null, circuit: circuitView(r.n), playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
     trust: p.trust,
     trustReview: {
       threshold: CONFIG.trust.lowTrustCap,

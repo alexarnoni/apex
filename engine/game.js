@@ -11,6 +11,7 @@ import {
   enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveRaceStrategy, resolveRaceStart, resolveRacePit, resolveRaceFinale, resolveTeamOrder,
   resolveStoryEvent, resolveRaceEvent, resolveHomeRace, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View,
 } from './f1.js';
+import { inboxView, headlineFor } from './inbox.js';
 import { createRng } from './rng.js';
 import { applyAging, makeRookie, getRookieCounter, setRookieCounter, declineInfo, raisePotential } from './drivers.js';
 import { createPlayer, runBaseSeasonSummary, pickTeamByTier, teamsByStrength, makeBaseGrid, assignBaseTeams } from './career.js';
@@ -575,5 +576,7 @@ export function getView(state) {
   if (state.f1) view.f1 = f1View({ ...state, player: p });
   if (state.phase === 'LEGADO') view.legacy = state.legacy;
   if (state.phase === 'ROTA_ALTERNATIVA') view.note = 'Rotas alternativas ainda não implementadas.';
+  view.inbox = inboxView(state);
+  view.headline = headlineFor(state);
   return view;
 }

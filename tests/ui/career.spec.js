@@ -385,7 +385,7 @@ test('o mudo do rádio persiste e a torre é expansível no celular', async ({ p
 
 test('modo paddock: abas trocam o recorte e somem durante a corrida', async ({ page }) => {
   await importCareer(page, fixture('weekend_approach'));
-  await expect(page.locator('.view-tabs .tab')).toHaveCount(3);
+  await expect(page.locator(".view-tabs .tab")).toHaveCount(4);
   await expect(page.locator('[data-act="simnext"]')).toBeInViewport();
   await page.locator('[data-act="view"][data-id="driver"]').click();
   await expect(page.locator('.ficha')).toBeVisible();
@@ -409,4 +409,26 @@ test('depois da bandeirada, Continuar leva ao próximo passo sem rolar', async (
   await next.click();
   await expect(page.locator('[data-act="simnext"]')).toBeInViewport();
   await expect(page.locator('[data-act="next-stage"]')).toHaveCount(0);
+});
+
+test('caixa de entrada: contador aparece depois da corrida, zera ao abrir e continua zerado no reload', async ({ page }) => {
+  const state = fixture('weekend_approach');
+  await importCareer(page, state);
+  await page.getByText('Controles de acompanhamento', { exact: true }).click();
+  await page.locator('[data-act="sim5"]').click();
+  await skipScene(page);
+  await expect(page.getByRole('button', { name: /^Mensagens, \d+ não lidas?$/ })).toBeVisible();
+  await expect(page.locator('.race-result').first()).toContainText('Nota');
+  await page.locator('[data-act="view"][data-id="inbox"]').click();
+  await expect(page.locator('.inbox-list li').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Mensagens', exact: true })).toBeVisible();
+  await page.reload();
+  await page.locator('[data-act="continue"][data-slot="1"]').click();
+  await expect(page.getByRole('button', { name: 'Mensagens', exact: true })).toBeVisible();
+});
+
+test('caixa de entrada não aparece durante a corrida', async ({ page }) => {
+  await importCareer(page, fixture('race_strategy'));
+  await skipScene(page);
+  await expect(page.locator('[data-act="view"][data-id="inbox"]')).toHaveCount(0);
 });

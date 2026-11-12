@@ -118,6 +118,18 @@ h1:focus, h2:focus { outline: none; }
 .layout { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); align-items: start; }
 .col-main, .col-ficha, .col-side, .after-flag { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
 .after-flag[hidden] { display: none; }
+/* Mensagens: uma coluna só, sem ficha nem painel lateral. */
+.layout[data-view="inbox"] { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; }
+.layout[data-view="inbox"] > :is(.col-ficha, .col-side) { display: none; }
+.inbox-list { display: grid; gap: 12px; padding: 0; margin: 0; list-style: none; }
+.inbox-list li { display: flex; flex-direction: column; gap: 4px; padding-top: 10px; border-top: 1px solid var(--line); }
+.inbox-list li.is-new { border-inline-start: 4px solid var(--cyan); padding-inline-start: 10px; }
+.inbox-list .row { gap: 8px; align-items: center; }
+.inbox-list p { margin: 0; }
+/* Manchete da última corrida, acima do resultado. */
+.card.headline { border-inline-start: 4px solid var(--cyan); }
+.card.headline h2 { margin: 0; font-size: 1.15rem; }
+.card.headline p { margin: 0; }
 @media (min-width: 1100px) {
   .layout { grid-template-columns: 290px minmax(0, 1fr) 390px; grid-template-areas: "ficha main side"; }
   .col-ficha { grid-area: ficha; position: sticky; top: 12px; }

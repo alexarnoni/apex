@@ -457,21 +457,71 @@ function teamTag(f1) {
 // --- layout em colunas: decisão no centro, ficha à esquerda, painel da temporada à direita ----
 // No DOM a decisão vem primeiro (no celular é o que aparece no topo); no desktop o CSS posiciona as colunas.
 
+// --- caixa de entrada: lidas por slot e seed (localStorage, com cópia na sessão) ----------------
+const INBOX_MAX = 200;
+let inboxMemory = null; // { seed, ids } para quando o navegador não guarda nada
+
+function readInboxIds(view) {
+  const ids = new Set();
+  try {
+    const raw = JSON.parse(window.localStorage.getItem(`bandeirada.inbox.${activeSlot}`) ?? 'null');
+    if (raw?.seed === view.seed && Array.isArray(raw.ids)) raw.ids.forEach((id) => ids.add(id));
+  } catch { /* sem armazenamento: vale a cópia da sessão */ }
+  if (inboxMemory?.seed === view.seed) inboxMemory.ids.forEach((id) => ids.add(id));
+  return ids;
+}
+
+function unreadInbox(view) {
+  const read = readInboxIds(view);
+  return new Set((view.inbox ?? []).map((m) => m.id).filter((id) => !read.has(id)));
+}
+
+// Abrir a aba marca tudo como lido.
+function markInboxRead(view) {
+  const ids = [...new Set([...readInboxIds(view), ...(view.inbox ?? []).map((m) => m.id)])].slice(-INBOX_MAX);
+  inboxMemory = { seed: view.seed, ids };
+  try { window.localStorage.setItem(`bandeirada.inbox.${activeSlot}`, JSON.stringify({ seed: view.seed, ids })); } catch { /* vale só nesta sessão */ }
+}
+
+const ratingText = (n) => Number(n).toFixed(1).replace('.', ',');
+
+function inboxPanel(view, unread) {
+  const list = view.inbox ?? [];
+  if (!list.length) return `<section class="card inbox"><h2>Mensagens</h2><p class="mute">Nada por enquanto. As notícias da carreira e o resultado das corridas aparecem aqui.</p></section>`;
+  const items = list.map((m) => `<li class="msg${unread.has(m.id) ? ' is-new' : ''}">
+    <div class="row"><span class="news-tag">${esc(m.from)}</span>${unread.has(m.id) ? '<span class="pill good">nova</span>' : ''}<span class="mute small">${esc(m.year)}</span></div>
+    <b>${esc(m.title)}</b><p>${esc(m.text)}</p></li>`).join('');
+  return `<section class="card inbox"><h2>Mensagens</h2><ol class="inbox-list">${items}</ol></section>`;
+}
+
+function headlineCard(h) {
+  return h ? `<section class="card headline"><small class="mute">Manchete</small><h2>${esc(h.title)}</h2><p>${esc(h.text)}</p></section>` : '';
+}
+
 function layout(view, main, aside = '', raceLead = '') {
   const map = view.f1?.map;
   const podium = podiumCard(map);
   // Modo paddock: fora da corrida, a decisão vem primeiro e a cena da etapa anterior desce.
   // A cena só fica no topo durante a corrida ou enquanto a bandeirada ainda está sendo exibida.
   const sceneTop = !!raceLead || !!sceneModel?.playing;
-  // Abas do modo paddock: mesma página, três recortes. Durante a corrida não há abas.
-  const VIEWS = { paddock: 'Paddock', driver: 'Piloto', season: 'Campeonato' };
+  // Abas do modo paddock: mesma página, recortes. Durante a corrida não há abas.
+  const VIEWS = { paddock: 'Paddock', driver: 'Piloto', season: 'Campeonato', inbox: 'Mensagens' };
   const tab = raceLead ? 'paddock' : (VIEWS[ui.view] ? ui.view : 'paddock');
-  const tabs = raceLead ? '' : `<nav class="tabs view-tabs" aria-label="Seções">${Object.entries(VIEWS).map(([id, label]) =>
-    `<button class="tab ${tab === id ? 'on' : ''}" data-act="view" data-id="${id}" aria-pressed="${tab === id}">${label}</button>`).join('')}</nav>`;
+  const unread = !raceLead && view.inbox ? unreadInbox(view) : new Set();
+  if (tab === 'inbox' && !raceLead) markInboxRead(view);
+  const tabs = raceLead ? '' : `<nav class="tabs view-tabs" aria-label="Seções">${Object.entries(VIEWS).map(([id, label]) => {
+    // Com a aba aberta a caixa acabou de ser lida: o contador já sai zerado nesta mesma tela.
+    const count = id === 'inbox' && tab !== 'inbox' ? unread.size : 0;
+    const text = count ? `${label} (${count})` : label;
+    const aria = count ? ` aria-label="${label}, ${count} ${count === 1 ? 'não lida' : 'não lidas'}"` : '';
+    return `<button class="tab ${tab === id ? 'on' : ''}" data-act="view" data-id="${id}" aria-pressed="${tab === id}"${aria}>${text}</button>`;
+  }).join('')}</nav>`;
   const scene = `${podium ? `<div class="map-mobile">${podium}</div>` : ''}${raceLead ? `<div class="race-lead">${raceSceneCard(map)}${raceLead}</div>` : raceSceneCard(map)}`;
+  const afterFlag = sceneTop && !raceLead ? `<div class="after-flag" hidden data-finish-reveal>${main}</div>` : main;
+  const body = tab === 'inbox' && !raceLead ? inboxPanel(view, unread) : (sceneTop ? scene + afterFlag : main + scene);
   return `${header(view)}${ladder(view)}${tabs}
   <div class="layout${raceLead ? ' in-race' : ''}" data-view="${tab}">
-    <div class="col-main">${sceneTop ? scene + (sceneTop && !raceLead ? `<div class="after-flag" hidden data-finish-reveal>${main}</div>` : main) : main + scene}</div>
+    <div class="col-main">${body}</div>
     <div class="col-ficha">${raceTower(map)}${carPanel(view)}${raceLead ? '' : ficha(view)}</div>
     <div class="col-side">${podium ? `<div class="map-desktop">${podium}</div>` : ''}${aside}</div>
   </div>`;
@@ -702,7 +752,7 @@ function racesList(f1) {
   if (!f1.races.length) return `${home}<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>`;
   const items = [...f1.races].reverse().map((r) => {
     const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? `trophy p${r.playerPos}` : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
-    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 12 })} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}${r.story?.length ? `<details class="race-story"><summary>Relato da corrida</summary>${storyList(r.story)}</details>` : ''}</li>`;
+    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 12 })} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}${r.rating != null ? `<span class="mute small">Nota ${ratingText(r.rating)}</span>` : ''}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}${r.story?.length ? `<details class="race-story"><summary>Relato da corrida</summary>${storyList(r.story)}</details>` : ''}</li>`;
   }).join('');
   return `${home}<ul class="racelist">${items}</ul>`;
 }
@@ -871,7 +921,7 @@ function raceResultCard(r) {
   return `<section class="card race-result" ${sceneModel?.playing && sceneModel.finishing ? 'hidden data-finish-reveal' : ''} aria-labelledby="race-result-title">
     <div class="row"><span class="pill good">Corrida encerrada</span><span class="mute small">Etapa ${esc(r.n)}</span></div>
     <h2 id="race-result-title">${esc(r.circuit?.gp ?? 'Resultado da corrida')}</h2>
-    <div class="row"><strong class="race-position">${esc(position)}</strong>
+    <div class="row"><strong class="race-position">${esc(position)}</strong>${r.rating != null ? `<span class="pill">Nota ${ratingText(r.rating)}</span>` : ''}
     <span>${r.grid ? `Largou em P${esc(r.grid)}${esc(movement)}` : ''}${r.points != null ? `${r.grid ? ' · ' : ''}${esc(r.points)} ${r.points === 1 ? 'ponto' : 'pontos'}` : ''}</span></div>
     <details><summary>Ver relato da corrida</summary>${raceLine(r)}</details>
   </section>`;
@@ -1124,7 +1174,7 @@ function screenF1(view) {
   const betweenRaces = ['weekend_approach', 'home_race', 'story_event'].includes(pd?.type);
   const event = lastEventCard(f1);
   const previous = last && !betweenRaces ? `<details class="card previous-race"><summary>Resultado da etapa anterior · ${esc(f1.lastRace.circuit?.gp ?? '')}</summary>${last}</details>` : '';
-  return layout(view, `${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}`, `${seasonPanel(view)}${raceLead ? '' : `${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`}`, raceLead);
+  return layout(view, `${!raceLead ? headlineCard(view.headline) : ''}${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}`, `${seasonPanel(view)}${raceLead ? '' : `${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`}`, raceLead);
 }
 
 function screenEndSeason(view) {
@@ -1242,7 +1292,11 @@ function render(animateMap = false) {
   el.innerHTML = panels() + html + footer();
   for (const d of el.querySelectorAll('details[data-keep]')) if (kept.has(d.dataset.keep)) d.open = true;
   if (map) paintRaceScene(el, map, TEAM_COLOR);
-  const radio = el.querySelector('.decision-context.radio') ? state.pendingDecision : null;
+  // O bip só toca quando o engenheiro fala com o piloto: recado de decisão de corrida já visível,
+  // não o que está escondido atrás da cena nem o recado de outras telas.
+  const radioCard = el.querySelector('.decision-context.radio');
+  const inRaceDecision = ['race_strategy', 'race_start', 'race_event', 'race_pit', 'race_finale', 'team_order'].includes(state.pendingDecision?.type);
+  const radio = radioCard && inRaceDecision && !radioCard.closest('[hidden]') ? state.pendingDecision : null;
   if (radio && radio !== radioHeard) playRadio();
   radioHeard = radio;
   document.body.classList.toggle('modal-open', !!anyModal());
