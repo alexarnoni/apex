@@ -693,7 +693,12 @@ function ficha(view) {
   if (c.titlesF1) trophies.push(`<span class="pill trophy">F1 ×${c.titlesF1}</span>`);
   if (c.titlesBase) trophies.push(`<span class="pill trophy">Base ×${c.titlesBase}</span>`);
   if (c.vice) trophies.push(`<span class="pill">Vice ×${c.vice}</span>`);
-  const f1Extra = f1 ? `
+  const duel = f1?.duel;
+  const mateLine = duel ? `<div class="ficha-mate"><small class="mute">COMPANHEIRO</small>
+      <p class="small"><b>${flagImg(duel.nat, { alt: false, h: 11 })} ${esc(duel.name)}</b> · ${esc(duel.age)} anos · nota geral ${esc(String(duel.overall).replace('.', ','))} (a sua: ${esc(String(p.skill).replace('.', ','))}).</p></div>` : '';
+  const f1Extra = f1 && view.screen !== 'LEGADO' ? `
+    <div class="ficha-profile"><small class="mute">PERFIL DA EQUIPE ATUAL</small>${profileBlock(f1.team.profile)}</div>
+    ${mateLine}
     <div class="chips-row"><span class="chip">contrato: ${esc(f1.contract.years)} ${f1.contract.years === 1 ? 'ano' : 'anos'}${f1.contract.statusClause ? ` · ${esc(f1.contract.statusClause)}` : ''}${f1.contract.exitClause ? ' · saída livre' : ''}</span>
       ${f1.rival ? `<span class="chip">rival: ${esc(f1.rival)}</span>` : ''}</div>
     <p class="mute small">${esc(STATUS_TEXT[f1.status] ?? 'Seu status na equipe é definido no início da temporada.')}${f1.statusWhy ? ` <b>Por quê:</b> ${esc(f1.statusWhy)}` : ''}</p>
@@ -710,9 +715,9 @@ function ficha(view) {
     </div>
     ${attributes(p)}
     <details class="pilot-profile"><summary>Perfil de pilotagem</summary>${profileBars(p.attributes)}<p class="mute small">A nota geral resume estas competências. O carro não entra nesta nota.</p></details>
-    <div class="tiles">${stat('Idade', p.age)}${stat('Potencial', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}${stat('Margem', margin(p))}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
+    <div class="tiles">${stat('Idade', p.age)}${stat('Talento', p.talent ?? '–')}${stat('Potencial', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}${stat('Margem', margin(p))}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
     ${team}
-    <div class="counters">${stat('GP', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Poles', c.poles)}</div>
+    <div class="counters">${stat('Largadas', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Pontos', c.points ?? 0)}</div>
     ${categoryTable(p.byCategory)}
     <div class="vitrine"><small class="mute">SALA DE TROFÉUS</small> ${trophies.length ? trophies.join(' ') : '<span class="mute small">vazia por enquanto</span>'}</div>
     ${f1Extra}
@@ -752,7 +757,7 @@ function racesList(f1) {
   if (!f1.races.length) return `${home}<p class="mute small">Nenhuma corrida disputada ainda nesta temporada.</p>`;
   const items = [...f1.races].reverse().map((r) => {
     const res = r.missed ? '<span class="pill">fora</span>' : r.playerPos ? `<span class="pill ${r.playerPos <= 3 ? `trophy p${r.playerPos}` : ''}">P${r.playerPos}</span>` : '<span class="pill bad">abandono</span>';
-    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 12 })} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}${r.rating != null ? `<span class="mute small">Nota ${ratingText(r.rating)}</span>` : ''}<span class="mute small">${esc(r.winner ?? '—')} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}${r.story?.length ? `<details class="race-story"><summary>Relato da corrida</summary>${storyList(r.story)}</details>` : ''}</li>`;
+    return `<li><div class="row" style="gap:8px"><b title="Etapa ${r.n}">${r.circuit ? `${flagImg(r.circuit.flag, { alt: false, h: 12 })} ${esc(r.circuit.gp.replace(/^GP (d[aeo]s? )?/, ''))}` : `C${r.n}`}</b>${res}${r.rating != null ? `<span class="mute small">Nota ${ratingText(r.rating)}</span>` : ''}<span class="mute small">${esc(r.winner ?? '—')}${r.winner && r.winner === f1.duel?.name ? ' (companheiro)' : ''} venceu${r.wet ? ' · chuva' : ''}</span></div>${r.summary ? `<div class="mute small">${esc(r.summary)}</div>` : ''}${r.story?.length ? `<details class="race-story"><summary>Relato da corrida</summary>${storyList(r.story)}</details>` : ''}</li>`;
   }).join('');
   return `${home}<ul class="racelist">${items}</ul>`;
 }
@@ -1075,6 +1080,34 @@ function seasonPulseCard(goal, final = false) {
     <details><summary>Disputas e cobrança da equipe</summary><ul class="log">${goal.lines.map(line => `<li>${esc(line)}</li>`).join('')}</ul><p class="mute small">${esc(goal.consequence)}</p></details></section>`;
 }
 
+// Placar contra o companheiro e conta do título, em linhas curtas. Serve ao painel da temporada e ao briefing.
+function duelLines(f1) {
+  const d = f1.duel;
+  const lines = [];
+  if (d) {
+    const pts = `<b>Você ${esc(d.myPoints)} × ${esc(d.matePoints)} ${esc(d.name)}</b> em pontos`;
+    if (!d.races) lines.push(`${pts}. Ainda sem corridas comparáveis neste ano.`);
+    else lines.push(`${pts}. Na corrida você ficou à frente em ${esc(d.raceWins)} de ${esc(d.races)}${d.gridWins + d.gridLosses ? `; no grid, em ${esc(d.gridWins)} de ${esc(d.gridWins + d.gridLosses)}` : ''}.`);
+  }
+  if (f1.title) lines.push(esc(f1.title.line));
+  return lines;
+}
+function duelCard(f1) {
+  const lines = duelLines(f1);
+  if (!lines.length) return '';
+  return `<section class="card duel-card"><h3>Companheiro e título</h3><ul class="log">${lines.map(l => `<li>${l}</li>`).join('')}</ul></section>`;
+}
+
+// Briefing de antes da largada: pista, campeonato, companheiro e meta, no começo do plano do fim de semana.
+function briefingCard(f1) {
+  const circuit = f1.race?.circuit;
+  if (!circuit) return '';
+  const goalLine = f1.goal ? `<li><b>Meta:</b> ${esc(f1.goal.label)} · ${esc(f1.goal.progress)}.</li>` : '';
+  return `<section class="card briefing"><h3>Briefing · ${esc(circuit.gp)}</h3>
+    <ul class="log"><li><b>Pista:</b> ${esc(circuit.tags.length ? circuit.tags.join(' · ') : 'equilibrada')} · chance de chuva ${esc(circuit.rain)}%.</li>
+    ${duelLines(f1).map(l => `<li>${l}</li>`).join('')}${goalLine}</ul></section>`;
+}
+
 function raceDashboard(f1, pd, stage, year) {
   const { done, total, circuit } = f1.race;
   const between = pd.type === 'story_event';
@@ -1165,7 +1198,7 @@ function screenF1(view) {
         + `<section class="card scene-wait" data-finish-pending><p><b>Cena em andamento.</b> A decisão aparece quando o trecho terminar.</p><button class="btn ghost small" data-scene-skip>Pular animação</button></section>`;
       raceLead = body + dashboard;
       body = '';
-    } else body = body + dashboard;   // plano e botões antes do painel do GP: a ação principal fica visível sem rolar
+    } else body = body + (pd.type === 'weekend_approach' && !pd.payload.out ? briefingCard(f1) : '') + dashboard;   // plano e botões antes do painel do GP: a ação principal fica visível sem rolar
   }
   const dev = f1.devNarrative.length && f1.race?.done === 0
     ? `<section class="card"><h3>Desenvolvimento dos carros</h3><ul class="log">${f1.devNarrative.map((l) => `<li>${esc(l)}</li>`).join('')}</ul></section>` : '';
@@ -1174,7 +1207,7 @@ function screenF1(view) {
   const betweenRaces = ['weekend_approach', 'home_race', 'story_event'].includes(pd?.type);
   const event = lastEventCard(f1);
   const previous = last && !betweenRaces ? `<details class="card previous-race"><summary>Resultado da etapa anterior · ${esc(f1.lastRace.circuit?.gp ?? '')}</summary>${last}</details>` : '';
-  return layout(view, `${!raceLead ? headlineCard(view.headline) : ''}${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}`, `${seasonPanel(view)}${raceLead ? '' : `${seasonPulseCard(f1.goal)}${dev}${recentCareer(f1)}${baseHistory(view)}`}`, raceLead);
+  return layout(view, `${!raceLead ? headlineCard(view.headline) : ''}${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}`, `${seasonPanel(view)}${raceLead ? '' : `${seasonPulseCard(f1.goal)}${duelCard(f1)}${dev}${recentCareer(f1)}${baseHistory(view)}`}`, raceLead);
 }
 
 function screenEndSeason(view) {
@@ -1195,8 +1228,14 @@ function screenOffers(view) {
   const pd = view.decision;
   let body = '';
   if (pd.type === 'retire_or_continue') {
+    const c = view.player.career;
+    const d = view.player.decline;
+    const fmt = (n) => (Math.round(n * 10) / 10).toLocaleString('pt-BR');
+    const bits = [`${c.titlesF1} ${c.titlesF1 === 1 ? 'título' : 'títulos'} e ${c.vice} ${c.vice === 1 ? 'vice' : 'vices'} na F1`, `${c.wins} ${c.wins === 1 ? 'vitória' : 'vitórias'} e ${c.podiums} ${c.podiums === 1 ? 'pódio' : 'pódios'} na carreira`];
+    const future = d?.inDecline ? `Você está em declínio: a habilidade cai cerca de ${fmt(d.next)} no próximo ano.` : d ? `A habilidade ainda está em alta; o declínio começa aos ${d.startAge} anos.` : '';
     body = `<section class="card focus"><h2>Fim de temporada, ${esc(pd.payload.age)} anos</h2>
-      <p class="mute">${esc(pd.payload.seasons)} ${pd.payload.seasons === 1 ? 'temporada' : 'temporadas'} na F1. Continuar ou encerrar a carreira?</p>
+      <p class="mute">${esc(pd.payload.seasons)} ${pd.payload.seasons === 1 ? 'temporada' : 'temporadas'} na F1: ${esc(bits.join('; '))}. ${esc(future)}</p>
+      <p>Continuar mantém a carreira aberta e o legado cresce com cada ano; encerrar fecha o legado como está. Continuar ou encerrar a carreira?</p>
       <div class="row"><button class="btn" data-act="retire" data-id="continue">Continuar</button><button class="btn ghost" data-act="retire" data-id="retire">Encerrar a carreira</button></div></section>`;
   } else if (pd.type === 'offer_pick') {
     body = `<section class="card focus"><h2>Mercado de pilotos</h2>

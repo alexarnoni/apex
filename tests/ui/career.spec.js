@@ -432,3 +432,15 @@ test('caixa de entrada não aparece durante a corrida', async ({ page }) => {
   await skipScene(page);
   await expect(page.locator('[data-act="view"][data-id="inbox"]')).toHaveCount(0);
 });
+
+test('briefing, duelo com o companheiro e conta do título aparecem antes da largada; a ficha mostra talento e equipe', async ({ page }) => {
+  await importCareer(page, fixture('weekend_approach', (s) => !s.pendingDecision.payload.out));
+  await expect(page.locator('.briefing')).toContainText('Briefing');
+  await expect(page.locator('.briefing')).toContainText('em pontos');
+  await show(page, '.duel-card', 'season');
+  await expect(page.locator('.duel-card')).toContainText('Companheiro e título');
+  await show(page, '.ficha', 'driver');
+  await expect(page.locator('.ficha')).toContainText('Talento');
+  await expect(page.locator('.ficha')).toContainText('PERFIL DA EQUIPE ATUAL');
+  await expect(page.locator('.ficha-mate')).toContainText('nota geral');
+});

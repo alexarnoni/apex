@@ -234,7 +234,9 @@ export const CONFIG = {
   // Talento do jogador (2026-11-08): potencial de berço sorteado numa curva em sino (a maioria é bom, poucos são geracionais)
   // mais um pequeno bônus por começar cedo; a dedicação eleva o teto: cada escolha de treino soma trainGain ao potencial,
   // com rendimento decrescente (quanto mais alto o potencial, menos cada treino rende: trainFrom e trainSlope).
-  talent: { mean: 84.5, sd: 4.5, min: 74, max: 100, youthPerYear: 1.0, trainGain: 0.30, trainFrom: 80, trainSlope: 30 },
+  talent: { mean: 84.5, sd: 4.5, min: 74, max: 100, youthPerYear: 1.0, trainGain: 0.30, trainFrom: 80, trainSlope: 30,
+    // Faixas só para mostrar o talento na ficha (o número exato continua escondido): potencial abaixo de `max` = rótulo.
+    tiers: [{ max: 80, label: 'Esforçado' }, { max: 85, label: 'Bom' }, { max: 90, label: 'Acima da média' }, { max: 95, label: 'Excepcional' }, { max: 101, label: 'Geracional' }] },
 
   // Carreira do jogador na base (spec-loop-jogador)
   base: {

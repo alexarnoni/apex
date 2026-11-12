@@ -16,6 +16,7 @@ import { CIRCUITS, circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
 import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, finaleSituation, paceEdge } from './strategy.js';
 import { startOptions, resolveStart } from './start.js';
 import { createSeasonGoal, goalProgress } from './season-goals.js';
+import { teammateDuel, titleMath } from './duel.js';
 import { racePlan, PLAN_LABELS, raceAdvice } from './race-policy.js';
 import { raceRating } from './rating.js';
 import { raisePotential } from './drivers.js';
@@ -1138,6 +1139,8 @@ export function f1View(s) {
     plan: racePlan(s),
     plans: Object.entries(PLAN_LABELS).map(([id, label]) => ({ id, label, description: F1().approach[id].description })),
     goal: goalProgress(s),
+    duel: teammateDuel(s),
+    title: titleMath(s),
     advice: raceAdvice(s),
     eventPosition,
     map,

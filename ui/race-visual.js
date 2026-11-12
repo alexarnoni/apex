@@ -9,7 +9,8 @@ const LAP_MS = 7000;      // duração de uma volta na velocidade 1×
 const LIGHTS_MS = 1800;   // luzes de largada antes de o pelotão sair
 const SAMPLES = 720;
 const PRE_START = ['race_strategy', 'race_start'];
-const STAGE = { race_strategy: 'Largada', race_start: 'Largada', race_event: 'Na pista', race_pit: 'Box', team_order: 'Rádio', race_finale: 'Final' };
+// Rótulo dos lances entre duas decisões. "Largada" fica só para as luzes; o trecho depois dela já é corrida.
+const STAGE = { race_strategy: 'Primeiras voltas', race_start: 'Primeiras voltas', race_event: 'Na pista', race_pit: 'Depois do box', team_order: 'Rádio', race_finale: 'Final' };
 const STATUS = {
   waiting: 'Pista livre antes da corrida.', race_strategy: 'Grid formado.', race_start: 'Grid formado.',
   finish: 'Bandeirada.',
