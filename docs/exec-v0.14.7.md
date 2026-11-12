@@ -1,6 +1,21 @@
 # Especificação — v0.14.7 "Pendências da carreira jogada"
 
-Pacote pequeno, quase todo de texto e interface. Leia antes `guia-executor.md`. Origem: `achados-jogada.md` (os números entre parênteses são os achados). Estado em 2026-11-11: nada iniciado. Modelo sugerido: qualquer um; as tarefas são independentes.
+Pacote pequeno, quase todo de texto e interface. Leia antes `guia-executor.md`. Origem: `achados-jogada.md` (os números entre parênteses são os achados). Estado em 2026-11-11: **executado localmente, não publicado** (commit local; sem push nem alteração de versão). Modelo sugerido: qualquer um; as tarefas são independentes.
+
+| Tarefa | Estado |
+|---|---|
+| T1 etiqueta da cena | **Feito** |
+| T2 plano após bandeirada | **Feito** (`.after-flag`; auxiliar `skipScene` também clica em `[data-scene="skip"]`) |
+| T3 evento "Pelotão embolado" | **Feito** (`npm run events` executado) |
+| T4 ordem no celular | **Feito**, testes passam; **captura 375×812 não feita** |
+| T5 "Pista equilibrada" | **Feito** |
+| T6 rádio que explica | **Feito** |
+| T7 aviso de confiança | **Feito** (`<details>`) |
+| T8 kart não é carro | **Feito** (ofertas do kart e cartão da base); "Carro:" nas ofertas de F4 em diante não foi tocado, por fora do escopo |
+| T9 ano no lugar de "Temporada 1" | **Feito** (`view.year`; `raceDashboard` recebe o ano por parâmetro) |
+| T10 frase do GP de casa | **Feito** |
+| T11 composto na parada | **Feito**, com ressalva: em pista seca usa o composto do plano quando ele é macios, médios ou duros; sem composto escolhido na parada, mantém "pneus de pista seca". |
+| T12 `aria-pressed` | **Feito** (`optionCards` e estilo de pilotagem) |
 
 Nenhuma tarefa deste pacote muda regra, probabilidade, efeito ou save. Se alguma mudança parecer exigir isso, pare e relate.
 

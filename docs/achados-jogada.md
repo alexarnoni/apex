@@ -87,10 +87,12 @@ Política automática de calibração, estilo consistente.
 | 14 (ano de base em três cliques) | v0.32, mini calendário |
 | 16 (corrida curta) | Fase 4, volta a volta |
 | 21, 22 (ofertas em fórmula fixa, academia sem contrapartida) | v0.28 e v0.30 |
-| 23, 24, 25 (rádio que não explica, conselhos contraditórios, bloco de risco) | Leitura frase a frase das telas (resto da v0.14.2) |
-| 27, 29, 30, 31 (kart chamado de carro, nota opaca, rótulos da narração, "Temporada 1") | Leitura frase a frase das telas |
+| 24 (conselhos contraditórios) | Depende do volta a volta (Fase 4) |
+| 29 (nota opaca dos olheiros) | v0.15 |
 | 32 (acessibilidade das escolhas) | v0.20 |
 | 35 (escolha do kart) | Ajustador de calibração, v0.19 |
+
+**Resolvidos na v0.14.7 (local, não publicada):** 23, 25, 27, 31, 37, 38, 39, 40, 42. Parciais: 28 (falta "te venceu na Karting"), 30 (faltam os rótulos "Largada" da narração e a ordem do feed; a parada já mostra o composto do plano em pista seca), 32 (`aria-pressed` feito; o restante segue na v0.20).
 
 ## Plano de execução (2026-11-11)
 
