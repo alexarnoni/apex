@@ -3,16 +3,15 @@
 Atualizado em **2026-11-11**.
 
 - Repo `alexarnoni/apex`; push na `main` publica o site (GitHub Pages). Site: https://bandeirada.alexarnoni.com.
-- **Publicado:** v0.14.7 em `c39b4d3` ([deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/43131728577)). HTML servido conferido: versão 0.14.7 e os textos novos.
-- **Só local, não publicado** (branch `main`, sem push):
-  - v0.15 "Caixa de entrada": `2ef2a13` (código) e `e48fb90` (docs). Versão ainda 0.14.7. Publicar só com pedido explícito; ao publicar, subir para 0.15.0 em `package.json` e `package-lock.json`.
-  - Ajuste de layout da T4 da v0.14.7: `033216e`. As duas opções no celular deixaram de ficar presas ao rodapé e não cobrem mais o recado do rádio. Esse ajuste precisa ir na próxima publicação.
+- **Publicado:** v0.15.0 em `123eabe` ([deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/43136639372)). HTML servido conferido: versão 0.15.0, aba Mensagens, manchete e textos novos.
+  - A primeira tentativa (`b4079da`, [run 43135701868](https://github.com/alexarnoni/apex/actions/runs/43135701868)) falhou no CI: a barra de abas com "Mensagens (N)" passava da largura do celular na fonte de fallback do Linux. Corrigido em `123eabe` (abas quebram linha). Reproduzido localmente com fonte larga.
+  - v0.14.7 em `c39b4d3`, com o ajuste de layout das opções no celular em `033216e`.
+- **Sem pendência de publicação.** Nada local além de documentação.
 - Verificação atual: 194 testes Node, build e 38 Playwright (Chrome do sistema).
 - Bip do rádio (`ui/app.js`, `ui/sound.js`): toca só no recado de decisão de corrida visível. Ainda não foi ouvido no navegador.
 
 ## Pendências
 
-- Publicar a v0.15 (e o ajuste de `033216e`), quando o usuário pedir.
 - Testar em aparelho real: som do rádio, ordem das opções no celular, caixa de entrada.
 - Achados parciais em `achados-jogada.md`: 28, 30 e 32.
 - Próximo pacote: `pacotes-1.0.md`, a partir da v0.16.

@@ -1,6 +1,6 @@
 # Especificação — v0.15 "Caixa de entrada"
 
-Primeiro pacote da Fase 1. Leia antes `guia-executor.md`. Estado em 2026-11-11: **executado localmente, não publicado.** Partes A, B, C e D feitas; testes Node (194) e Playwright (38) passam. Sem versão alterada (0.14.7 ainda no ar). Modelo sugerido: Sonnet (há função pura nova na engine e uma aba nova).
+Primeiro pacote da Fase 1. Leia antes `guia-executor.md`. Estado em 2026-11-11: **publicado como v0.15.0** (commit `123eabe`). Partes A, B, C e D feitas; testes Node (194) e Playwright (44 com desktop e celular) passam. Modelo sugerido: Sonnet (há função pura nova na engine e uma aba nova).
 
 **Pronto quando:** depois de cada bandeirada o jogador tem pelo menos uma mensagem nova e uma nota da corrida, e vê quantas mensagens ainda não leu.
 
