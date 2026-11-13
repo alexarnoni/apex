@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "bandeirada", "runtimeExecutable": "node", "runtimeArgs": ["tools/serve.mjs", "dist", "5056"], "port": 5056 }
+  ]
+}
