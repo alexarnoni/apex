@@ -46,6 +46,7 @@ O intervalo entre etapas hoje é o trecho mais vazio. Quase tudo é interface. *
 - [x] ~~Histórico navegável da base e de campeonatos anteriores (seção "Imersão e aproveitamento de tela").~~ **Feito** (2026-11-12, v0.17). Companheiro e campeão só nas temporadas novas.
 - [x] ~~Restos de itens já entregues: bandeira nas tabelas de equipes (D.7).~~ **Feito** (2026-11-12, v0.17). 
 - [ ] **Novo:** "enquanto você esteve fora" ao reabrir o save e avisos de marco (primeiro pódio, 100 GPs).
+- [ ] **Novo (2026-11-12, pedido do usuário):** disputas com mais poder de escolha, sem pausas novas. Pneu como recurso da corrida (composto com aderência e desgaste, condição que cai por trecho, atacar gasta pneu), duelo com três manobras (por dentro, por fora, pressionar) contra um rival de perfil visível e, depois, postura (Atacar, Ritmo, Poupar) como ordem permanente. *Engine e calibração.* Detalhes em `pacotes-1.0.md` (v0.18.5 a v0.18.8) e especificação em `exec-v0.18.5.md`.
 
 ### Fase 2 (v0.19 e v0.20) — Alicerce
 
