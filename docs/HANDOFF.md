@@ -13,7 +13,7 @@ Atualizado em **2026-11-13**.
 ## Pendências
 
 - Testar em aparelho real: som do rádio, ordem das opções no celular, caixa de entrada.
-- Trabalho local sem commit em 2026-11-12: v0.17.1 "Corrida legível" (narração em sincronia com a pista, traçado suavizado com setas, pneus desenhados e textos realistas) em `ui/race-visual.js`, `ui/app.js`, `ui/shell.html`, `engine/strategy.js` e `engine/f1.js` (só texto); 199 Node e 42 Playwright aprovados. Especificação nova `exec-v0.18.5.md`.
+- v0.17.1 "Corrida legível" publicada em 2026-11-12 (commit `8456726`): narração em sincronia com a pista, traçado suavizado com setas, pneus desenhados e textos realistas. Na fila, em `pacotes-1.0.md`: "Pneus e disputas" (v0.18.5 a v0.18.7, especificado em `exec-v0.18.5.md`), postura (v0.18.8) e traçados redesenhados (v0.18.9); a mesma página lista o que foi conversado em 2026-11-12 e ainda não foi feito.
 - Próximo pacote: v0.18 (primeira corrida), em `pacotes-1.0.md`. Depois dela entra "Pneus e disputas" (v0.18.5 a v0.18.7), pedido em 2026-11-12 e especificado em `exec-v0.18.5.md`: muda regra de jogo e exige a calibração descrita lá; não iniciado.
 - Achados parciais em `achados-jogada.md`: 28, 30 e 32.
 - **v0.17.0 publicada** em `b5e492d` ([deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/43348196763)): equipe, gráficos, radar, estatísticas, recordes, companheiro e histórico da base, bandeiras e faixa do legado. HTML servido conferido (versão 0.17.0 e textos novos). Limites em `pacotes-1.0.md`.

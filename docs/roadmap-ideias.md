@@ -525,7 +525,7 @@ Limites da etapa 1: ao simular várias etapas, só a última bandeirada é anima
 - [ ] Destaque no mapa do rival citado na decisão de ataque ou defesa.
 - [ ] Pit stop visível, com pit lane desenhada (os traçados atuais só têm a pista).
 - [ ] Carros circulando devagar durante a pausa, no lugar de congelados. Decidir com o usuário.
-- [ ] Suavizar os traçados sem trocar a fonte dos dados.
+- [ ] Suavizar os traçados sem trocar a fonte dos dados. **Parcial (2026-11-12, v0.17.1):** curvas suavizadas no desenho, pista mais fina e setas de sentido. O redesenho completo está em `pacotes-1.0.md`, v0.18.9.
 - [ ] Barra de progresso da corrida (largada, meio, final) enquanto não há número de volta.
 - [x] ~~Torre recolhida no celular.~~ **Feito e publicado na v0.14.1 (2026-11-09).** Três primeiros e jogador, com opção de abrir o grid.
 - [ ] Narração com ícone por tipo (ultrapassagem, abandono, rádio).
