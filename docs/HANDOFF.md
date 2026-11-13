@@ -13,6 +13,7 @@ Atualizado em **2026-11-13**.
 ## Pendências
 
 - Testar em aparelho real: som do rádio, ordem das opções no celular, caixa de entrada.
+- Próximo pacote: v0.18 (primeira corrida), em `pacotes-1.0.md`.
 - Achados parciais em `achados-jogada.md`: 28, 30 e 32.
 - **v0.17.0 publicada** em `b5e492d` ([deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/43348196763)): equipe, gráficos, radar, estatísticas, recordes, companheiro e histórico da base, bandeiras e faixa do legado. HTML servido conferido (versão 0.17.0 e textos novos). Limites em `pacotes-1.0.md`.
 
