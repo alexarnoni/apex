@@ -103,8 +103,13 @@ export function runBaseSeasonSummary({ player, category, rng, names, persistentR
   };
   const score = scoutingScore(scoutingArgs);
 
+  // Companheiro de equipe no ano (2 vagas por equipe): só leitura do resultado, sem sorteio.
+  const mateDriver = drivers.find((d) => d !== player && d.team === player.team);
+  const mate = mateDriver ? { name: mateDriver.name, position: result.standings.indexOf(mateDriver) + 1, points: mateDriver.seasonPoints } : null;
+
   return {
     position: pos,
+    mate,
     points: player.seasonPoints,
     wins: player.seasonWins,
     podiums: player.seasonPodiums,

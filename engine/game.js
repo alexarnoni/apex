@@ -272,7 +272,8 @@ function resolveBaseChoice(s, rng, answer) {
   }
   bc.lastSummary = { ...summary, year: s.year, category: category.id };
   (bc.seasons ??= []).push({ year: s.year, category: category.name, categoryId: category.id,
-    team: summary.teamName, teamId: summary.teamId, position: summary.position, points: summary.points, wins: summary.wins, podiums: summary.podiums });
+    team: summary.teamName, teamId: summary.teamId, position: summary.position, points: summary.points, wins: summary.wins, podiums: summary.podiums,
+    mate: summary.mate ?? null, champion: summary.champion });
   log(s, 'season', `${s.year} ${category.name}: ${summary.position}º (${summary.wins} vitórias, ${summary.points} pts).`);
 
   // Convite de academia (só com oferta 'top', ainda sem academia)
@@ -570,6 +571,7 @@ export function getView(state) {
         points: sum.points,
         wins: sum.wins,
         champion: sum.champion,
+        mate: sum.mate ?? null,
         rivalResults: sum.rivalResults,
         scouting: scoutingLine(sum),
         why: scoutingWhy(sum),

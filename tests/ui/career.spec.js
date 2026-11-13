@@ -458,4 +458,9 @@ test('v0.17: página da equipe, gráfico da temporada, ano a ano, radar e estat�
   await expect(page.locator('.radar')).toBeVisible();
   await page.locator('.full-stats summary').click();
   await expect(page.locator('.full-stats')).toContainText('Abandonos');
+  await show(page, '.season-chart', 'season');
+  await expect(page.locator('.season-detail').first()).toBeAttached();
+  await page.locator('details:has(> summary:text-is("Histórico da base")) > summary').click();
+  await page.locator('details:has(> summary:text-is("Histórico da base")) .season-detail > summary').first().click();
+  await expect(page.locator('details:has(> summary:text-is("Histórico da base")) .season-detail[open]')).toContainText('pts');
 });

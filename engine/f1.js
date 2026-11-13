@@ -17,6 +17,7 @@ import { strategyOptions, resolveStrategy, finaleOptions, resolveFinale, finaleS
 import { startOptions, resolveStart } from './start.js';
 import { createSeasonGoal, goalProgress } from './season-goals.js';
 import { teammateDuel, titleMath } from './duel.js';
+import { worldRecords } from './records.js';
 import { racePlan, PLAN_LABELS, raceAdvice } from './race-policy.js';
 import { raceRating } from './rating.js';
 import { raisePotential } from './drivers.js';
@@ -1148,6 +1149,7 @@ export function f1View(s) {
     goal: goalProgress(s),
     duel: teammateDuel(s),
     title: titleMath(s),
+    records: worldRecords(world),
     advice: raceAdvice(s),
     eventPosition,
     map,
@@ -1156,7 +1158,7 @@ export function f1View(s) {
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)) },
     status: p.status ?? null,
     statusWhy: statusWhy(world, p),
-    races: (season?.races ?? []).map((r) => ({ story: r.story ?? [], n: r.n, rating: r.rating ?? null, circuit: circuitView(r.n), playerPos: r.playerPos, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
+    races: (season?.races ?? []).map((r) => ({ story: r.story ?? [], n: r.n, rating: r.rating ?? null, circuit: circuitView(r.n), playerPos: r.playerPos, points: r.points ?? null, missed: !!r.missed, wet: r.wet, event: r.event ?? null, grid: r.grid ?? null, summary: r.summary ?? null, winner: r.winner ?? null, pole: r.pole ?? null })),
     trust: p.trust,
     trustReview: {
       threshold: CONFIG.trust.lowTrustCap,

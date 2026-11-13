@@ -62,3 +62,20 @@ test('a view traz nacionalidade da equipe e abandonos da carreira', () => {
   assert.ok(v.f1.constructors.every(c => typeof c.nat === 'string'));
   assert.equal(typeof v.player.career.dnfs, 'number');
 });
+
+test('recordes do mundo somam só quem tem marca e a base registra companheiro e campeão', async () => {
+  const { worldRecords } = await import('../engine/records.js');
+  const s = f1Season(3);
+  const recs = worldRecords(s.f1.world);
+  assert.ok(Array.isArray(recs));
+  for (const r of recs) assert.ok(r.value > 0 && typeof r.name === 'string');
+  const view = getView(s);
+  assert.deepEqual(view.f1.records, recs);
+  const seasons = view.baseHistory;
+  assert.ok(seasons.length > 0);
+  assert.ok(seasons.every(x => 'mate' in x && 'champion' in x), 'campos novos da base entram em todas as temporadas novas');
+  const mated = seasons.filter(x => x.mate);
+  assert.ok(mated.length > 0 && mated.every(x => x.mate.name && x.mate.position >= 1));
+  const cum = view.f1.races.map(r => r.points);
+  assert.ok(cum.every(p => p === null || p >= 0));
+});
