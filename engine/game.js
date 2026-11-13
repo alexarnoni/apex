@@ -9,7 +9,7 @@ import { CONFIG } from './config.js';
 import { attributeView, trainAttributes, evolveAttributes } from './driver-attributes.js';
 import {
   enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveRaceStrategy, resolveRaceStart, resolveRacePit, resolveRaceFinale, resolveTeamOrder,
-  resolveStoryEvent, resolveRaceEvent, resolveHomeRace, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View,
+  resolveStoryEvent, resolveRaceEvent, resolveHomeRace, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View, legacyTier,
 } from './f1.js';
 import { inboxView, headlineFor } from './inbox.js';
 import { createRng } from './rng.js';
@@ -477,6 +477,7 @@ export function careerTotals(state, p) {
     podiums: n(base, 'podiums') + n(f1, 'podiums'),
     poles: n(base, 'poles') + n(f1, 'poles'),
     points: n(base, 'points') + n(f1, 'points'),
+    dnfs: n(base, 'dnfs') + n(f1, 'dnfs'),
     titlesBase: n(base, 'titles'),
     titlesF1: n(f1, 'titles'),
     titles: n(base, 'titles') + n(f1, 'titles'),
@@ -576,7 +577,7 @@ export function getView(state) {
     };
   }
   if (state.f1) view.f1 = f1View({ ...state, player: p });
-  if (state.phase === 'LEGADO') view.legacy = state.legacy;
+  if (state.phase === 'LEGADO') view.legacy = { ...state.legacy, tier: legacyTier(state.legacy.score) };
   if (state.phase === 'ROTA_ALTERNATIVA') view.note = 'Rotas alternativas ainda não implementadas.';
   view.inbox = inboxView(state);
   view.headline = headlineFor(state);

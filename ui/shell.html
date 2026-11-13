@@ -595,6 +595,20 @@ h2::before { display: none; }
 .counters .stat small { letter-spacing: .02em; font-size: 11px; }
 .counters .stat b { font-size: 20px; }
 .ficha-profile, .ficha-mate { display: flex; flex-direction: column; gap: 4px; }
+.radar { width: 100%; max-width: 220px; margin: 4px auto; display: block; }
+.radar-ring { fill: none; stroke: var(--line); stroke-width: .6; }
+.radar-shape { fill: color-mix(in srgb, var(--signal) 30%, transparent); stroke: var(--signal); stroke-width: 1.4; }
+.radar-label { font-size: 6.5px; fill: var(--mute); text-transform: uppercase; }
+.season-chart svg, .years-card svg { width: 100%; height: auto; display: block; }
+.chart-bar { fill: var(--line); }
+.chart-bar.points { fill: color-mix(in srgb, var(--signal) 55%, var(--line)); }
+.chart-bar.podium { fill: var(--amber); }
+.chart-x { font-size: 9px; fill: var(--mute); }
+.chart-line { fill: none; stroke: var(--signal); stroke-width: 1.6; stroke-linejoin: round; }
+.kv { display: grid; gap: 4px; margin: 8px 0 0; font-size: 14px; }
+.kv div { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding: 2px 0; }
+.kv dt { color: var(--mute); }
+.kv dd { margin: 0; font-family: var(--f-mono); }
 </style>
 <!--BODY-->
 <div class="wrap" id="app" role="main"></div>

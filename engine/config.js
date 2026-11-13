@@ -321,7 +321,11 @@ export const CONFIG = {
   },
 
   // Nota de legado (spec-backend): mesma fórmula será recalculada no servidor
-  legacy: { title: 1000, vice: 250, win: 50, pole: 15, podium: 10, point: 1, baseTitle: 40, altRouteTitle: 60 },
+  legacy: { title: 1000, vice: 250, win: 50, pole: 15, podium: 10, point: 1, baseTitle: 40, altRouteTitle: 60,
+    // Faixas da nota (só texto). Cortes tirados de 273 carreiras da política automática em 2026-11-12: quartis 504, 1679 e 3493, P90 6635 e P97 11915.
+    // `top` é a parcela aproximada de carreiras que chega até a faixa ou acima dela.
+    tiers: [{ min: 0, label: 'Passagem discreta', top: 100 }, { min: 500, label: 'Piloto respeitado', top: 75 }, { min: 1700, label: 'Piloto de destaque', top: 50 },
+      { min: 3500, label: 'Astro da F1', top: 25 }, { min: 6600, label: 'Lenda', top: 10 }, { min: 12000, label: 'Dinastia histórica', top: 3 }] },
 
   // Confiança do jogador com a equipe atual (0-100)
   trust: {

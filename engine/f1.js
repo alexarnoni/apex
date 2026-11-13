@@ -28,7 +28,7 @@ import { attributeView, ATTRIBUTE_LABELS, trainAttributes, ensureAttributes } fr
 import { EFFECTS, applyEffects, rollOutcome, outcomeText, pickNarrative, pickRaceEvent } from './events.js';
 import { CATEGORIES } from '../data/categories.js';
 import { SURNAMES } from '../data/names.js';
-import { TEAMS_F1, DRIVERS_F1, SISTER_TEAMS } from '../data/world2026.js';
+import { TEAMS_F1, DRIVERS_F1, SISTER_TEAMS, TEAM_NAT } from '../data/world2026.js';
 import { NARRATIVE_EVENTS, RACE_EVENTS } from '../data/events.js';
 
 const F1 = () => CONFIG.f1;
@@ -1024,6 +1024,13 @@ export function resolveContractTerms(s, rng, answer) {
 // Aposentadoria e legado
 // ---------------------------------------------------------------------------
 
+// Faixa da nota de legado: rótulo e quanto da distribuição simulada ela alcança. Só apresentação; não entra em nenhuma regra.
+export function legacyTier(score) {
+  const tiers = CONFIG.legacy.tiers;
+  const i = tiers.reduce((acc, t, k) => (score >= t.min ? k : acc), 0);
+  return { label: tiers[i].label, top: tiers[i].top, next: tiers[i + 1] ? { label: tiers[i + 1].label, missing: tiers[i + 1].min - score } : null };
+}
+
 // Nota de legado (spec-backend). Função pura sobre os agregados.
 export function legacyScore(sum) {
   const L = CONFIG.legacy;
@@ -1122,7 +1129,7 @@ export function f1View(s) {
       delta: hasDelta ? (season.prevPos[d.name] ?? i + 1) - (i + 1) : 0,
     }));
   const constructors = constructorStandings(world).map((c, i) => ({
-    pos: i + 1, id: c.id, name: c.name, points: c.points, isYours: c.id === p.team,
+    pos: i + 1, id: c.id, name: c.name, nat: TEAM_NAT[c.id] ?? null, points: c.points, isYours: c.id === p.team,
     delta: hasDelta ? (season.prevConPos?.[c.id] ?? i + 1) - (i + 1) : 0,
   }));
   const isLast = (r) => r && { story: r.story ?? [], n: r.n, rating: r.rating ?? null, circuit: circuitView(r.n), wet: r.wet, winner: r.winner, pole: r.pole, playerPos: r.playerPos, missed: !!r.missed, grid: r.grid ?? null, points: r.points ?? null, summary: r.summary ?? null };

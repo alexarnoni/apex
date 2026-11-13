@@ -283,6 +283,7 @@ test('carreira inteira por cliques: criação, base, temporadas, contratos e leg
       expect(sawContract).toBe(true);
       expect(sawGoal).toBe(true);
       await expect(page.locator('[data-act="copy"]')).toBeVisible();
+      await expect(page.locator('.legacy-tier b')).toBeVisible();
       return;
     }
     expect(state.phase).not.toBe('ROTA_ALTERNATIVA');
@@ -443,4 +444,18 @@ test('briefing, duelo com o companheiro e conta do título aparecem antes da lar
   await expect(page.locator('.ficha')).toContainText('Talento');
   await expect(page.locator('.ficha')).toContainText('PERFIL DA EQUIPE ATUAL');
   await expect(page.locator('.ficha-mate')).toContainText('nota geral');
+});
+
+test('v0.17: página da equipe, gráfico da temporada, ano a ano, radar e estatísticas completas', async ({ page }) => {
+  await importCareer(page, fixture('weekend_approach', (s) => !s.pendingDecision.payload.out && s.f1.season.raceIndex >= 1));
+  await show(page, '.team-card', 'season');
+  await expect(page.locator('.team-card')).toContainText('nos construtores');
+  await expect(page.locator('.season-chart svg')).toBeVisible();
+  await page.locator('[data-act="sttab"][data-id="teams"]').click();
+  await expect(page.locator('table[aria-label="Classificação de construtores"] img').first()).toBeVisible();
+  await show(page, '.ficha', 'driver');
+  await page.locator('.pilot-profile summary').click();
+  await expect(page.locator('.radar')).toBeVisible();
+  await page.locator('.full-stats summary').click();
+  await expect(page.locator('.full-stats')).toContainText('Abandonos');
 });

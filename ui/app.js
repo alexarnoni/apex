@@ -678,6 +678,16 @@ function skillDial(p) {
   </div>`;
 }
 
+// Estatísticas completas da carreira (base e F1 somadas), com as taxas que a ficha não mostra.
+function fullStats(view) {
+  const c = view.player.career;
+  const pct = (n) => (c.gp ? `${(Math.round((n / c.gp) * 1000) / 10).toLocaleString('pt-BR')}%` : '–');
+  const best = view.f1?.seasons.length ? Math.min(...view.f1.seasons.map(y => y.position)) : null;
+  const rows = [['Largadas', c.gp], ['Vitórias', `${c.wins} (${pct(c.wins)})`], ['Pódios', `${c.podiums} (${pct(c.podiums)})`], ['Poles', c.poles], ['Pontos', c.points ?? 0], ['Abandonos', c.dnfs ?? 0],
+    ['Títulos', c.titles], ['Vices na F1', c.vice], ['Melhor final na F1', best ? `${best}º` : '–']];
+  return `<details class="full-stats"><summary>Estatísticas completas</summary><dl class="kv">${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl></details>`;
+}
+
 function ficha(view) {
   const p = view.player;
   const c = p.career;
@@ -714,7 +724,8 @@ function ficha(view) {
       </div>
     </div>
     ${attributes(p)}
-    <details class="pilot-profile"><summary>Perfil de pilotagem</summary>${profileBars(p.attributes)}<p class="mute small">A nota geral resume estas competências. O carro não entra nesta nota.</p></details>
+    <details class="pilot-profile"><summary>Perfil de pilotagem</summary>${radarChart(p.attributes)}${profileBars(p.attributes)}<p class="mute small">A nota geral resume estas competências. O carro não entra nesta nota.</p></details>
+    ${fullStats(view)}
     <div class="tiles">${stat('Idade', p.age)}${stat('Talento', p.talent ?? '–')}${stat('Potencial', `${p.potentialBand[0]}–${p.potentialBand[1]}`)}${stat('Margem', margin(p))}${p.academy ? stat('Academia', p.academy.teamId.toUpperCase()) : ''}</div>
     ${team}
     <div class="counters">${stat('Largadas', c.gp)}${stat('Vitórias', c.wins)}${stat('Pódios', c.podiums)}${stat('Pontos', c.points ?? 0)}</div>
@@ -748,8 +759,65 @@ function driversTable(f1) {
 function teamsTable(f1) {
   const rows = f1.constructors.map((c) => `<tr class="${c.isYours ? 'you' : ''}"><td class="pos">${c.pos}</td>
     <td class="car"><i style="background:${esc(TEAM_COLOR[c.id] ?? 'var(--line)')}"></i></td>
-    <td class="name">${esc(c.name)}</td><td class="dl">${delta(c.delta)}</td><td class="pts">${esc(c.points)}</td></tr>`).join('');
+    <td class="name">${flagImg(c.nat, { alt: false, h: 11 })} ${esc(c.name)}</td><td class="dl">${delta(c.delta)}</td><td class="pts">${esc(c.points)}</td></tr>`).join('');
   return `<div class="scroll-x"><table class="tower" aria-label="Classificação de construtores"><tbody>${rows}</tbody></table></div>`;
+}
+
+// Radar de atributos: um eixo por competência, de 0 a 100. A lista de barras do perfil fica junto, para leitor de tela.
+function radarChart(values = []) {
+  if (values.length < 3) return '';
+  const C = 70; const R = 48; const n = values.length;
+  const pt = (i, k) => { const a = -Math.PI / 2 + (2 * Math.PI * i) / n; return [C + Math.cos(a) * R * k, C + Math.sin(a) * R * k]; };
+  const fmt = (p) => p.map(v => v.toFixed(1)).join(',');
+  const poly = (k) => values.map((_, i) => fmt(pt(i, k))).join(' ');
+  const shape = values.map((a, i) => fmt(pt(i, Math.max(0, Math.min(100, a.value)) / 100))).join(' ');
+  const labels = values.map((a, i) => { const [x, y] = pt(i, 1.28); return `<text x="${x.toFixed(1)}" y="${y.toFixed(1)}" text-anchor="middle" dominant-baseline="middle" class="radar-label">${esc(a.label.slice(0, 5))}</text>`; }).join('');
+  const name = values.map(a => `${a.label} ${a.value}`).join(', ');
+  return `<svg class="radar" viewBox="0 0 140 140" role="img" aria-label="Radar de atributos: ${esc(name)}"><polygon points="${poly(1)}" class="radar-ring"/><polygon points="${poly(0.5)}" class="radar-ring"/><polygon points="${shape}" class="radar-shape"/>${labels}</svg>`;
+}
+
+// Gráfico da temporada: uma barra por etapa, mais alta quanto melhor a chegada. Abandono e ausência ficam marcados.
+function seasonChart(f1) {
+  const races = f1.races;
+  if (!races.length) return '';
+  const total = f1.race?.total ?? races.length;
+  const W = 220; const H = 80; const slot = W / Math.max(total, races.length);
+  const worst = Math.max(20, ...races.map(r => r.playerPos ?? 0));
+  const bars = races.map((r, i) => {
+    const x = (i * slot + slot * 0.15).toFixed(1); const w = (slot * 0.7).toFixed(1);
+    if (r.missed || !r.playerPos) return `<text x="${(i * slot + slot / 2).toFixed(1)}" y="${H - 3}" text-anchor="middle" class="chart-x">${r.missed ? '–' : '×'}</text>`;
+    const h = Math.max(3, (H - 10) * (1 - (r.playerPos - 1) / worst));
+    return `<rect x="${x}" y="${(H - h).toFixed(1)}" width="${w}" height="${h.toFixed(1)}" rx="1.5" class="chart-bar${r.playerPos <= 3 ? ' podium' : r.playerPos <= 10 ? ' points' : ''}"/>`;
+  }).join('');
+  const text = races.map(r => `etapa ${r.n}: ${r.missed ? 'fora' : r.playerPos ? `P${r.playerPos}` : 'abandono'}`).join('; ');
+  return `<section class="card season-chart"><h3>Chegadas da temporada</h3>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Posição de chegada por etapa. ${esc(text)}">${bars}</svg>
+    <p class="mute small">Barra alta é chegada melhor. Em destaque: pódio e zona de pontos. × abandono.</p></section>`;
+}
+
+// Evolução ano a ano: posição final no mundial de cada temporada na F1 e o que cada uma rendeu.
+function yearsCard(f1) {
+  if (!f1.seasons.length) return '';
+  const rows = [...f1.seasons].reverse().map(y => `<tr><td class="pos">${esc(y.year)}</td><td class="car"><i style="background:${esc(TEAM_COLOR[y.team] ?? 'var(--line)')}"></i></td><td class="name">${esc(y.teamName)}</td><td class="pts">${esc(y.position)}º · ${esc(y.points)} pts · ${esc(y.wins)}v</td></tr>`).join('');
+  const W = 220; const H = 50; const n = f1.seasons.length;
+  const worst = Math.max(10, ...f1.seasons.map(y => y.position));
+  const pts = f1.seasons.map((y, i) => `${(n === 1 ? W / 2 : 6 + (i * (W - 12)) / (n - 1)).toFixed(1)},${(4 + (H - 8) * ((y.position - 1) / (worst - 1))).toFixed(1)}`).join(' ');
+  const line = n > 1 ? `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Posição final no mundial, ano a ano: ${esc(f1.seasons.map(y => `${y.year} ${y.position}º`).join(', '))}"><polyline points="${pts}" class="chart-line"/></svg><p class="mute small">Quanto mais alto o ponto, melhor a posição no mundial.</p>` : '';
+  return `<details class="card years-card" open><summary>Ano a ano na F1</summary>${line}<div class="scroll-x"><table class="tower"><tbody>${rows}</tbody></table></div></details>`;
+}
+
+// Página da equipe: o carro, a posição entre os construtores, a dupla e os seus anos lá.
+function teamCard(f1) {
+  const t = f1.team;
+  const row = f1.constructors.find(c => c.isYours);
+  const mine = f1.standings.find(d => d.isPlayer);
+  const years = f1.seasons.filter(y => y.team === t.id);
+  const mate = f1.duel;
+  return `<section class="card team-card"><h3>${teamTag(f1)}</h3>
+    <p class="small">Carro: <b>${esc(t.carLabel)}</b> (#${esc(t.carRank)}) · ${row ? `${esc(row.pos)}º nos construtores com ${esc(row.points)} pts` : ''}</p>
+    ${profileBlock(t.profile)}
+    <p class="small">Dupla: <b>${esc(mine?.name ?? 'Você')}</b> (${esc(mine?.points ?? 0)} pts)${mate ? ` e <b>${flagImg(mate.nat, { alt: false, h: 11 })} ${esc(mate.name)}</b> (${esc(mate.matePoints)} pts)` : ''}.</p>
+    <p class="mute small">${years.length ? `Você tem ${years.length} ${years.length === 1 ? 'temporada completa' : 'temporadas completas'} nesta equipe: ${esc(years.map(y => `${y.year} ${y.position}º`).join(', '))}.` : 'Esta é a sua primeira temporada nesta equipe.'}</p></section>`;
 }
 
 function racesList(f1) {
@@ -1207,7 +1275,7 @@ function screenF1(view) {
   const betweenRaces = ['weekend_approach', 'home_race', 'story_event'].includes(pd?.type);
   const event = lastEventCard(f1);
   const previous = last && !betweenRaces ? `<details class="card previous-race"><summary>Resultado da etapa anterior · ${esc(f1.lastRace.circuit?.gp ?? '')}</summary>${last}</details>` : '';
-  return layout(view, `${!raceLead ? headlineCard(view.headline) : ''}${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}`, `${seasonPanel(view)}${raceLead ? '' : `${seasonPulseCard(f1.goal)}${duelCard(f1)}${dev}${recentCareer(f1)}${baseHistory(view)}`}`, raceLead);
+  return layout(view, `${!raceLead ? headlineCard(view.headline) : ''}${betweenRaces ? last : ''}${title ? `<h2>${esc(title)}</h2>` : ''}${body}${event}${previous}`, `${seasonPanel(view)}${raceLead ? '' : `${seasonPulseCard(f1.goal)}${duelCard(f1)}${teamCard(f1)}${seasonChart(f1)}${dev}${yearsCard(f1)}${recentCareer(f1)}${baseHistory(view)}`}`, raceLead);
 }
 
 function screenEndSeason(view) {
@@ -1271,10 +1339,22 @@ function summaryText(view) {
   ].join('\n');
 }
 
+// Uma frase com a história da carreira: o que ela rendeu na base e na F1 e qual foi a melhor temporada.
+function legacyStory(view) {
+  const l = view.legacy;
+  const seasons = view.f1.seasons;
+  const best = seasons.length ? seasons.reduce((a, b) => (b.position < a.position || (b.position === a.position && b.points > a.points) ? b : a)) : null;
+  const parts = [`${l.seasons} ${l.seasons === 1 ? 'temporada' : 'temporadas'} na F1, ${l.wins} ${l.wins === 1 ? 'vitória' : 'vitórias'} e ${l.titlesF1} ${l.titlesF1 === 1 ? 'título' : 'títulos'}`];
+  if (l.baseTitles) parts.push(`${l.baseTitles} ${l.baseTitles === 1 ? 'título' : 'títulos'} na base`);
+  return `${parts.join('; ')}.${best ? ` Melhor temporada: ${best.year}, ${best.position}º pela ${best.teamName} com ${best.points} pontos.` : ''}`;
+}
+
 function screenLegacy(view) {
   const l = view.legacy;
   const main = `<section class="card focus"><h2>${l.how === 'voluntary' ? 'Carreira encerrada' : 'Sem lugar no grid'} · aos ${esc(l.retiredAge)} anos</h2>
       <div class="row" style="align-items:flex-end;gap:24px"><div class="big">${esc(l.score)}</div><small class="mute">NOTA DE LEGADO</small></div>
+      <p class="legacy-tier"><b>${esc(l.tier.label)}</b>${l.tier.top < 100 ? ` · entre os ${esc(l.tier.top)}% melhores de 273 carreiras simuladas` : ''}.${l.tier.next ? ` Faltaram ${esc(l.tier.next.missing)} pontos para ${esc(l.tier.next.label)}.` : ''}</p>
+      <p class="mute small">${esc(legacyStory(view))}</p>
       <div class="stats">${stat('Títulos F1', l.titlesF1)}${stat('Vice', l.vice)}${stat('Vitórias na F1', l.wins)}${stat('Pódios na F1', l.podiums)}${stat('Poles na F1', l.poles)}${stat('Pontos na F1', l.points)}${stat('Temporadas na F1', l.seasons)}${stat('Títulos na base', l.baseTitles)}</div>
       <div class="row"><button class="btn" data-act="copy">Copiar resumo</button><button class="btn ghost" data-act="newgame-yes">Nova carreira</button></div>
       <p class="mute" style="font-size:14px" id="copy-msg">O resumo traz a seed e os números da carreira, pronto para colar em qualquer conversa.</p>

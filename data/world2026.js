@@ -42,3 +42,6 @@ export const DRIVERS_F1 = [
   { name: 'Perez',      nat: 'MX', team: 'cad', skill: 84, style: 'con', age: 36, contract: 2 },
   { name: 'Bottas',     nat: 'FI', team: 'cad', skill: 83, style: 'con', age: 36, contract: 2 },
 ];
+
+// Nacionalidade da equipe (só para a bandeira nas tabelas); fica fora do mundo salvo para não mexer nos saves.
+export const TEAM_NAT = { mcl: 'GB', mer: 'DE', rbr: 'AT', fer: 'IT', ast: 'GB', wil: 'GB', rb: 'IT', haa: 'US', alp: 'FR', aud: 'DE', cad: 'US' };

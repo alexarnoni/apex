@@ -46,3 +46,19 @@ test('depois de corridas o placar fecha com as etapas e a conta do título é co
   assert.deepEqual(view.f1.title, t);
   assert.ok(view.player.talent);
 });
+
+test('faixa do legado cobre qualquer nota e só apresenta', async () => {
+  const { legacyTier } = await import('../engine/f1.js');
+  assert.equal(legacyTier(0).label, 'Passagem discreta');
+  assert.equal(legacyTier(1679).label, 'Piloto respeitado');
+  assert.equal(legacyTier(1700).label, 'Piloto de destaque');
+  assert.equal(legacyTier(23140).label, 'Dinastia histórica');
+  assert.equal(legacyTier(23140).next, null);
+  assert.equal(legacyTier(100).next.missing, 400);
+});
+
+test('a view traz nacionalidade da equipe e abandonos da carreira', () => {
+  const v = getView(f1Season(0));
+  assert.ok(v.f1.constructors.every(c => typeof c.nat === 'string'));
+  assert.equal(typeof v.player.career.dnfs, 'number');
+});
