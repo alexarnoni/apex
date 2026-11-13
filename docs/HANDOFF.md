@@ -7,14 +7,14 @@ Atualizado em **2026-11-12**.
   - A primeira tentativa (`b4079da`, [run 43135701868](https://github.com/alexarnoni/apex/actions/runs/43135701868)) falhou no CI: a barra de abas com "Mensagens (N)" passava da largura do celular na fonte de fallback do Linux. Corrigido em `123eabe` (abas quebram linha). Reproduzido localmente com fonte larga.
   - v0.14.7 em `c39b4d3`, com o ajuste de layout das opções no celular em `033216e`.
 - **Publicado:** v0.16.0 em `3798f43` ([deploy aprovado](https://github.com/alexarnoni/apex/actions/runs/43322798161)): duelo, conta do título, briefing, ficha, achados 17, 18, 19 (parcial) e 30 (parcial). Detalhe e limites em `pacotes-1.0.md`.
-- Verificação atual: 196 testes Node, build e 40 Playwright (Chrome do sistema).
+- Verificação atual: 198 testes Node, build e 42 Playwright (Chrome do sistema).
 - Bip do rádio (`ui/app.js`, `ui/sound.js`): toca só no recado de decisão de corrida visível. Ainda não foi ouvido no navegador.
 
 ## Pendências
 
 - Testar em aparelho real: som do rádio, ordem das opções no celular, caixa de entrada.
 - Achados parciais em `achados-jogada.md`: 28, 30 e 32.
-- Próximo pacote: v0.17 (inclui faixa do legado, achado 19).
+- **Local, não publicado:** v0.17 parcial (equipe, gráficos, radar, estatísticas, bandeiras, faixa do legado; achado 19 fechado). Faltam recordes do mundo, companheiros de base e histórico da base. Versão segue 0.16.0. Ver `pacotes-1.0.md`.
 
 ## Saves e regras
 

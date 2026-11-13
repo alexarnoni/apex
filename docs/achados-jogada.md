@@ -98,7 +98,8 @@ Política automática de calibração, estilo consistente.
 
 - **30 resolvido em parte:** os lances do meio da prova saem como "Primeiras voltas" e "Depois do box"; "Largada" ficou só nas luzes. A ordem do mais novo para o mais antigo foi mantida (feed ao vivo, destaque no mais recente).
 - **Feitos:** 17 (vencedor marcado como companheiro na lista de corridas e duelo no painel), 18 (aposentadoria com títulos, vitórias e declínio), 28 (já estava corrigido: "no Kart"; "primeira corrida em casa" só aparece na F1).
-- **Parcial:** 19 (ficha de aposentado sem contrato nem status; o legado ainda é um número sem faixa, v0.17); 15 (marcos) e 29 (nota opaca) conforme a v0.15.
+- **19 resolvido na v0.17 local:** o legado ganhou faixa ("Piloto de destaque", "Lenda"…), quanto falta para a seguinte e uma frase com a melhor temporada.
+- **Parcial:** 15 (marcos) e 29 (nota opaca) conforme a v0.15.
 - **Seguem abertos e têm pacote:** 32 restante na v0.20; 14, 16, 21, 22, 24, 35, 41 pela tabela acima.
 
 ## Plano de execução (2026-11-11)
