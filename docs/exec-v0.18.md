@@ -1,4 +1,4 @@
-# Especificação — v0.18.5 "Pneus e disputas"
+# Especificação — v0.18 "Pneus e disputas"
 
 Leia antes `guia-executor.md`. Estado em 2026-11-12: nada iniciado. Pedido do usuário: mais opções para ultrapassar e ganhar posição, com pneus que tenham efeito como na vida real, sem travar o jogo nem simular demais.
 
@@ -165,7 +165,7 @@ A etiqueta e uma frase do que ela significa vão no payload e aparecem na tela d
 - `engine/race-policy.js`: conselho e recomendação para o duelo (recomende `outside` com pneu abaixo de 50, `inside` com ritmo melhor e pneu acima de 70, `press` ou `manage` nos demais).
 - `engine/advance-races.js` e `tools/calibrate/lib.js` (`answerFor`): delegar e simular usam a opção segura; nenhuma resposta automática pode escolher opção desabilitada.
 - `ui/race-visual.js`: rótulo do trecho para o duelo.
-- Tutorial e glossário da v0.18: explicar composto, condição, ataques restantes e manobras.
+- O tutorial e o glossário ("Primeira corrida", v0.18.5) vêm depois deste pacote e já nascem explicando composto, condição, ataques restantes e manobras; nada a fazer aqui.
 - Achado 41 (`achados-jogada.md`): marque como resolvido se a primeira corrida de uma carreira nova tiver pelo menos três pausas na maioria das seeds; meça em 100 seeds e registre.
 
 ### C4. Testes
@@ -188,4 +188,4 @@ O duelo de meio só abre sem evento e com carro de outra equipe à frente; press
 
 ## Entrega
 
-Siga `guia-executor.md`. Publique as etapas A, B e C separadas (versões alvo 0.18.5, 0.18.6 e 0.18.7), cada uma só com a ordem do usuário. Em `docs/versoes.md`, registre os campos opcionais novos do save (`season.cur.tyre`, `season.cur.pressure`) e que saves antigos continuam abrindo. A postura (Atacar, Ritmo, Poupar) fica para depois deste pacote e ainda não tem especificação.
+Siga `guia-executor.md`. Publique as etapas A, B e C separadas (versões alvo 0.18.0, 0.18.1 e 0.18.2), cada uma só com a ordem do usuário. Em `docs/versoes.md`, registre os campos opcionais novos do save (`season.cur.tyre`, `season.cur.pressure`) e que saves antigos continuam abrindo. A postura (Atacar, Ritmo, Poupar) fica para depois deste pacote e ainda não tem especificação.

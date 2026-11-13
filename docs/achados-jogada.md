@@ -103,7 +103,7 @@ Política automática de calibração, estilo consistente.
 - **Seguem abertos e têm pacote:** 32 restante na v0.20; 14, 16, 21, 22, 24, 35, 41 pela tabela acima.
 
 
-**Destinos revistos em 2026-11-13:** cada achado aberto agora consta na entrada do seu pacote em `pacotes-1.0.md`: 29 e 15 (v0.18; resto do 15 na v0.34), 35 (v0.19), 32 (v0.20), 30 (v0.23), 16 e 41 (v0.25), 24 (v0.26), 21 (v0.28), 22 (v0.30), 14 (v0.32).
+**Destinos revistos em 2026-11-13:** cada achado aberto agora consta na entrada do seu pacote em `pacotes-1.0.md`: 29 e 15 (v0.18.5; resto do 15 na v0.34), 35 (v0.19), 32 (v0.20), 30 (v0.23), 16 e 41 (v0.25), 24 (v0.26), 21 (v0.28), 22 (v0.30), 14 (v0.32).
 
 ## Plano de execução (2026-11-11)
 
