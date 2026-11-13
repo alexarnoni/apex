@@ -24,6 +24,11 @@ const reduced = () => typeof matchMedia === 'function' && matchMedia('(prefers-r
 const clamp = (n) => Math.max(0, Math.min(1, n));
 const ease = (t) => t * t * (3 - 2 * t);
 const places = (n) => `${n} ${n === 1 ? 'posição' : 'posições'}`;
+// Fração do trecho em que o carro que termina na posição `index` começa a trocar de lugar, e quanto dura a troca.
+// A cena, a narração e a torre usam os mesmos números, para o que se lê acontecer junto com o que se vê.
+const MOVE_SPAN = .3;
+const moveStart = (index, total) => .1 + .5 * index / Math.max(1, total);
+const moveAt = (index, total) => Math.min(1, moveStart(index, total) + MOVE_SPAN / 2);
 
 // Compara a ordem recebida com a anterior e devolve o que a tela mostra: setas, abandonos e narração.
 // Quando `animate` é verdadeiro e a corrida avançou, prepara o trecho que paintRaceScene vai tocar.
@@ -46,11 +51,11 @@ export function raceScene(map, key, animate) {
     const was = new Map(before.map((car, i) => [car.name, i]));
     const now = new Map(names.map((name, i) => [name, i]));
     const stage = map.phase === 'finish' ? 'Corrida' : STAGE[previousPhase] ?? 'Na pista';
-    if (PRE_START.includes(previousPhase)) lines.push({ when: 'Largada', text: 'Apagam-se as luzes.' });
+    if (PRE_START.includes(previousPhase)) lines.push({ when: 'Largada', text: 'Apagam-se as luzes.', at: 0 });
     const gone = before.filter(car => !now.has(car.name));
     for (const car of gone) {
       scene.out.push(car);
-      lines.push({ when: 'Abandono', text: car.isPlayer ? 'Sua corrida termina aqui.' : `${car.name} abandona.` });
+      lines.push({ when: 'Abandono', text: car.isPlayer ? 'Sua corrida termina aqui.' : `${car.name} abandona.`, at: .3 });
     }
     const moves = [];
     names.forEach((name, i) => {
@@ -59,13 +64,13 @@ export function raceScene(map, key, animate) {
       if (delta) scene.deltas[name] = delta;
       if (delta && !map.cars[i].isPlayer) moves.push({ name, delta, from: was.get(name) + 1, to: i + 1 });
     });
-    if (names[0] !== before[0].name && now.has(before[0].name)) lines.push({ when: stage, text: `${names[0]} assume a liderança.` });
+    if (names[0] !== before[0].name && now.has(before[0].name)) lines.push({ when: stage, text: `${names[0]} assume a liderança.`, at: moveAt(0, names.length) });
     const you = map.cars.findIndex(car => car.isPlayer);
     const yourDelta = you >= 0 ? scene.deltas[names[you]] : 0;
-    if (yourDelta) lines.push({ when: stage, text: `Você ${yourDelta > 0 ? 'ganha' : 'perde'} ${places(Math.abs(yourDelta))}: P${you + 1 + yourDelta} → P${you + 1}.` });
+    if (yourDelta) lines.push({ when: stage, text: `Você ${yourDelta > 0 ? 'ganha' : 'perde'} ${places(Math.abs(yourDelta))}: P${you + 1 + yourDelta} → P${you + 1}.`, at: moveAt(you, names.length) });
     moves.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
     for (const move of moves.filter(m => Math.abs(m.delta) >= 2 && m.to > 1).slice(0, 2)) {
-      lines.push({ when: stage, text: `${move.name} ${move.delta > 0 ? 'sobe' : 'cai'} de P${move.from} para P${move.to}.` });
+      lines.push({ when: stage, text: `${move.name} ${move.delta > 0 ? 'sobe' : 'cai'} de P${move.from} para P${move.to}.`, at: moveAt(move.to - 1, names.length) });
     }
     if (play) {
       scene.segment = {
@@ -79,12 +84,44 @@ export function raceScene(map, key, animate) {
   }
 
   const known = new Set(scene.feed.map(line => line.text));
-  for (const note of map.notes ?? []) if (!known.has(note.text)) lines.push(note);
-  if (map.phase === 'finish' && names.length && animate) lines.push({ when: 'Bandeirada', text: `${names[0]} vence.` });
+  // Relato da engine: fala do que a sua decisão causou, então entra junto com a troca de posição do seu carro.
+  // A chegada só entra quando os carros cruzam a linha.
+  const you = map.cars.findIndex(car => car.isPlayer);
+  const noteAt = you >= 0 ? moveAt(you, names.length) : .55;
+  for (const note of map.notes ?? []) if (!known.has(note.text)) lines.push({ ...note, at: note.when === 'Chegada' ? 1 : noteAt });
+  if (map.phase === 'finish' && names.length && animate) lines.push({ when: 'Bandeirada', text: `${names[0]} vence.`, at: 1 });
+  // Ordem de exibição igual à ordem em que as coisas acontecem na pista.
+  lines.forEach((line, i) => { line.order = i; });
+  lines.sort((a, b) => (a.at ?? 0) - (b.at ?? 0) || a.order - b.order);
   scene.feed.push(...lines);
   scene.fresh = scene.segment ? lines.length : 0;
   Object.assign(scene, { key, phase: map.phase, cars: map.cars, paused: false });
   return model();
+}
+
+// Os traçados vêm em pontos inteiros numa grade de 200×140, o que deixa as curvas em degraus.
+// Corta os cantos duas vezes (Chaikin) só para desenhar; os dados de origem não mudam.
+const smoothed = new Map();
+function smoothPath(id, d) {
+  if (smoothed.has(id)) return smoothed.get(id);
+  const nums = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
+  let pts = [];
+  for (let i = 0; i + 1 < nums.length; i += 2) pts.push([nums[i], nums[i + 1]]);
+  let out = d;
+  if (pts.length >= 4 && !/[^MLZ\d\s.,-]/i.test(d)) {
+    for (let pass = 0; pass < 2; pass++) {
+      const next = [];
+      for (let i = 0; i < pts.length; i++) {
+        const [ax, ay] = pts[i];
+        const [bx, by] = pts[(i + 1) % pts.length];
+        next.push([ax * .75 + bx * .25, ay * .75 + by * .25], [ax * .25 + bx * .75, ay * .25 + by * .75]);
+      }
+      pts = next;
+    }
+    out = `M${pts.map(([x, y]) => `${x.toFixed(2)} ${y.toFixed(2)}`).join('L')}Z`;
+  }
+  smoothed.set(id, out);
+  return out;
 }
 
 function model() {
@@ -130,11 +167,18 @@ export function paintRaceScene(root, map, colors) {
   };
 
   // Pista em camadas: zebra por baixo, asfalto por cima e a linha central tracejada.
-  element('path', { d: track.d, class: 'track-kerb' });
-  element('path', { d: track.d, class: 'track-kerb-red' });
-  const road = element('path', { d: track.d, class: 'track-road' });
-  element('path', { d: track.d, class: 'track-centre' });
+  const d = smoothPath(map.circuit.id, track.d);
+  element('path', { d, class: 'track-kerb' });
+  element('path', { d, class: 'track-kerb-red' });
+  const road = element('path', { d, class: 'track-road' });
+  element('path', { d, class: 'track-centre' });
   const points = lookup(map.circuit.id, road);
+  // Setas de sentido ao longo da pista: ajudam a ler traçados com trechos próximos ou que se cruzam.
+  for (const f of [.14, .39, .64, .89]) {
+    const p = at(points, f);
+    element('path', { d: 'M-1.3 -1.2L1.2 0L-1.3 1.2', class: 'track-arrow',
+      transform: `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${(p.angle * 180 / Math.PI).toFixed(1)})` });
+  }
   const line = at(points, 0);
   const nx = -Math.sin(line.angle);
   const ny = Math.cos(line.angle);
@@ -191,7 +235,7 @@ export function paintRaceScene(root, map, colors) {
     const grid = onGrid ? 1 : segment?.fromGrid ? 1 - clamp(progress / .12) : 0;
     for (const car of cars) {
       const moving = segment && car.from !== car.index;
-      const t = moving ? ease(clamp((progress - (.1 + .5 * car.index / cars.length)) / .3)) : 1;
+      const t = moving ? ease(clamp((progress - moveStart(car.index, cars.length)) / MOVE_SPAN)) : 1;
       const rank = car.from + (car.index - car.from) * t;
       const pass = moving ? Math.sin(Math.PI * t) * 2.1 * Math.sign(car.from - car.index) : 0;
       const stagger = grid * (car.from % 2 ? 1.5 : -1.5);
@@ -209,11 +253,12 @@ export function paintRaceScene(root, map, colors) {
 
   const controls = panel.querySelector('.map-controls');
   const status = panel.querySelector('.scene-status');
-  const feed = [...root.querySelectorAll('.race-feed li.fresh')].reverse();
-  const reveal = (count) => feed.forEach((item, i) => item.classList.toggle('fresh', i >= count));
+  const feed = [...root.querySelectorAll('.race-feed li.fresh')];
+  // Cada linha carrega o instante do trecho em que o fato acontece na pista (data-at) e só aparece a partir dele.
+  const reveal = (progress) => feed.forEach((item) => item.classList.toggle('fresh', Number(item.dataset.at ?? 0) > progress));
   const idle = () => {
     place(1);
-    reveal(feed.length);
+    reveal(1);
     for (const { node } of outCars) node.remove();
     lights.setAttribute('hidden', '');
     if (controls) controls.hidden = true;
@@ -233,8 +278,13 @@ export function paintRaceScene(root, map, colors) {
       row.style.transition = 'none';
       row.style.transform = `translateY(${Number(row.dataset.delta) * row.offsetHeight}px)`;
     }
+    // Cada linha da torre desliza no mesmo instante em que o carro troca de lugar na pista.
+    const total = Math.max(1, map.cars.length);
+    const lapMs = segment.laps * LAP_MS;
     requestAnimationFrame(() => requestAnimationFrame(() => rows.forEach((row) => {
-      row.style.transition = `transform ${1.2 / scene.speed}s ease ${segment.hold / 1000 / scene.speed}s`;
+      const index = [...row.parentElement.children].indexOf(row);
+      const delay = (segment.hold + moveStart(index, total) * lapMs) / 1000 / scene.speed;
+      row.style.transition = `transform ${MOVE_SPAN * lapMs / 1000 / scene.speed}s ease ${delay}s`;
       row.style.transform = '';
     })));
   }
@@ -272,7 +322,7 @@ export function paintRaceScene(root, map, colors) {
     if (waiting) lamps.forEach((lamp, i) => lamp.classList.toggle('on', segment.elapsed > (i + 1) * segment.hold / 6));
     place(progress);
     // A última linha só aparece no fim do trecho, quando os carros chegam.
-    reveal(waiting ? 1 : 1 + Math.floor(progress * (feed.length - 1)));
+    reveal(waiting ? 0 : progress);
     if (status) status.textContent = scene.paused ? 'Cena pausada.' : waiting ? 'Luzes de largada…' : map.phase === 'finish' ? 'Últimas voltas…' : 'Corrida em andamento…';
     if (progress >= 1) finish();
     else frame = requestAnimationFrame(step);

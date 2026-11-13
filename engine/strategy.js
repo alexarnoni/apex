@@ -12,12 +12,12 @@ import { racingSkill } from './driver-attributes.js';
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 const LABELS = {
-  soft:   { label: 'Macios', description: 'Ataque cedo: rendem mais em pista de rua e para quem larga atrás, mas gastam rápido.' },
-  medium: { label: 'Médios', description: 'A escolha segura: nem ganha nem perde nada de especial.' },
-  hard:   { label: 'Duros', description: 'Aguentam mais voltas: bons em pista técnica e para esticar o primeiro stint.' },
-  inters: { label: 'Pneus de chuva', description: 'A pista está molhada: é a escolha que a equipe recomenda.' },
-  wait:   { label: 'Esperar a pista secar', description: 'Fica com o que tem e aposta que a chuva passa logo.' },
-  slicks: { label: 'Arriscar slicks', description: 'Aposta alta: se a pista secar, você voa; se não, perde muito.' },
+  soft:   { label: 'Macios', description: 'Mais aderência e volta mais rápida no começo, mas se desgastam cedo. Bons para ganhar posição largando atrás e em pista de rua, onde o desgaste é baixo.' },
+  medium: { label: 'Médios', description: 'Equilíbrio entre ritmo e duração. Dão liberdade para parar cedo ou tarde; é a escolha da maioria do grid.' },
+  hard:   { label: 'Duros', description: 'Menos aderência e demoram a aquecer, mas duram muito. Bons em pista técnica, que castiga o pneu, e para esticar o primeiro stint.' },
+  inters: { label: 'Intermediários', description: 'O pneu certo para pista molhada sem água acumulada. É a escolha que a equipe recomenda.' },
+  wait:   { label: 'Esticar os intermediários', description: 'Ficar mais tempo na pista para trocar direto para pneus de seco quando secar. Se a chuva apertar, você perde ritmo.' },
+  slicks: { label: 'Arriscar slicks', description: 'Pneus de seco na pista molhada. Se o trilho seco aparecer logo, você voa; se não, perde muito.' },
 };
 
 // Encaixe de cada opção com a situação (tags da pista, posição de largada, clima).
@@ -42,16 +42,16 @@ const GOOD = {
   soft: 'Os macios deram o ataque que você queria',
   medium: 'A equipe acertou o tempo da parada',
   hard: 'Os duros aguentaram e você passou rivais no fim do stint',
-  inters: 'Você foi dos primeiros a trocar para pneus de chuva',
-  wait: 'Esperar compensou: a pista secou na hora certa',
+  inters: 'Os intermediários estavam na janela certa e você andou forte',
+  wait: 'Esticar compensou: a pista secou e você fez uma parada a menos',
   slicks: 'A aposta ousada nos slicks funcionou',
 };
 const BAD = {
   soft: 'Os macios acabaram cedo e você perdeu ritmo',
   medium: 'Uma parada lenta custou posições',
   hard: 'Os duros demoraram a esquentar',
-  inters: 'A pista secou antes do esperado e os pneus de chuva sofreram',
-  wait: 'A chuva apertou e você demorou a trocar',
+  inters: 'A pista secou antes do esperado e os intermediários superaqueceram',
+  wait: 'A chuva apertou e os intermediários gastos custaram ritmo',
   slicks: 'Os slicks não seguraram na pista molhada',
 };
 

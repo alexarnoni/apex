@@ -436,9 +436,14 @@ h2::before { display: none; }
 .race-visual svg { display: block; width: 100%; aspect-ratio: 10 / 7; max-height: 300px; background: color-mix(in srgb, var(--good) 9%, var(--panel2)); border-radius: 10px; }
 .race-visual svg.wet { --road: #2b3346; background: color-mix(in srgb, var(--cyan) 12%, var(--panel2)); }
 .race-visual svg path, .race-visual svg line { stroke-linejoin: round; stroke-linecap: round; }
-.race-visual svg .track-kerb { stroke: var(--kerb); stroke-width: 7.6; }
-.race-visual svg .track-kerb-red { stroke: #d8343c; stroke-width: 7.6; stroke-dasharray: 2.5 2.5; stroke-linecap: butt; }
-.race-visual svg .track-road { stroke: var(--road); stroke-width: 6; }
+.race-visual svg .track-kerb { stroke: var(--kerb); stroke-width: 5.6; stroke-linejoin: round; }
+.race-visual svg .track-kerb-red { stroke: #d8343c; stroke-width: 5.6; stroke-dasharray: 2.5 2.5; stroke-linecap: butt; stroke-linejoin: round; }
+.race-visual svg .track-road { stroke: var(--road); stroke-width: 4.4; stroke-linejoin: round; }
+.tyre-opt { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 12px; text-align: left; }
+.tyre-icon { width: 54px; height: 54px; flex: none; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .35)); }
+.tyre-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.tyre-opt .tyre-text > span { color: var(--mute); font-size: 14px; }
+.race-visual svg .track-arrow { fill: none; stroke: #fff; stroke-width: .7; stroke-linecap: round; stroke-linejoin: round; opacity: .7; }
 .race-visual svg .track-centre { stroke: #fff; stroke-width: .3; stroke-dasharray: 1.6 2.4; opacity: .35; }
 .race-visual svg .track-finish { stroke: #fff; stroke-width: .9; stroke-dasharray: .9 .9; stroke-linecap: butt; }
 .race-visual svg .track-finish.alt { stroke-dashoffset: .9; }

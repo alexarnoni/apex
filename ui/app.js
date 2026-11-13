@@ -445,6 +445,26 @@ function stat(label, value) { return `<div class="stat"><b>${esc(value)}</b><sma
 
 
 
+// Pneu desenhado com a cor do composto, como nas transmissões: vermelho (macio), amarelo (médio),
+// branco (duro) e verde (intermediário). Desenho próprio, sem marca.
+const TYRE_COLOR = { soft: '#e8323c', medium: '#f2c318', hard: '#f1f1f4', inters: '#2fb163', wait: '#2fb163', slicks: '#f2c318' };
+function tyreIcon(id) {
+  const c = TYRE_COLOR[id];
+  if (!c) return '';
+  return `<svg class="tyre-icon" viewBox="0 0 48 48" aria-hidden="true">
+    <circle cx="24" cy="24" r="22" fill="#17161d" stroke="#000" stroke-width="1"/>
+    <circle cx="24" cy="24" r="17" fill="none" stroke="${c}" stroke-width="3.2" stroke-dasharray="33 20.4" stroke-dashoffset="16.5" stroke-linecap="butt"/>
+    <circle cx="24" cy="24" r="11" fill="#2b2a35" stroke="#55535f" stroke-width="1.2"/>
+    <circle cx="24" cy="24" r="3.2" fill="${c}"/>
+    ${[0, 72, 144, 216, 288].map((a) => `<line x1="24" y1="24" x2="24" y2="14.2" stroke="#6c6a78" stroke-width="1.6" transform="rotate(${a} 24 24)"/>`).join('')}
+  </svg>`;
+}
+
+function tyreCards(options, act) {
+  return `<div class="grid2 tyre-options">${Object.entries(options).map(([id, o]) =>
+    `<button class="opt tyre-opt" style="--oc:${TYRE_COLOR[id] ?? 'var(--line)'}" data-act="${act}" data-id="${esc(id)}">${tyreIcon(id)}<span class="tyre-text"><strong>${esc(o.label)}</strong><span>${esc(o.description ?? '')}</span></span></button>`).join('')}</div>`;
+}
+
 function optionCards(options, act, selected = null) {
   return `<div class="grid2">${Object.entries(options).map(([id, o]) =>
     `<button class="opt ${selected === id ? 'on' : ''}" aria-pressed="${selected === id}" data-act="${act}" data-id="${esc(id)}"><strong>${esc(o.label)}</strong><span>${esc(o.description ?? '')}</span></button>`).join('')}</div>`;
@@ -549,7 +569,7 @@ function raceSceneCard(map) {
   const position = map.cars.findIndex(car => car.isPlayer) + 1;
   const phase = map.phase === 'waiting' ? 'Antes da corrida' : map.phase === 'finish' ? 'Bandeirada' : WEEKEND_STAGE[map.phase];
   const { feed, fresh, speed } = sceneModel ?? { feed: [], fresh: 0, speed: 1 };
-  const lines = feed.map((line, i) => `<li class="${i >= feed.length - fresh ? 'fresh' : ''}"><b>${esc(line.when)}</b> ${esc(line.text)}</li>`).reverse().join('');
+  const lines = feed.map((line, i) => `<li class="${i >= feed.length - fresh ? 'fresh' : ''}" data-at="${Number(line.at ?? 0)}"><b>${esc(line.when)}</b> ${esc(line.text)}</li>`).reverse().join('');
   // Mapa compacto à esquerda; estado, controles e narração à direita. No celular, um abaixo do outro.
   return `<section class="card race-visual${map.cars.length ? '' : ' solo'}" aria-label="Mapa da corrida">
     <div class="scene-head"><h3>${map.phase === 'finish' && !sceneModel?.playing ? 'Etapa anterior · ' : ''}${esc(map.circuit.gp)}</h3>
@@ -1093,8 +1113,8 @@ function strategyCard(p) {
       <div class="row"><b>${esc(poleLine)}</b><span class="chip">${p.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span></div>
       <div class="scroll-x"><table class="tower" aria-label="Grid de largada"><tbody>${rows}</tbody></table></div>
       <h3>Estratégia de pneus</h3>
-      <p class="mute small">${p.wet ? 'A pista está molhada: decida o que calçar. A equipe recomenda ' + esc(p.options.find((o) => o.id === p.safe)?.label ?? '') + '.' : 'Leia a pista e a sua posição de largada. A escolha segura é ' + esc(p.options.find((o) => o.id === p.safe)?.label ?? '') + ': não ganha nem perde nada de especial.'}</p>
-      ${optionCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'strategy')}
+      <p class="mute small">${p.wet ? 'A pista está molhada: decida o que calçar. A equipe recomenda ' + esc(p.options.find((o) => o.id === p.safe)?.label ?? '') + '.' : 'Leia a pista e a sua posição de largada. Médios são a escolha mais segura; macios e duros rendem mais quando combinam com a pista.'}</p>
+      ${tyreCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'strategy')}
     </section>`;
 }
 

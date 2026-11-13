@@ -481,7 +481,7 @@ function openPitWindow(s, rng, w, absent, eventId = null) {
   const wet = changes ? !w.wet : w.wet;
   season.pendingRace = { w: ser(world, w), absent, eventId };
   s.pendingDecision = { type: 'race_pit', payload: {
-    position: index + 1, tyre: tyre.id === 'slicks' ? 'Pneus de pista seca' : tyre.id === 'wait' ? 'Composto mantido' : tyre.label,
+    position: index + 1, tyre: tyre.id === 'slicks' ? 'Pneus de pista seca' : tyre.id === 'wait' ? 'Intermediários' : tyre.label,
     condition, wet, changes, interruption, rival: rival?.name ?? null,
     clearAir, safe: interruption || changes || !clearAir ? 'pit' : 'extend',
     options: interruption ? [
