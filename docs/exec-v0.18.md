@@ -106,6 +106,10 @@ Opções da parada em pista seca sem mudança de clima: `pit` ("Parar: pneus mé
 
 `tests/tyres.test.js`: em 2.000 corridas simuladas do primeiro trecho, macio ganha posição mais vezes que médio, e médio mais que duro; depois de três trechos sem parar, a ordem se inverte; desgaste por composto; treino de pneus reduz desgaste; `attacksLeft`; `chanceMod` acima e abaixo da referência; pneu em `dead` custa posição; valor padrão quando `season.cur.tyre` não existe; corrida molhada não muda. Ajuste `tests/strategy.test.js` para o fim da aposta em pista seca. Navegador: o painel mostra composto e condição desde a largada; a janela de box oferece `pit_soft`.
 
+### A8. Estado em 2026-11-13
+
+Etapa A implementada e corrigida. Diferenças em relação ao texto acima, registradas em `calibracao.md`: valores finais de `CONFIG.tyres` (macio 0,05/26, duro -0,04/9, `pitOpens` 60, `paceFactor` 4, `pitStopCost` 0,85) e a regra de posições da janela normal de box, que deixou de dar posição de graça. Ao executar as etapas B e C, parta desses valores e não reduza a aderência nem feche a janela de box para fazer a calibração caber: se um critério falhar, procure a regra que entrega ganho sem custo.
+
 ## Etapa B — Atacar gasta pneu e o duelo final tem manobra (depende da A)
 
 ### B1. Custo do ataque

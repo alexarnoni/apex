@@ -537,7 +537,13 @@ export function resolveRacePit(s, rng, answer) {
   const worn = p.condition <= CONFIG.tyres.pitOpens;
   const edge = p.interruption === 'red_flag' ? (pit ? 0 : p.changes || worn ? -1 : 0)
     : p.interruption === 'safety_car' ? (pit ? (p.changes || worn ? 0 : -1) : p.changes || worn ? -2 : 0)
-    : p.changes ? (pit ? 1 : -2) : pit ? (p.clearAir ? 0 : 1) : (p.clearAir ? 1 : -1);
+    : p.changes ? (pit ? 1 : -2)
+    // Janela normal (só desgaste): ler certo a pista mantém a posição; ler errado custa uma.
+    // O ganho vem depois, do pneu novo, e não de graça na parada. Corridas sem pneu simulado seguem a regra antiga.
+    // Parar com pista livre entrega a posição; parar preso no tráfego custa uma posição em parte das vezes
+    // (é uma parada a mais que a dos rivais); ficar na pista preso no tráfego também custa.
+    : season.cur?.tyre?.compound ? (pit ? (p.clearAir ? -1 : (rng.next() < CONFIG.tyres.pitStopCost ? -1 : 0)) : (p.clearAir ? 0 : -1))
+    : pit ? (p.clearAir ? 0 : 1) : (p.clearAir ? 1 : -1);
   EFFECTS.shift({ w, player: s.player }, edge);
   const position = w.result.indexOf(s.player) + 1;
   // Em pista seca, mostra o composto do plano (macios, médios ou duros) quando ele é de seco; sem mudança de lógica.

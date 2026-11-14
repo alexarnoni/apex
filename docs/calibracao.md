@@ -165,3 +165,24 @@ Medição: `node tools/calibrate/player.js --policy <p> --n 300` (seeds 1 a 300)
 Causa do excesso: macios chegam a 56% depois de dois trechos e abriam a janela de box; a regra de posições existente dá +1 a quem para preso atrás de um rival, de graça. Com `pitOpens` 50 a janela por desgaste quase não abre em pista seca, e a opção `pit_soft` só aparece nesses casos raros (limite aceito; só abre sem interrupção). Valores finais alterados em relação à especificação: macio grip 0,02 e wear 22, duro grip -0,03, `pitOpens` 50.
 
 Critérios da etapa A: `a` dentro de ±4 pontos e chegada à F1 igual (ok); `attack` 4 pontos acima de `a` e abaixo de 25% (ok). Composto: estimativa analítica do ganho médio por pista (sem simular 2.000 corridas) dá macio, médio e duro cada um melhor em pelo menos uma das 24 pistas para largadas P3 e P6; com largada P9 o médio não é o melhor em nenhuma. **Não medidos:** simulação de 2.000 corridas por composto, posição média e abandono de `attack` contra `a`, duelos com pneu a 90/60/30 (dependem das etapas B e C). As políticas `abl_soft`, `abl_start` e `abl_pit` em `tools/calibrate/lib.js` são ablações desta medição.
+
+## v0.18 etapa A, correção — os compostos passam a pesar (2026-11-13)
+
+A calibração acima fechava, mas o composto quase não mudava o resultado: em 60 carreiras por composto (1ª temporada de F1, demais decisões automáticas), posição média de chegada 11,93 com macios, 11,93 com médios e 11,89 com duros; a janela de box abria só por interrupção ou clima e `pit_soft` não aparecia. A causa era a regra antiga da parada, que dava uma posição de graça a quem parava preso atrás de um rival.
+
+Mudanças: na janela normal com pneu simulado, ler certo a pista mantém a posição e ler errado custa uma; parar preso no tráfego custa uma posição com chance `pitStopCost` (é uma parada a mais que a dos rivais); o ganho vem depois, do pneu novo. Corridas sem pneu simulado (pista molhada, saves antigos) seguem a regra antiga. Valores finais: macio 0,05/26, médio 0,00/14, duro -0,04/9, `pitOpens` 60, `pitStopCost` 0,85, `paceFactor` 4.
+
+Ganho médio de posições por corrida causado pelo pneu (ritmo por trecho mais efeito da parada), 60 carreiras por linha, cerca de 1.100 corridas secas cada:
+
+| Composto | Pista técnica | Pista de rua | Demais pistas | Janelas por desgaste |
+|---|---|---|---|---|
+| Macios, parada segura | -0,15 | +0,15 | -0,09 | 772 |
+| Macios, parando de macios | -0,10 | +0,20 | -0,06 | 772 |
+| Médios | +0,03 | +0,04 | +0,04 | 0 |
+| Duros | +0,23 | +0,04 | -0,08 | 0 |
+
+Cada composto é o melhor em um tipo de pista: duros na técnica, macios na de rua, médios nas demais. Chance de ganhar posição no primeiro trecho com pneu novo: macios 23%, médios 13%, duros perto de zero; sem parar, os macios passam a perder.
+
+Rodadas de ajuste (ganho dos macios em pista comum): aderência 0,04 sem custo de parada +0,16; aderência 0,06 com custo 0,75 +0,04 (política `attack` 24% de títulos, reprovada); aderência 0,05 com custo 1 -0,17; final -0,09.
+
+Carreiras com título em 300 seeds (269 chegam à F1, 90%): base antes dos pneus 35 (13%); política `a` 32 (12%); política `attack` 48 (18%). Critérios: `a` dentro de ±4 pontos da base (ok); `attack` abaixo de 25% (ok) e no máximo 5 pontos acima de `a` (**6 pontos, no limite da margem de erro de ±2,3**). Não medido: quanto desses 6 pontos vem dos pneus e quanto dos ataques na largada, nos eventos e no duelo final, que já existiam; medir uma política "ataca mas usa médios" antes da etapa B.
