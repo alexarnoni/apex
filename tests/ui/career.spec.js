@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { createCareer, advance, applyDecision, ENGINE_VERSION } from '../../engine/game.js';
+import { CONFIG } from '../../engine/config.js';
 import { answerFor } from '../../tools/calibrate/lib.js';
 import { enterF1 } from '../../engine/f1.js';
 import { createRng } from '../../engine/rng.js';
@@ -206,10 +207,39 @@ test('janela de box retoma após reload e registra a parada na corrida', async (
   await expect(page.locator('.focus')).toContainText(`Posição atual · P${state.pendingDecision.payload.position}`);
   await page.reload();
   await page.locator('[data-act="continue"][data-slot="1"]').click();
-  await page.getByRole('button', { name: /Parar agora/ }).click();
+  await page.locator('[data-act="pit"][data-id="pit"]').click();
   const next = await saved(page);
   const result = next.f1.season.cur?.pit?.text ?? next.f1.season.lastRace?.story.find(item => item.when === 'Janela de box')?.text;
   expect(result).toMatch(/voltou em P\d+/);
+});
+
+test('janela de box em pista seca oferece pneus macios e o painel mostra o pneu', async ({ page }) => {
+  // Com macios o pneu chega a 60% e abre a janela de box sem interrupção nem mudança de pista.
+  // (o limite de abertura é 50 no jogo; aqui sobe para 60 só para gerar o estado)
+  let state = null;
+  const savedOpens = CONFIG.tyres.pitOpens;
+  CONFIG.tyres.pitOpens = 60;
+  for (let seed = 1; seed <= 20 && !state; seed++) {
+    let s = createCareer({ surname: 'TesteUI', number: 7, style: 'con', flag: 'BR', age: 15, seed });
+    for (let step = 0; step < 3000; step++) {
+      const pd = s.pendingDecision;
+      if (pd?.type === 'race_pit' && !pd.payload.interruption && !pd.payload.changes && !pd.payload.wet) { state = s; break; }
+      if (['LEGADO', 'ROTA_ALTERNATIVA'].includes(s.phase)) break;
+      s = pd ? applyDecision(s, pd.type === 'race_strategy' && !pd.payload.wet ? { id: 'soft' } : answerFor(s)) : advance(s);
+    }
+  }
+  CONFIG.tyres.pitOpens = savedOpens;
+  expect(state).not.toBeNull();
+  await importCareer(page, state);
+  await expect(page.locator('[data-act="pit"][data-id="pit_soft"]')).toHaveCount(1);
+  const panel = page.getByRole('region', { name: 'Seu carro' });
+  await expect(panel).toContainText('Pneus');
+  await expect(panel).toContainText('Ataques que o pneu aguenta');
+  await expect(panel.locator('.tyre-bar')).toHaveCount(1);
+  await page.locator('[data-act="pit"][data-id="pit_soft"]').click();
+  const next = await saved(page);
+  const result = next.f1.season.cur?.pit?.text ?? next.f1.season.lastRace?.story.find(item => item.when === 'Janela de box')?.text;
+  expect(result).toMatch(/macios/);
 });
 
 test('plano muda sem gastar etapa, persiste no reload e meta fica visível', async ({ page }) => {

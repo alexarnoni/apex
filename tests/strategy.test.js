@@ -41,7 +41,7 @@ function meanShift(choice, ctx, runs = 4000) {
 test('a escolha padrão não muda o resultado em média, e a escolha certa vale um pouco mais', () => {
   const ctx = { tags: ['rua'], grid: 6, wet: false };
   assert.ok(Math.abs(meanShift('medium', ctx)) < 0.06, 'padrão: média ~0');
-  assert.ok(meanShift('soft', ctx) > 0.15, 'macios em pista de rua: ganha posições em média');
+  assert.equal(meanShift('soft', ctx, 200), 0, 'pista seca: a escolha não é mais aposta (o efeito vem do estado de pneu)');
   const wet = { tags: [], grid: 6, wet: true };
   assert.ok(meanShift('inters', wet) > meanShift('wait', wet));
   assert.ok(meanShift('slicks', wet) < 0, 'slicks no molhado perdem em média');

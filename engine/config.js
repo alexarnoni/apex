@@ -44,6 +44,23 @@ export const CONFIG = {
     },
   },
 
+  // Pneus (F1, engine/tyres.js): o pneu é um recurso que cai a cada trecho da corrida e muda o ritmo do jogador.
+  tyres: {
+    soft:   { grip:  0.02, wear: 22 },
+    medium: { grip:  0.00, wear: 14 },
+    hard:   { grip: -0.03, wear: 9 },
+    practiceWearFactor: 0.8,   // treino livre "Testar pneus" reduz o desgaste
+    attackWear: 10,            // custo de uma tentativa de ultrapassagem
+    pressWear: 4,              // custo de pressionar
+    reference: 70,             // condição neutra
+    perTenBelow: 0.03,         // a cada 10 pontos abaixo de 70: -0,03 de chance
+    perTenAbove: 0.02,         // a cada 10 pontos acima de 70: +0,02 de chance
+    dead: 15,                  // pneu acabado
+    pitOpens: 50,              // janela de box abre com condição igual ou menor
+    paceFactor: 2,             // ritmo do pneu vira chance de ganhar/perder uma posição por trecho
+    fitFactor: 0.03,           // encaixe do composto com a pista soma fit * 0,03 à aderência
+  },
+
   // Largada (F1): efeito adicional sobre o resultado bruto; hold é neutro.
   start: { gain: 0.35, loss: 0.25, contact: 0.03, wetContact: 0.03, streetContact: 0.02, aggressiveGain: 0.05 },
 

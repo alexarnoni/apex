@@ -12,9 +12,9 @@ import { racingSkill } from './driver-attributes.js';
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 const LABELS = {
-  soft:   { label: 'Macios', description: 'Mais aderência e volta mais rápida no começo, mas se desgastam cedo. Bons para ganhar posição largando atrás e em pista de rua, onde o desgaste é baixo.' },
-  medium: { label: 'Médios', description: 'Equilíbrio entre ritmo e duração. Dão liberdade para parar cedo ou tarde; é a escolha da maioria do grid.' },
-  hard:   { label: 'Duros', description: 'Menos aderência e demoram a aquecer, mas duram muito. Bons em pista técnica, que castiga o pneu, e para esticar o primeiro stint.' },
+  soft:   { label: 'Macios', description: 'Aderência alta e ritmo mais rápido, mas desgaste rápido: dura pouco. Bom para largar atrás e em pista de rua.' },
+  medium: { label: 'Médios', description: 'Aderência e desgaste intermediários. Ritmo e duração equilibrados; é a escolha da maioria do grid.' },
+  hard:   { label: 'Duros', description: 'Aderência menor e ritmo mais lento no começo, mas desgaste baixo: duram muito. Bons em pista técnica.' },
   inters: { label: 'Intermediários', description: 'O pneu certo para pista molhada sem água acumulada. É a escolha que a equipe recomenda.' },
   wait:   { label: 'Esticar os intermediários', description: 'Ficar mais tempo na pista para trocar direto para pneus de seco quando secar. Se a chuva apertar, você perde ritmo.' },
   slicks: { label: 'Arriscar slicks', description: 'Pneus de seco na pista molhada. Se o trilho seco aparecer logo, você voa; se não, perde muito.' },
@@ -148,9 +148,18 @@ export function resolveFinale(w, player, rival, choiceId, carWeight, rng, mode =
 }
 
 // Resolve a aposta: sorteia bom, ruim ou neutro e move o jogador. Devolve { kind, shift, text, label }.
+const DRY_TEXT = {
+  soft: 'Você larga de macios: mais aderência no começo, desgaste rápido.',
+  medium: 'Você larga de médios: ritmo e duração equilibrados.',
+  hard: 'Você larga de duros: começa mais lento, mas o pneu dura muito.',
+};
+
+// Em pista seca a escolha não é mais aposta: o composto vira estado de pneu (engine/tyres.js) e o encaixe com a pista
+// um bônus fixo (strategyFit). Só na chuva a aposta continua sorteada.
 export function resolveStrategy(w, player, choiceId, ctx, rng) {
   const S = CONFIG.strategy;
   const meta = LABELS[choiceId];
+  if (DRY_TEXT[choiceId]) return { kind: 'none', shift: 0, text: DRY_TEXT[choiceId], label: meta.label };
   const fit = strategyFit(choiceId, ctx);
   const pGood = clamp(S.pGood + S.perFit * fit, 0.05, 0.7);
   const pBad = clamp(S.pBad - S.perFit * fit, 0.05, 0.6);

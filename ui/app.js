@@ -623,14 +623,15 @@ function carPanel(view) {
   const plan = f1.plans.find(p => p.id === f1.plan)?.label;
   const rows = [
     ['Posição', position ? `P${position} de ${map.cars.length}` : 'Fora da prova'],
-    ['Pneus', map.tyre ?? 'A definir'],
-    pd?.type === 'race_pit' ? ['Condição estimada', `${pd.payload.condition}%`] : null,
+    ['Pneus', map.tyre ? `${map.tyre.label}${map.tyre.compound ? ` · ${map.tyre.condition}%` : ''}` : 'A definir'],
+    map.tyre?.compound ? ['Ataques que o pneu aguenta', String(map.tyre.attacksLeft)] : null,
     ['Pista', map.wet ? 'Molhada' : 'Seca'],
     plan ? ['Plano', plan] : null,
     f1.goal ? ['Meta da equipe', f1.goal.label] : null,
   ].filter(Boolean);
   return `<section class="card car-panel" aria-label="Seu carro"><h3>Seu carro</h3>
-    <dl>${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl></section>`;
+    <dl>${rows.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>
+    ${map.tyre?.compound ? `<div class="tyre-bar" role="img" aria-label="Condição dos pneus: ${esc(map.tyre.condition)}%"><i style="width:${Math.max(0, Math.min(100, map.tyre.condition))}%"></i></div>` : ''}</section>`;
 }
 
 // Fase da carreira: quando o declínio começa e quanto custa o próximo ano (previsível, sem sorteio).
@@ -1113,7 +1114,7 @@ function strategyCard(p) {
       <div class="row"><b>${esc(poleLine)}</b><span class="chip">${p.wet ? '🌧 Pista molhada' : '☀ Pista seca'}</span></div>
       <div class="scroll-x"><table class="tower" aria-label="Grid de largada"><tbody>${rows}</tbody></table></div>
       <h3>Estratégia de pneus</h3>
-      <p class="mute small">${p.wet ? 'A pista está molhada: decida o que calçar. A equipe recomenda ' + esc(p.options.find((o) => o.id === p.safe)?.label ?? '') + '.' : 'Leia a pista e a sua posição de largada. Médios são a escolha mais segura; macios e duros rendem mais quando combinam com a pista.'}</p>
+      <p class="mute small">${p.wet ? 'A pista está molhada: decida o que calçar. A equipe recomenda ' + esc(p.options.find((o) => o.id === p.safe)?.label ?? '') + '.' : 'Leia a pista e a sua posição de largada. Macios são mais rápidos e duram pouco; duros são mais lentos e duram muito; médios ficam no meio. O desgaste muda o ritmo ao longo da corrida e define quantos ataques o pneu aguenta.'}</p>
       ${tyreCards(Object.fromEntries(p.options.map((o) => [o.id, o])), 'strategy')}
     </section>`;
 }
