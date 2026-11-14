@@ -145,3 +145,23 @@ Mundo: `npm run balance` com 200 eras de 25 anos por semente 42/137/999; compara
 O alvo de dinastia máxima < 9 falhou em duas sementes; a parcela modal não atingiu > 60%, como na referência. Kart (1.000 simulações): posição média 12,1/20 contra 11,6; ofertas top 8%, médias 49%, sem oferta 44% (arredondadas), contra 9%/54%/38%.
 
 As notas iniciais por dimensão são escolhas de design. A média usa 20% classificação, 30% corrida, 15% consistência, 10% chuva, 15% pneus e 10% contribuição técnica. O ritmo de corrida usa pneus em 20% do componente do piloto; na chuva, 35% vem da competência de chuva. Ajustes futuros devem conferir também base e mercado, pois ambos passam a consumir as especialidades.
+
+## v0.18 etapa A — pneus como estado (2026-11-13)
+
+Medição: `node tools/calibrate/player.js --policy <p> --n 300` (seeds 1 a 300). Base antes da mudança, política `a`: 269 chegam à F1 (90%), 35 com título (13%).
+
+| Configuração | Política | Título (de 269) |
+|---|---|---|
+| Valores da especificação, ajustados (macio 0,04/22, duro -0,03/9, `pitOpens` 60) | `a` | 39 (14%) |
+| idem | `attack` | 88 (33%) |
+| idem, só macios (`abl_soft`) | | 64 (24%) |
+| idem, só ataque na largada / só `pit_soft` | | 36 / 39 |
+| macio 0,02/22 | `a` / `abl_soft` / `attack` | 39 / 62 / 80 |
+| macio 0,02/22, `paceFactor` 0 | `abl_soft` | 64 (o ritmo do pneu não é a causa) |
+| macio 0,02/22, `pitOpens` 50 | `abl_soft` | 37 (14%) |
+| **final** (macio 0,02/22, duro -0,03/9, `pitOpens` 50) | `a` | **39 (14%), chegada à F1 90%** |
+| **final** | `attack` | **48 (18%)** |
+
+Causa do excesso: macios chegam a 56% depois de dois trechos e abriam a janela de box; a regra de posições existente dá +1 a quem para preso atrás de um rival, de graça. Com `pitOpens` 50 a janela por desgaste quase não abre em pista seca, e a opção `pit_soft` só aparece nesses casos raros (limite aceito; só abre sem interrupção). Valores finais alterados em relação à especificação: macio grip 0,02 e wear 22, duro grip -0,03, `pitOpens` 50.
+
+Critérios da etapa A: `a` dentro de ±4 pontos e chegada à F1 igual (ok); `attack` 4 pontos acima de `a` e abaixo de 25% (ok). Composto: estimativa analítica do ganho médio por pista (sem simular 2.000 corridas) dá macio, médio e duro cada um melhor em pelo menos uma das 24 pistas para largadas P3 e P6; com largada P9 o médio não é o melhor em nenhuma. **Não medidos:** simulação de 2.000 corridas por composto, posição média e abandono de `attack` contra `a`, duelos com pneu a 90/60/30 (dependem das etapas B e C). As políticas `abl_soft`, `abl_start` e `abl_pit` em `tools/calibrate/lib.js` são ablações desta medição.

@@ -199,3 +199,7 @@ Detalhes em [v0.11.md](v0.11.md). 178 testes Node e 22 de navegador. ENGINE_VERS
 Publicada como 0.15.0 em `123eabe`. A primeira tentativa (`b4079da`) falhou no CI por causa da barra de abas em fonte larga; a correção está no mesmo lançamento.
 
 Aba **Mensagens** derivada do estado (`engine/inbox.js`): cartas do careerLog, uma mensagem por corrida, marcos da temporada (primeira vitória, pódio ou pontos), movimentações de mercado no início da temporada e manchete da última corrida. A nota da corrida (`engine/rating.js`, de 1 a 10) entra como campo opcional `rating` em cada corrida. Mensagens lidas ficam no `localStorage` por slot e seed. Saves antigos continuam abrindo: sem `rating` a corrida aparece só com o GP. Para a manchete de "supera o companheiro", a corrida também grava `teammateGrid`, opcional. ENGINE_VERSION 1 sem mudança. 194 testes Node e 38 de navegador.
+
+## v0.18.0 (não publicada): pneus como estado
+
+Campo opcional novo em `season.cur.tyre` (`compound`, `condition`, `wearFactor`, `fit`) e `season.cur.tyreLog`; lidos com valor padrão (condição 70, sem composto) quando faltam. Nova resposta `pit_soft` na janela de box. ENGINE_VERSION 1 sem mudança; saves antigos continuam abrindo (uma corrida em andamento nesse save segue sem pneu simulado). Corridas passam a sair diferentes das versões anteriores com a mesma seed.

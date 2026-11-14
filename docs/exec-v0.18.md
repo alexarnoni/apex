@@ -1,6 +1,6 @@
 # Especificação — v0.18 "Pneus e disputas"
 
-Leia antes `guia-executor.md`. Estado em 2026-11-12: nada iniciado. Pedido do usuário: mais opções para ultrapassar e ganhar posição, com pneus que tenham efeito como na vida real, sem travar o jogo nem simular demais.
+Leia antes `guia-executor.md`. Estado em 2026-11-13: etapa A implementada e calibrada (não publicada); B e C não iniciadas. Pedido do usuário: mais opções para ultrapassar e ganhar posição, com pneus que tenham efeito como na vida real, sem travar o jogo nem simular demais.
 
 **Este pacote muda regra de jogo e resultado de corrida.** Modelo sugerido: Sonnet com esforço alto, ou superior. Não é tarefa para Haiku. Cada etapa abaixo só é publicada depois de passar pela calibração descrita no fim.
 
@@ -32,7 +32,9 @@ Isso tem de aparecer no resultado da corrida, não só no texto: com pneu novo, 
 
 `engine/f1.js`: `resolveRaceStrategy` → `resolveRaceStart` → `openRaceEvent` (sorteia um evento ou segue) → `openPitWindow` (abre a janela só em alguns casos) → `continueToOrders` → `openFinale` (duelo final com 50% de chance quando há situação) → `finishRace`. `engine/strategy.js`: `resolveStrategy` (hoje uma aposta sorteada que move posições), `finaleSituation`, `finaleOptions`, `resolveFinale`, `paceEdge`. `engine/start.js`: `resolveStart`. O estado da corrida em andamento é `season.cur` (criado em `resolveWeekendApproach`) e `season.pendingRace`.
 
-## Etapa A — Pneu como estado (publicável sozinha)
+## Etapa A — Pneu como estado (publicável sozinha) — FEITA em 2026-11-13 (não publicada)
+
+Desvios: macio grip 0,02 e wear 22, duro grip -0,03, `pitOpens` 50 (calibração em `calibracao.md`). `pit_soft` só aparece em janelas raras de pista seca. Tarefas A1 a A7 feitas.
 
 ### A1. Configuração
 
