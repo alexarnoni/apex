@@ -95,3 +95,34 @@ test('importar rejeita arquivo que não é save, de outra versão ou corrompido'
   const bad = JSON.stringify({ app: 'apex', version: ENGINE_VERSION, state: { lixo: true } });
   assert.throws(() => saves.parseImport(bad), /corrompido/);
 });
+
+
+test('um envelope antigo migra em memória e ganha schemaVersion na próxima gravação', () => {
+  const storage = fakeStorage();
+  const state = career();
+  delete state.history;
+  const old = JSON.stringify({ app: 'apex', version: ENGINE_VERSION, state });
+  storage.setItem('apex.slot.1', old);
+  const saves = make(storage);
+  const migrated = saves.load(1);
+  assert.deepEqual(migrated.history, []);
+  assert.deepEqual(saves.parseImport(old), migrated);
+  assert.equal(storage.getItem('apex.slot.1'), old);
+  assert.equal(saves.write(1, migrated), true);
+  assert.equal(JSON.parse(storage.getItem('apex.slot.1')).schemaVersion, 1);
+});
+
+test('uma aba não sobrescreve a revisão que outra aba acabou de gravar', () => {
+  const storage = fakeStorage();
+  const a = make(storage);
+  const b = make(storage);
+  assert.equal(a.write(1, career(1)), true);
+  b.load(1);
+  assert.equal(a.write(1, career(2)), true);
+  assert.equal(b.changed(1), true);
+  assert.equal(b.write(1, career(3)), false);
+  assert.equal(b.load(1).seed, 2);
+  assert.equal(b.changed(1), false);
+  assert.equal(b.write(1, career(3)), true);
+  assert.equal(a.changed(1), true);
+});

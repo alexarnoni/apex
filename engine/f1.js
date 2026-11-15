@@ -13,9 +13,9 @@ import { CONFIG } from './config.js';
 import { createWorld, beginYear, endYear } from './world.js';
 import { resetSeasonStats, startRace, applyTeamOrders, awardRace, summarizeSeason, trackFor } from './season.js';
 import { CIRCUITS, circuitFor, TAG_LABEL, TAG_HINT } from '../data/circuits.js';
-import { strategyOptions, strategyFit, resolveStrategy, finaleOptions, resolveFinale, finaleSituation, paceEdge } from './strategy.js';
+import { strategyOptions, strategyFit, resolveStrategy, finaleOptions, resolveFinale, finaleSituation, finaleFit, paceEdge, rivalProfile } from './strategy.js';
 import { startOptions, resolveStart } from './start.js';
-import { startTyre, tick as tyreTick, chanceMod, isDead, tyreView, COMPOUND_LABEL } from './tyres.js';
+import { startTyre, tick as tyreTick, chanceMod, attackOption, attacksLeft, NO_ATTACK, spend, isDead, tyreView, COMPOUND_LABEL } from './tyres.js';
 import { createSeasonGoal, goalProgress } from './season-goals.js';
 import { teammateDuel, titleMath } from './duel.js';
 import { worldRecords } from './records.js';
@@ -174,7 +174,10 @@ function storyDecision(ev, phase, ctx) {
     type: 'story_event',
     payload: {
       phase, eventId: ev.id, title: ev.title, text: ev.text(ctx),
-      options: ev.options.map((o) => ({ id: o.id, label: o.label, description: o.description })),
+      options: ev.options.map(({ id, label, description, attack }) => {
+            const option = { id, label, description };
+            return attack ? attackOption({ ...option, attack }, season.cur.tyre) : option;
+          }),
     },
   };
 }
@@ -194,6 +197,10 @@ export function resolveStoryEvent(s, rng, answer) {
   const opt = ev.options.find((o) => o.id === answer?.id);
   if (!opt) throw new Error(`id inválido (use ${ev.options.map((o) => o.id).join(', ')})`);
   const ctx = buildCtx(s);
+  if (opt.attack) {
+    if (attackOption(opt, season.cur.tyre).disabled) throw new Error(NO_ATTACK);
+    spendRaceTyre(season.cur, CONFIG.tyres.attackWear);
+  }
   const outcome = rollOutcome(opt, rng);
   applyEffects(ctx, outcome.effects, rng);
   recordEvent(s, ev, outcomeText(outcome, ctx));
@@ -392,7 +399,7 @@ export function resolveRaceStrategy(s, rng, answer) {
   season.cur.tyre = startTyre(answer.id, season.cur.practice);
   if (season.cur.tyre.compound) season.cur.tyre.fit = strategyFit(answer.id, pr.strategyCtx);
   const startCtx = { ...pr.strategyCtx, gridSize: world.drivers.length };
-  const { options: starts, safe } = startOptions(startCtx);
+  const { options: starts, safe } = startOptions(startCtx, season.cur.tyre);
   season.pendingRace = { w: ser(world, w), absent: false, eventId: null, startCtx };
   s.pendingDecision = {
     type: 'race_start',
@@ -404,29 +411,75 @@ export function resolveRaceStart(s, rng, answer) {
   const { world, season } = s.f1;
   const pr = season.pendingRace;
   const w = deser(world, pr.w);
-  season.cur.start = resolveStart(w, s.player, answer?.id, pr.startCtx, rng);
+  season.cur.start = resolveStart(w, s.player, answer?.id, pr.startCtx, rng, season.cur.tyre);
+  if (answer.id === 'attack') spendRaceTyre(season.cur, CONFIG.tyres.attackWear);
+  countOvertakes(season.cur, season.cur.start.shift);
   season.pendingRace = null;
   openRaceEvent(s, rng, w, false);
 }
 
 // Um trecho de corrida para o pneu do jogador: desgasta, move o ritmo e cobra o pneu acabado.
 // Sempre um sorteio por trecho (em pista seca), para a sequência não depender do composto.
+function countOvertakes(cur, shift) {
+  if (shift > 0) cur.overtakes = (cur.overtakes ?? 0) + shift;
+}
+
+function duelContext(cur, rival, edge, mid = false) {
+  return { tyre: cur.tyre, fit: finaleFit(edge), profile: rivalProfile(rival), mid,
+    pressure: !mid && cur.pressure?.rival === rival.name };
+}
+
+function playDuel(s, w, rival, id, rng, mode, mid = false) {
+  const { world, season } = s.f1;
+  const cur = season.cur;
+  const weight = world.category.carWeight;
+  const duel = duelContext(cur, rival, paceEdge(s.player, rival, weight), mid);
+  const result = resolveFinale(w, s.player, rival, id, weight, rng, mode, duel);
+  if (id === 'inside' || id === 'outside') spendRaceTyre(cur, CONFIG.tyres.attackWear);
+  if (id === 'press') {
+    spendRaceTyre(cur, CONFIG.tyres.pressWear);
+    cur.pressure = { rival: rival.name, level: 1 };
+  }
+  if (mode === 'attack') countOvertakes(cur, result.shift);
+  return result;
+}
+
+function spendRaceTyre(cur, amount) {
+  if (cur.tyre?.compound) cur.tyre.condition = spend(cur.tyre, amount);
+}
+
+const POSTURE_LABELS = { attack: 'Atacar', pace: 'Ritmo', save: 'Poupar' };
+const POSTURE_PAUSES = ['race_strategy', 'race_start', 'race_event', 'race_pit', 'team_order'];
+
+export function canChangeRacePosture(s) {
+  const race = s.f1?.season?.pendingRace;
+  return s.phase === 'F1_FIM_DE_SEMANA' && !!race?.w && !race.absent && !race.w.wet
+    && POSTURE_PAUSES.includes(s.pendingDecision?.type);
+}
+
+function racePosture(s) {
+  return Object.hasOwn(POSTURE_LABELS, s.f1.racePosture) ? s.f1.racePosture : 'pace';
+}
+
 function tyreStep(s, rng, w) {
   const cur = s.f1.season.cur;
   const t = cur?.tyre;
   if (!t?.compound || w.dnfs.includes(s.player)) return;
   const T = CONFIG.tyres;
-  t.condition = tyreTick(t);
-  const pace = chanceMod(t);
+  const posture = w.wet ? 'pace' : racePosture(s);
+  const profile = T.posture[posture];
+  t.condition = tyreTick(t, profile.wear);
+  const pace = chanceMod(t) + profile.pace;
+  const when = posture === 'pace' ? 'Ritmo dos pneus' : `Postura (${POSTURE_LABELS[posture]})`;
   const roll = rng.next();
   const log = (cur.tyreLog ??= []);
   const label = COMPOUND_LABEL[t.compound];
   if (pace > 0 && roll < pace * T.paceFactor) {
     EFFECTS.shift({ w, player: s.player }, 1);
-    log.push({ when: 'Ritmo dos pneus', text: `${label} ${t.condition >= 80 ? 'novos' : 'em bom estado'}: você ganha uma posição.` });
+    log.push({ when, text: posture === 'pace' ? `${label} ${t.condition >= 80 ? 'novos' : 'em bom estado'}: você ganha uma posição.` : 'Você ganha uma posição neste trecho.' });
   } else if (pace < 0 && roll < -pace * T.paceFactor) {
     EFFECTS.shift({ w, player: s.player }, -1);
-    log.push({ when: 'Ritmo dos pneus', text: 'Pneus gastos: você perde uma posição.' });
+    log.push({ when, text: posture === 'pace' ? 'Pneus gastos: você perde uma posição.' : 'Você perde uma posição neste trecho.' });
   }
   if (isDead(t)) {
     EFFECTS.shift({ w, player: s.player }, -1);
@@ -452,6 +505,20 @@ function openRaceEvent(s, rng, w, out) {
       };
       return;
     }
+    const rival = ctx.pos > 1 ? w.result.filter(d => !w.dnfs.includes(d))[ctx.pos - 2] : null;
+    if (rival && rival.team !== s.player.team && attacksLeft(season.cur.tyre)) {
+      const edge = paceEdge(s.player, rival, world.category.carWeight);
+      const duel = duelContext(season.cur, rival, edge, true);
+      season.pendingRace = { w: ser(world, w), absent: false, eventId: 'duelo_pista', duelRival: rival.name };
+      s.pendingDecision = {
+        type: 'race_event',
+        payload: { race: season.raceIndex + 1, position: ctx.pos, eventId: 'duelo_pista',
+          title: 'Duelo na pista', text: `${rival.name} está logo à frente.`,
+          profile: duel.profile, condition: duel.tyre?.condition ?? 70, faster: edge > 0,
+          ...finaleOptions(rival.name, 'attack', duel) },
+      };
+      return;
+    }
   }
   openPitWindow(s, rng, w, out);
 }
@@ -473,13 +540,25 @@ function raceCtx(s, w) {
 export function resolveRaceEvent(s, rng, answer) {
   const { world, season } = s.f1;
   const pr = season.pendingRace;
+  if (pr.eventId === 'duelo_pista') {
+    const rival = world.drivers.find(d => d.name === pr.duelRival);
+    const w = deser(world, pr.w);
+    if (!['inside', 'outside', 'press'].includes(answer?.id)) throw new Error('Manobra inválida.');
+    const result = playDuel(s, w, rival, answer.id, rng, 'attack', true);
+    season.cur.event = 'Duelo na pista';
+    season.cur.eventText = result.text;
+    season.pendingRace = null;
+    return openPitWindow(s, rng, w, pr.absent, pr.eventId);
+  }
   const ev = RACE_EVENTS.find((e) => e.id === pr.eventId);
   const opt = ev.options.find((o) => o.id === answer?.id);
   if (!opt) throw new Error(`id inválido (use ${ev.options.map((o) => o.id).join(', ')})`);
   const w = deser(world, pr.w);
   const ctx = raceCtx(s, w);
   const outcome = rollOutcome(opt, rng);
+  const before = w.result.indexOf(s.player);
   applyEffects(ctx, outcome.effects, rng);
+  if (opt.attack && !w.dnfs.includes(s.player)) countOvertakes(season.cur, before - w.result.indexOf(s.player));
   recordEvent(s, ev, outcomeText(outcome, ctx));
   season.cur.event = ev.title;
   season.cur.eventText = outcomeText(outcome, ctx);
@@ -596,10 +675,11 @@ function openFinale(s, rng, w, absent, eventId) {
   const F = CONFIG.strategy.finale;
   if (!absent && !w.dnfs.includes(p)) {
     const situation = finaleSituation(w, p, world.category.carWeight);
-    if (situation && rng.chance(F.chance)) {
+    if (situation && (situation.mode === 'attack' ? attacksLeft(season.cur.tyre) : rng.chance(F.chance))) {
       const { rival, mode, pos } = situation;
       const edge = paceEdge(p, rival, world.category.carWeight);
-      const { options, safe } = finaleOptions(rival.name, mode);
+      const duel = duelContext(season.cur, rival, edge);
+      const { options, safe } = finaleOptions(rival.name, mode, duel);
       season.pendingRace = { w: ser(world, w), absent, eventId, finaleRival: rival.name, finaleMode: mode };
       s.pendingDecision = {
         type: 'race_finale',
@@ -607,6 +687,7 @@ function openFinale(s, rng, w, absent, eventId) {
           race: season.raceIndex + 1, circuit: circuitView(season.raceIndex + 1), pos, mode,
           rival: { name: rival.name, nat: rival.nat ?? rival.flag ?? null, team: rival.team, teamName: teamName(world, rival.team) },
           pace: edge >= F.paceThreshold ? 'faster' : edge <= -F.paceThreshold ? 'slower' : 'even',
+          profile: duel.profile, condition: duel.tyre?.condition ?? 70, faster: edge > 0,
           options, safe,
         },
       };
@@ -622,9 +703,10 @@ export function resolveRaceFinale(s, rng, answer) {
   const rival = world.drivers.find((d) => d.name === pr.finaleRival);
   const mode = pr.finaleMode ?? 'attack'; // decisões antigas continuam sendo de ataque
   const { options } = finaleOptions(pr.finaleRival, mode);
-  if (!options.some((o) => o.id === answer?.id)) throw new Error(`id inválido (use ${options.map((o) => o.id).join(', ')})`);
+  const id = mode === 'attack' && answer?.id === 'attack' ? 'inside' : answer?.id;
+  if (!options.some((o) => o.id === id)) throw new Error(`id inválido (use ${options.map((o) => o.id).join(', ')})`);
   const w = deser(world, pr.w);
-  const result = resolveFinale(w, s.player, rival, answer.id, world.category.carWeight, rng, mode);
+  const result = playDuel(s, w, rival, id, rng, mode);
   season.cur.finale = { kind: result.kind, shift: result.shift, text: result.text, label: result.label };
   season.pendingRace = null;
   finishRace(s, rng, w, false, pr.eventId);
@@ -720,13 +802,21 @@ function raceStory(race, cur, order, p, gridSize, carRankNow, rng) {
   return lines;
 }
 
+function firstF1Race(s) {
+  const { season, seasons } = s.f1;
+  return !!season && seasons.length === 0 && !(s.player.stats.gp > 0) && !season.races.some(r => !r.missed);
+}
+
 function finishRace(s, rng, w, absent, eventId) {
   const { world, season } = s.f1;
   const p = s.player;
   // Foto das classificações ANTES de premiar esta corrida, para mostrar quem subiu e quem caiu.
   season.prevPos = positionMap(world);
   season.prevConPos = constructorPositionMap(world);
-  if (!absent) p.stats.gp = (p.stats.gp ?? 0) + 1;
+  if (!absent) {
+    if (firstF1Race(s)) log(s, 'f1_debut', `Você disputou seu primeiro GP de F1 pela ${teamName(world, p.team)}. A estreia foi no ${circuitFor(season.raceIndex + 1).gp}.`);
+    p.stats.gp = (p.stats.gp ?? 0) + 1;
+  }
   const pointsBefore = p.seasonPoints ?? 0;
   const a = awardRace(w);
   const pos = a.classified.indexOf(p) + 1;
@@ -740,7 +830,8 @@ function finishRace(s, rng, w, absent, eventId) {
   race.teammateName = mate?.name ?? null;
   race.teammatePos = mate && a.classified.includes(mate) ? a.classified.indexOf(mate) + 1 : null;
   race.teammateGrid = mate && w.quali ? (w.quali.indexOf(mate) + 1) || null : null;
-  race.rating = raceRating({ playerPos: race.playerPos, grid: race.grid, carRank: carRank(world, p.team), teammatePos: race.teammatePos, missed: absent });
+  race.overtakes = season.cur?.overtakes ?? 0;
+  race.rating = raceRating({ overtakes: race.overtakes, playerPos: race.playerPos, grid: race.grid, carRank: carRank(world, p.team), teammatePos: race.teammatePos, missed: absent });
   const order = season.ordersLog.find((o) => o.race === race.n && (o.p1 === p.name || o.p2 === p.name));
   race.summary = raceSummary(race, season.cur, order, p.name);
   race.story = raceStory(race, season.cur, order, p, w.result.length, carRank(world, p.team), rng);
@@ -1154,7 +1245,7 @@ export function f1View(s) {
   ].filter(Boolean);
   const tyreInfo = cur?.strategy ? { ...tyreView(cur.tyre), label: cur.tyre?.compound ? COMPOUND_LABEL[cur.tyre.compound] : cur.strategy.label } : null;
   const map = !season ? null : pending ? {
-    circuit: circuitView(round), phase: decision.type,
+    circuit: circuitView(round), phase: decision.type, eventId: decision.payload.eventId,
     cars: preStart ? (season.cur?.mapGrid ?? decision.payload.gridRows ?? []) : mapDrivers(pending.result.filter(i => !pending.dnfs.includes(i))),
     interruption: decision?.payload.interruption ?? null, wet: !!(decision?.payload.wet ?? pending.wet), tyre: tyreInfo, notes,
   } : season.lastRace?.mapOrder ? {
@@ -1197,6 +1288,7 @@ export function f1View(s) {
     eventPosition,
     map,
     tyre: tyreInfo,
+    posture: { id: racePosture(s), options: POSTURE_LABELS, editable: canChangeRacePosture(s) },
     pitUpdate: season?.cur?.pit?.text ?? null,
     homeRounds: CIRCUITS.flatMap((c, i) => c.flag === p.flag ? [{ round: i + 1, gp: c.gp }] : []),
     team: { id: p.team, name: teamName(world, p.team), carRank: rank, carLabel: carLabel(rank), profile: profileView(tierOf(rank, world.teams.length, F1().carTierRank)) },
@@ -1214,6 +1306,7 @@ export function f1View(s) {
     contract: { years: p.contract, statusClause: p.statusClause, exitClause: p.exitClause },
     worldSeason: world.season,
     marketMoves: (world.lastMoves ?? []).slice(0, 12),
+    firstRace: firstF1Race(s),
     race: season ? { done: season.raceIndex, total: season.total, circuit: season.raceIndex < season.total ? circuitView(season.raceIndex + 1) : null } : null,
     lastRace: season ? isLast(season.lastRace) : null,
     rival: season?.rival ?? null,

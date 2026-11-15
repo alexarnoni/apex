@@ -18,9 +18,9 @@ export function tyreOf(season) {
 }
 
 // Condição depois de um trecho de corrida.
-export function tick(tyre) {
+export function tick(tyre, wear = 1) {
   if (!tyre?.compound) return tyre?.condition ?? 70;
-  return Math.max(0, tyre.condition - CONFIG.tyres[tyre.compound].wear * (tyre.wearFactor ?? 1));
+  return Math.max(0, tyre.condition - CONFIG.tyres[tyre.compound].wear * (tyre.wearFactor ?? 1) * wear);
 }
 
 // Condição depois de um ataque ou de pressionar.
@@ -41,6 +41,11 @@ export function chanceMod(tyre) {
 export function attacksLeft(tyre) {
   const T = CONFIG.tyres;
   return Math.max(0, Math.floor(((tyre?.condition ?? T.reference) - T.dead) / T.attackWear));
+}
+
+export const NO_ATTACK = 'Pneu sem condição para atacar.';
+export function attackOption(option, tyre) {
+  return attacksLeft(tyre) ? option : { ...option, disabled: true, reason: NO_ATTACK };
 }
 
 export const isDead = (tyre) => !!tyre?.compound && tyre.condition <= CONFIG.tyres.dead;

@@ -61,7 +61,8 @@ export function applySets(sets) {
 // train    : sempre escolhe a opção de treino na base (skillGain) e treina todo ano na F1.
 // notrain  : nunca treina (base: opção sem skillGain; F1: foco "imagem").
 // attack   : como 'a', mas tenta ganhar posição: macios, ataque na largada, ataque nos eventos, pit_soft na parada.
-export const POLICIES = ['a', 'train', 'notrain', 'attack', 'abl_soft', 'abl_start', 'abl_pit'];
+// attack_medium: mesmas decisões de ataque, com médios nas escolhas de pista seca.
+export const POLICIES = ['a', 'train', 'notrain', 'kart_coach', 'attack', 'attack_medium', 'abl_soft', 'abl_start', 'abl_pit'];
 
 // Escolhe a opção desejada (ou um sinônimo) se existir e não estiver desabilitada; senão, a segura.
 function enabledId(options, want, safe, alt = []) {
@@ -71,6 +72,7 @@ function enabledId(options, want, safe, alt = []) {
 
 export function answerFor(state, policy = 'a', { retireAt = 34 } = {}) {
   const pd = state.pendingDecision;
+  const attacks = policy === 'attack' || policy === 'attack_medium';
   switch (pd.type) {
     case 'kart_offer': return { id: 'balanced' };
     case 'kart_return': return { id: 'stay' };
@@ -78,6 +80,7 @@ export function answerFor(state, policy = 'a', { retireAt = 34 } = {}) {
     case 'base_choice': {
       const o = pd.payload.options;
       const keys = Object.keys(o);
+      if (policy === 'kart_coach' && pd.payload.category === 'kart') return { option: 'B' };
       if (policy === 'train') return { option: keys.find((k) => o[k].skillGain) ?? keys[0] };
       if (policy === 'notrain') return { option: keys.find((k) => !o[k].skillGain) ?? keys[0] };
       return { option: 'A' };
@@ -89,11 +92,15 @@ export function answerFor(state, policy = 'a', { retireAt = 34 } = {}) {
     case 'season_focus': return { id: policy === 'notrain' ? 'image' : 'train' };
     case 'weekend_approach': return { id: pd.payload.out ? 'rest' : 'balanced' };
     case 'race_strategy': return { id: ['attack', 'abl_soft'].includes(policy) && !pd.payload.wet ? 'soft' : pd.payload.safe };
-    case 'race_start': return { id: ['attack', 'abl_start'].includes(policy) ? enabledId(pd.payload.options, 'attack', pd.payload.safe) : pd.payload.safe };
+    case 'race_start': return { id: attacks || policy === 'abl_start' ? enabledId(pd.payload.options, 'attack', pd.payload.safe) : pd.payload.safe };
     case 'race_pit': return { id: ['attack', 'abl_pit'].includes(policy) && pd.payload.options.some((o) => o.id === 'pit_soft') && pd.payload.safe === 'pit' ? 'pit_soft' : pd.payload.safe };
-    case 'race_finale': return { id: policy === 'attack' ? enabledId(pd.payload.options, pd.payload.mode === 'defend' ? 'defend' : 'inside', pd.payload.safe, ['attack']) : pd.payload.safe };
+    case 'race_finale': return { id: attacks ? enabledId(pd.payload.options, pd.payload.mode === 'defend' ? 'defend' : 'inside', pd.payload.safe, ['attack']) : pd.payload.safe };
     case 'story_event': return { id: pd.payload.options[0].id };
-    case 'race_event': return { id: policy === 'attack' ? (pd.payload.options.find((o) => o.attack && !o.disabled) ?? pd.payload.options[0]).id : pd.payload.options[0].id };
+    case 'race_event': {
+      const options = pd.payload.options.filter(o => !o.disabled);
+      const attack = attacks && options.find(o => o.attack);
+      return { id: attack?.id ?? pd.payload.safe ?? options[0].id };
+    }
     case 'team_order': return { id: 'obey' };
     case 'contract_terms': return { years: 2, clause: 'none', exitClause: false };
     case 'retire_or_continue': return { id: state.player.age >= retireAt ? 'retire' : 'continue' };

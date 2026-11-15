@@ -4,13 +4,13 @@ import { circuitFor } from '../data/circuits.js';
 const MAX = 40;
 const LOG_KIND = {
   contract: 'equipe', trust: 'equipe', academy: 'equipe', promotion: 'equipe', offer: 'equipe', start: 'equipe',
-  transfer: 'mercado',
+  transfer: 'mercado', f1_debut: 'marco',
   event: 'imprensa', season: 'imprensa', retire: 'imprensa', alt_route: 'imprensa', kart_return: 'imprensa',
 };
 const LOG_TITLE = {
   contract: 'Contrato', trust: 'Confiança da equipe', academy: 'Academia', promotion: 'Subida de categoria', offer: 'Proposta',
   start: 'Começo da carreira', transfer: 'Troca de equipe', event: 'Notícia', season: 'Temporada encerrada',
-  retire: 'Aposentadoria', alt_route: 'Outro caminho', kart_return: 'Volta ao kart',
+  f1_debut: 'Estreia na F1', retire: 'Aposentadoria', alt_route: 'Outro caminho', kart_return: 'Volta ao kart',
 };
 const SENDER = { equipe: 'Chefe de equipe', mercado: 'Mercado', imprensa: 'Imprensa', corrida: 'Engenheiro de corrida', marco: 'Paddock' };
 const MOVE_TITLE = { transfer: 'Troca de equipe', rookie: 'Estreia', return: 'Retorno', reserve: 'Reserva', available: 'Sem assento', retire: 'Aposentadoria' };
@@ -50,6 +50,7 @@ function raceMessages(state, season) {
       const mate = r.teammatePos && r.teammateName ? `, ${r.playerPos < r.teammatePos ? 'à frente' : 'atrás'} de ${r.teammateName}` : '';
       text = `${r.grid ? `Largou em P${r.grid} e chegou` : 'Chegou'} em P${r.playerPos}${mate}.`;
     }
+    if (!r.missed && r.overtakes != null) text += ` Ultrapassagens suas: ${r.overtakes}.`;
     const order = 10 + r.n;
     out.push({ id: `corrida:${state.year}:${r.n}`, kind: 'corrida', from: SENDER.corrida, title: label, text, year: state.year, order });
 
@@ -77,7 +78,12 @@ function marketMessages(state, season) {
 
 export function inboxView(state) {
   const season = state.f1?.season ?? null;
-  const built = [...logMessages(state), ...raceMessages(state, season), ...marketMessages(state, season)]
+  const f2Titles = (state.baseCareer?.seasons ?? [])
+    .filter(s => (s.categoryId === 'f2' || s.category === 'Fórmula 2') && s.position === 1)
+    .map(s => ({ id: `marco:f2:${s.year}`, kind: 'marco', from: SENDER.marco, title: 'Título da F2',
+      text: `Você conquistou o campeonato da F2 pela ${s.team} com ${s.points} pontos.`,
+      year: s.year, order: 901 }));
+  const built = [...logMessages(state), ...f2Titles, ...raceMessages(state, season), ...marketMessages(state, season)]
     .map((m, seq) => ({ ...m, seq }));
   return built
     .sort((a, b) => (b.year - a.year) || (b.order - a.order) || (b.seq - a.seq))

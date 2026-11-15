@@ -230,7 +230,7 @@ export const RACE_EVENTS = [
     title: 'Relargada',
     text: () => 'O safety car recolhe nesta volta. Pneus frios, todo mundo colado na sua traseira. Como você sai na relargada?',
     options: [
-      { id: 'ataque', label: 'Ataque total', description: '50% de ganhar 1 posição, 20% de abandonar.', outcomes: [
+      { id: 'ataque', attack: true, label: 'Ataque total', description: '50% de ganhar 1 posição, 20% de abandonar.', outcomes: [
         { p: 0.5, effects: { shift: 1 }, text: 'Você mergulha por dentro e ganha a posição.' },
         { p: 0.2, effects: { dnf: true }, text: 'Toque na primeira curva. Corrida encerrada.' },
         { p: 0.3, effects: {}, text: 'Não havia espaço, e você segura a posição.' },
@@ -257,7 +257,7 @@ export const RACE_EVENTS = [
     title: 'Duelo com o rival',
     text: (c) => `${c.rival.name} está logo à sua frente, de novo. A arquibancada levanta.`,
     options: [
-      { id: 'mergulho', label: 'Mergulho', description: '55% de ultrapassar (+1 de fama), 15% de os dois abandonarem.', outcomes: [
+      { id: 'mergulho', attack: true, label: 'Mergulho', description: '55% de ultrapassar (+1 de fama), 15% de os dois abandonarem.', outcomes: [
         { p: 0.55, effects: { shift: 1, fame: 1 }, text: (c) => `Você mergulha por dentro e passa ${c.rival.name} na entrada da curva.` },
         { p: 0.15, effects: { dnf: true, dnfRival: true }, text: (c) => `Toque. Você e ${c.rival.name} terminam na brita.` },
         { p: 0.3, effects: {}, text: (c) => `${c.rival.name} fecha a porta primeiro.` },
@@ -316,7 +316,7 @@ export const RACE_EVENTS = [
     title: 'Pelotão embolado',
     text: () => 'Três carros dividem a freada à sua frente. Tem espaço por dentro, mas é pouco.',
     options: [
-      { id: 'atacar', label: 'Mergulhar por dentro', description: '35% de ganhar 2 posições, 15% de perder 2, 10% de abandonar.', outcomes: [
+      { id: 'atacar', attack: true, label: 'Mergulhar por dentro', description: '35% de ganhar 2 posições, 15% de perder 2, 10% de abandonar.', outcomes: [
         { p: 0.35, effects: { shift: 2 }, text: 'Você mergulha por dentro e passa dois carros na saída da curva.' },
         { p: 0.15, effects: { shift: -2 }, text: 'Você é espremido e perde duas posições.' },
         { p: 0.1, effects: { dnf: true }, text: 'Toque na disputa. Pneu furado e corrida encerrada.' },

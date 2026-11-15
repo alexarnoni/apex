@@ -1,7 +1,7 @@
 // Nota da corrida (1 a 10, passos de 0,5). Só leitura: não sorteia e não muda o resultado.
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 
-export function raceRating({ playerPos, grid = null, carRank, teammatePos = null, missed = false }) {
+export function raceRating({ playerPos, grid = null, carRank, teammatePos = null, missed = false, overtakes = 0 }) {
   if (missed) return null;
   if (!playerPos) return 4;
   // Dois carros por equipe: o carro nº 1 espera P1,5; o nº 4 espera P7,5.
@@ -11,5 +11,6 @@ export function raceRating({ playerPos, grid = null, carRank, teammatePos = null
   if (teammatePos) rating += playerPos < teammatePos ? 0.3 : -0.3;
   if (playerPos === 1) rating = Math.max(rating, 8.5);
   else if (playerPos <= 3) rating = Math.max(rating, 7);
+  rating += Math.min(1, 0.3 * overtakes);
   return Math.round(clamp(rating, 1, 10) * 2) / 2;
 }

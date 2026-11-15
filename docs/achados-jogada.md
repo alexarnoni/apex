@@ -24,7 +24,7 @@ Jogada na v0.14.3, no navegador, a 1024 px de largura. Do kart ao fim do primeir
 ## Momentos sem peso
 
 14. **Um ano de base são três cliques.** Escolha de pré-temporada, "Disputar temporada" e o resultado aparece: 19º, sem ver corrida nenhuma. Do kart à F1 foram cerca de 20 cliques.
-15. **Marcos passam em branco.** Título da F2, estreia na F1 e primeiros pontos não têm tela nem frase própria.
+15. **Marcos passam em branco.** Atualização local de 2026-11-15 registra título da F2 e estreia na F1 na caixa de entrada. Primeiros pontos já têm mensagem. Celebrações adicionais ficam para a v0.34.
 16. **Corrida curta.** A primeira corrida de F1 teve três decisões (pneus, largada, box) e acabou.
 17. **Companheiro invisível.** Russell venceu a corrida de estreia e nada na tela disse que era o companheiro.
 18. **Aposentadoria sem contexto.** Aos 30 anos, depois de um P2: "Continuar ou encerrar a carreira?", sem títulos, previsão de declínio ou o que está em jogo.
@@ -44,7 +44,7 @@ Jogada na v0.14.3, no navegador, a 1024 px de largura. Do kart ao fim do primeir
 26. Inglês que restou: "Karting" como nome da categoria (a aba já diz "Kart"), "Networking de academias", "surfar o mercado".
 27. Kart chamado de carro: "Carro forte", "+2 de carro", "Energy Corse carro #7". O "#7" é a força do equipamento e se confunde com o número do piloto (#27).
 28. "te venceu na Karting"; "É sua primeira corrida em casa registrada nesta carreira."
-29. "Nota 0: resultado (19º) +1 · cobrança da equipe −1" é opaco para quem chega.
+29. ~~Nota dos olheiros opaca para quem chega.~~ **Feito localmente em 2026-11-15.** A tela explica o que a nota decide e como a cobrança da equipe entra na conta; o glossário detalha as parcelas.
 30. Narração: quase tudo rotulado "Largada", inclusive lances do meio da prova; ordem do mais novo para o mais antigo; a parada aparece como "pneus de pista seca", sem o composto.
 31. "Temporada 1" no lugar do ano (2032).
 
@@ -126,6 +126,6 @@ Achados novos. Os itens 36 e 43 foram corrigidos e publicados na v0.14.6 em 2026
 38. **Plano da próxima etapa aparece junto com a bandeirada da anterior** enquanto a animação roda.
 39. **Evento "Largada confusa" depois da largada.** Com a largada já decidida e narrada, o evento pergunta de novo como abordar a primeira curva.
 40. **Opções presas cobrem o texto da situação no celular.** A descrição do evento fica atrás das duas opções até rolar.
-41. **Corrida com só duas decisões.** A primeira corrida da F1 teve pneus e largada e foi direto à bandeirada.
+41. **~~Corrida com só duas decisões.~~ Feito em 2026-11-15 na etapa C local.** Na amostra de 100 carreiras, 73 das 92 que chegaram à F1 tiveram três ou mais pausas na estreia. O critério é maioria das seeds e duas pausas ainda podem ocorrer.
 42. **Circuitos sem características.** Austrália e China não têm traços cadastrados; a escolha de pneus fala em pista de rua e pista técnica sem dizer qual é o caso.
 43. **Espaço vazio acima da cena** enquanto o pódio está oculto.

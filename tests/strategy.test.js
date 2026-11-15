@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { createRng } from '../engine/rng.js';
 import { strategyFit, strategyOptions, resolveStrategy } from '../engine/strategy.js';
-import { createCareer, advance, applyDecision, getView } from '../engine/game.js';
+import { createCareer, advance, applyDecision, getView, setRacePosture } from '../engine/game.js';
 
 const HERO = { surname: 'Teste', number: 7, flag: 'BR', style: 'con' };
 
@@ -130,22 +130,45 @@ test('treino vale só para a etapa e uma neutralização pode ser delegada após
   assert.equal(s.f1.season.raceIndex, 0);
 
   const seen = new Set();
-  for (let guard = 0; guard < 140 && s.phase === 'F1_FIM_DE_SEMANA'; guard++) {
-    const pd = s.pendingDecision;
-    const advice = getView(s).f1.advice;
-    if (pd.type === 'race_pit' && pd.payload.interruption) {
-      assert.ok(advice.important);
-      const restored = JSON.parse(JSON.stringify(s));
-      const next = applyDecision(restored, advice.answer);
-      assert.deepEqual(next, applyDecision(s, advice.answer));
-      const text = next.f1.season.cur?.pit?.text ?? next.f1.season.lastRace.story.find(line => line.when === 'Janela de box').text;
-      assert.match(text, /retomada em P/);
-      seen.add(pd.payload.interruption);
+  for (const seed of [6, 5, 8, 10]) {
+    if (seen.size === 2) break;
+    if (seed !== 6) s = toFirstWeekend(seed);
+    for (let guard = 0; guard < 240 && s.phase === 'F1_FIM_DE_SEMANA'; guard++) {
+      const pd = s.pendingDecision;
+      const advice = getView(s).f1.advice;
+      if (pd.type === 'race_pit' && pd.payload.interruption) {
+        assert.ok(advice.important);
+        const restored = JSON.parse(JSON.stringify(s));
+        const next = applyDecision(restored, advice.answer);
+        assert.deepEqual(next, applyDecision(s, advice.answer));
+        const text = next.f1.season.cur?.pit?.text ?? next.f1.season.lastRace.story.find(line => line.when === 'Janela de box').text;
+        assert.match(text, /retomada em P/);
+        seen.add(pd.payload.interruption);
+      }
+      s = applyDecision(s, advice?.answer ?? { id: pd.payload.safe ?? pd.payload.options[0].id });
+      if (seed === 6 && s.f1.season.raceIndex === 0) assert.equal(s.f1.season.cur.practice, 'tyres');
+      if (s.pendingDecision?.type === 'weekend_approach') assert.equal(s.pendingDecision.payload.practice, 'none');
     }
-    s = applyDecision(s, advice?.answer ?? { id: pd.payload.options[0].id });
-    if (s.f1.season.raceIndex === 0) assert.equal(s.f1.season.cur.practice, 'tyres');
-    if (s.pendingDecision?.type === 'weekend_approach') assert.equal(s.pendingDecision.payload.practice, 'none');
   }
   assert.ok(seen.has('safety_car'));
   assert.ok(seen.has('red_flag'));
+});
+
+
+test('postura muda sem avançar e sobrevive ao save; Ritmo funciona como padrão em saves antigos', () => {
+  let s = toFirstWeekend(5);
+  assert.throws(() => setRacePosture(s, 'attack'), /pausa/);
+  s = applyDecision(s, { id: 'balanced' });
+  assert.equal(s.pendingDecision.type, 'race_strategy');
+  assert.equal(s.pendingDecision.payload.wet, false);
+  assert.equal(getView(s).f1.posture.id, 'pace');
+  const aggressive = setRacePosture(s, 'attack');
+  assert.equal(aggressive.rngState, s.rngState);
+  assert.deepEqual(aggressive.pendingDecision, s.pendingDecision);
+  assert.equal(s.f1.racePosture, undefined);
+  const fromSave = JSON.parse(JSON.stringify(aggressive));
+  const start = applyDecision(fromSave, { id: 'medium' });
+  assert.equal(getView(start).f1.posture.id, 'attack');
+  assert.deepEqual(start, applyDecision(aggressive, { id: 'medium' }));
+  assert.throws(() => setRacePosture(start, 'invalid'), /inválida/);
 });

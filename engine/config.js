@@ -40,6 +40,8 @@ export const CONFIG = {
     finale: {
       chance: 0.5, pGood: 0.30, pBad: 0.30, perFit: 0.12, fitScale: 4, maxFit: 1.5,
       paceThreshold: 2,
+      inside: { successBonus: 0.18, contact: 0.03 },
+      outside: { successBonus: -0.06, loss: 0.10 },
       defense: { holdChance: 0.65, perFit: 0.12, minHold: 0.35, maxHold: 0.85, mistakeChance: 0.10 },
     },
   },
@@ -50,7 +52,12 @@ export const CONFIG = {
     medium: { grip:  0.00, wear: 14 },
     hard:   { grip: -0.04, wear: 9 },
     practiceWearFactor: 0.8,   // treino livre "Testar pneus" reduz o desgaste
-    attackWear: 10,            // custo de uma tentativa de ultrapassagem
+    attackWear: 6,            // custo de uma tentativa de ultrapassagem
+    posture: {
+      attack: { pace: 0.06, wear: 1.65 },
+      pace: { pace: 0, wear: 1 },
+      save: { pace: -0.035, wear: 0.50 },
+    },
     pressWear: 4,              // custo de pressionar
     reference: 70,             // condição neutra
     perTenBelow: 0.03,         // a cada 10 pontos abaixo de 70: -0,03 de chance

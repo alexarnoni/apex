@@ -157,7 +157,7 @@ Próximo: spec-loop-jogador. Balanceamento fino a partir de dados de jogo real, 
 
 **No ar:** https://bandeirada.alexarnoni.com (o endereço antigo `alexarnoni.github.io/apex` redireciona para ele; publica sozinho a cada push na `main`).
 
-`npm run build` gera `dist/index.html` (o jogo inteiro em um arquivo). O workflow [.github/workflows/pages.yml](.github/workflows/pages.yml) roda os testes, constrói e publica a cada push na `main`.
+`npm run build` gera `dist/index.html` (o jogo inteiro em um arquivo). Use `npm run release` para validar a entrega localmente depois de instalar o Chromium do Playwright. O comando roda os testes Node, as simulações de balanceamento, o build e os testes de navegador sobre esse mesmo build. O workflow [.github/workflows/pages.yml](.github/workflows/pages.yml) só publica o artefato validado após o push na `main` ou acionamento manual.
 
 1. Criar o repositório e enviar o código (Pages gratuito exige repositório **público**, então o código fica visível):
    ```bash

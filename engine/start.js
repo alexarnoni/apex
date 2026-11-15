@@ -1,21 +1,23 @@
 // Largada simplificada: aplica o efeito sobre o resultado bruto, antes dos pontos.
 // Não é um modelo por volta; a escolha padrão não altera o resultado nem consome RNG.
 import { CONFIG } from './config.js';
+import { attackOption, chanceMod, NO_ATTACK } from './tyres.js';
 import { EFFECTS } from './events.js';
 
-export function startOptions({ grid }) {
+export function startOptions({ grid }, tyre) {
   const hold = { id: 'hold', label: 'Largar com margem', description: 'Priorizar uma primeira curva limpa, sem assumir o risco extra de uma tentativa de ultrapassagem.' };
   return {
     options: grid === 1 ? [hold] : [
-      { id: 'attack', label: 'Atacar na primeira curva', description: 'Tentar ganhar uma posição. Pode perder uma se errar a manobra, ou abandonar por um toque; chuva e pista de rua aumentam o risco.' },
+      attackOption({ id: 'attack', label: 'Atacar na primeira curva', description: 'Tentar ganhar uma posição. Pode perder uma se errar a manobra, ou abandonar por um toque; chuva e pista de rua aumentam o risco.' }, tyre),
       hold,
     ],
     safe: 'hold',
   };
 }
 
-export function resolveStart(w, player, choice, ctx, rng) {
-  const { options } = startOptions(ctx);
+export function resolveStart(w, player, choice, ctx, rng, tyre) {
+  const { options } = startOptions(ctx, tyre);
+  if (options.find((o) => o.id === choice)?.disabled) throw new Error(NO_ATTACK);
   if (!options.some((o) => o.id === choice)) throw new Error('opção de largada inválida');
   const before = w.result.indexOf(player);
   let kind = 'none';
@@ -25,7 +27,7 @@ export function resolveStart(w, player, choice, ctx, rng) {
   if (choice === 'attack') {
     const S = CONFIG.start;
     const contact = S.contact + (ctx.wet ? S.wetContact : 0) + (ctx.tags.includes('rua') ? S.streetContact : 0);
-    const gain = S.gain + (player.style === 'agg' ? S.aggressiveGain : 0);
+    const gain = S.gain + chanceMod(tyre) + (player.style === 'agg' ? S.aggressiveGain : 0);
     const roll = rng.next();
     if (roll < contact) {
       kind = 'dnf'; position = null;

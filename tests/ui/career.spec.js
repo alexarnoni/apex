@@ -1,8 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { createCareer, advance, applyDecision, ENGINE_VERSION } from '../../engine/game.js';
+import { SAVE_SCHEMA_VERSION } from '../../ui/saves.js';
 import { CONFIG } from '../../engine/config.js';
 import { answerFor } from '../../tools/calibrate/lib.js';
 import { enterF1 } from '../../engine/f1.js';
+import { finaleOptions } from '../../engine/strategy.js';
 import { createRng } from '../../engine/rng.js';
 import { advanceRaces } from '../../engine/advance-races.js';
 
@@ -28,7 +30,7 @@ async function importCareer(page, state) {
   await page.goto('/');
   await page.locator('#f-import').setInputFiles({
     name: 'carreira-teste.json', mimeType: 'application/json',
-    buffer: Buffer.from(JSON.stringify({ app: 'apex', version: ENGINE_VERSION, state })),
+    buffer: Buffer.from(JSON.stringify({ app: 'apex', version: ENGINE_VERSION, schemaVersion: SAVE_SCHEMA_VERSION, state })),
   });
   await expect(page.getByRole('status')).toContainText('Carreira importada no slot 1');
   await page.locator('[data-act="continue"][data-slot="1"]').click();
@@ -141,6 +143,19 @@ test('defesa mostra perseguidor e ceder entra no relato', async ({ page }) => {
   await expect(result.getByText(/cedeu a posição/).first()).toBeVisible();
 });
 
+test('duelo final mostra manobras e explica quando o pneu impede o ataque', async ({ page }) => {
+  const state = structuredClone(fixture('race_finale', s => s.pendingDecision.payload.mode === 'attack'));
+  const tyre = { compound: 'medium', condition: CONFIG.tyres.dead };
+  state.f1.season.cur.tyre = tyre;
+  const payload = state.pendingDecision.payload;
+  Object.assign(payload, finaleOptions(payload.rival.name, 'attack', { tyre }));
+  await importCareer(page, state);
+  await skipScene(page);
+  await expect(page.getByRole('button', { name: /Por dentro.*Pneu/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /Por fora.*Pneu/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /Administrar/ })).toBeEnabled();
+});
+
 test('simular cinco e resto resolve largada e defesa até pausa narrativa ou fim', async ({ page }) => {
   const state = fixture('weekend_approach');
   await importCareer(page, state);
@@ -159,6 +174,35 @@ test('simular cinco e resto resolve largada e defesa até pausa narrativa ou fim
   expect(after.f1.season.races.length).toBeGreaterThan(5);
   expect(['story_event', null]).toContain(after.pendingDecision?.type ?? null);
   await expect(page.getByRole('status')).toContainText(/notícia|terminou/);
+});
+
+test('o engenheiro guia a estreia até a bandeirada e deixa o glossário disponível', async ({ page }) => {
+  const state = fixture('weekend_approach', s => !s.pendingDecision.payload.out
+    && s.f1.seasons.length === 0 && s.f1.season.raceIndex === 0
+    && applyDecision(s, { id: 'balanced' }).pendingDecision?.type === 'race_strategy');
+  await importCareer(page, state);
+  const guide = page.getByRole('complementary', { name: 'Primeira corrida' });
+  await expect(guide).toContainText('Acompanhe sua estreia');
+  await guide.getByRole('button', { name: 'Abrir glossário' }).click();
+  const help = page.locator('#help-panel');
+  await expect(help.getByText('Composto e condição dos pneus', { exact: true })).toBeVisible();
+  await help.getByRole('button', { name: 'Fechar' }).click();
+  await page.getByRole('button', { name: 'Acompanhar etapa', exact: true }).click();
+  await expect(guide).toContainText('Escolha os pneus');
+  const actions = { race_strategy: 'strategy', race_start: 'start', race_event: 'event',
+    race_pit: 'pit', race_finale: 'finale', team_order: 'order' };
+  for (let i = 0; i < 7; i++) {
+    const current = await saved(page);
+    if (current.f1.season.raceIndex === 1) break;
+    const pd = current.pendingDecision;
+    await skipScene(page);
+    await expect(guide).toHaveCount(1);
+    const id = pd.payload.safe;
+    await page.locator(`[data-act="${actions[pd.type]}"][data-id="${id}"]`).click();
+  }
+  expect((await saved(page)).f1.season.raceIndex).toBe(1);
+  await skipScene(page);
+  await expect(guide).toHaveCount(0);
 });
 
 test('parar nas decisões interrompe a simulação antes de decidir pneus', async ({ page }) => {

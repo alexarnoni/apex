@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { createRng } from '../engine/rng.js';
-import { paceEdge, finaleFit, finaleOptions, resolveFinale } from '../engine/strategy.js';
+import { paceEdge, finaleFit, finaleOptions, resolveFinale, rivalProfile } from '../engine/strategy.js';
 import { CONFIG } from '../engine/config.js';
 
 const F = CONFIG.strategy.finale;
@@ -25,45 +25,64 @@ test('o encaixe do ataque é limitado e simétrico', () => {
   assert.equal(finaleFit(2), -finaleFit(-2));
 });
 
-function meanShift(choice, player, rival, carWeight, runs = 4000) {
+function sample(choice, condition, runs = 2000) {
   const rng = createRng(321);
-  let total = 0;
+  const counts = { good: 0, bad: 0, none: 0, dnf: 0 };
   for (let i = 0; i < runs; i++) {
-    const ds = Array.from({ length: 12 }, (_, k) => ({ name: `D${k}`, seasonDnfs: 0 }));
-    // jogador em P6 (índice 5), rival logo à frente (índice 4)
-    const w = { result: [...ds], dnfs: [] };
-    const p = ds[5]; const r = ds[4];
-    Object.assign(p, player); Object.assign(r, rival);
-    resolveFinale(w, p, r, choice, carWeight, rng);
-    total += 5 - w.result.indexOf(p);
-  }
-  return total / runs;
-}
-
-test('administrar não muda nada; atacar compensa só para quem tem mais ritmo', () => {
-  const quick = { teamCar: 90, skill: 92 }; const mid = { teamCar: 82, skill: 82 };
-  assert.equal(meanShift('manage', quick, mid, 0.6), 0);
-  assert.ok(meanShift('attack', quick, mid, 0.6) > 0.15, 'mais rápido que o rival: ataque rende');
-  assert.ok(meanShift('attack', mid, quick, 0.6) < -0.15, 'mais lento que o rival: ataque custa');
-  assert.ok(Math.abs(meanShift('attack', mid, mid, 0.6)) < 0.06, 'ritmo igual: média zero');
-});
-
-test('o ataque move no máximo uma posição e a resposta traz texto', () => {
-  const rng = createRng(4);
-  for (let i = 0; i < 200; i++) {
     const ds = Array.from({ length: 6 }, (_, k) => ({ name: `D${k}`, seasonDnfs: 0, teamCar: 80, skill: 80 }));
     const w = { result: [...ds], dnfs: [] };
-    const before = w.result.indexOf(ds[3]);
-    const res = resolveFinale(w, ds[3], ds[2], 'attack', 0.6, rng);
-    assert.ok(['good', 'bad', 'none'].includes(res.kind));
-    assert.ok(Math.abs(w.result.indexOf(ds[3]) - before) <= 1);
-    assert.ok(res.text.includes('D2'));
+    const res = resolveFinale(w, ds[3], ds[2], choice, 0.6, rng, 'attack', { tyre: { compound: 'medium', condition } });
+    counts[res.kind]++;
+    if (res.kind === 'dnf') assert.ok(w.dnfs.includes(ds[3]));
+    else assert.ok(Math.abs(w.result.indexOf(ds[3]) - 3) <= 1);
   }
+  return counts;
+}
+
+test('por dentro rende mais ultrapassagens e tem toque; pneu novo ajuda', () => {
+  const inside = sample('inside', 90);
+  const outside = sample('outside', 90);
+  assert.ok(inside.good > outside.good);
+  assert.ok(inside.dnf > 0);
+  assert.equal(outside.dnf, 0);
+  assert.ok(inside.good > sample('inside', 60).good);
+  assert.deepEqual(sample('attack', 90), inside);
+  assert.equal(sample('manage', 90).none, 2000);
 });
 
-test('as opções do final citam o rival e a segura é administrar', () => {
-  const { options, safe } = finaleOptions('Norris');
+test('as opções do final citam o rival e a segura continua disponível com pneu gasto', () => {
+  const tyre = { compound: 'medium', condition: CONFIG.tyres.dead };
+  const { options, safe } = finaleOptions('Norris', 'attack', { tyre });
   assert.equal(safe, 'manage');
-  assert.deepEqual(options.map((o) => o.id), ['attack', 'manage']);
+  assert.deepEqual(options.map((o) => o.id), ['inside', 'outside', 'manage']);
   assert.ok(options[0].description.includes('Norris'));
+  assert.ok(options[0].disabled && options[1].disabled);
+  assert.match(options[0].reason, /Pneu/);
+  assert.ok(!options[2].disabled);
+  const ds = [{ name: 'Norris', teamCar: 80, skill: 80 }, { name: 'Jogador', teamCar: 80, skill: 80 }];
+  const w = { result: [...ds], dnfs: [] };
+  assert.throws(() => resolveFinale(w, ds[1], ds[0], 'inside', 0.6, createRng(1), 'attack', { tyre }), /Pneu/);
+});
+
+test('perfil usa consistência antes de desgaste e pressão ajuda no duelo seguinte', () => {
+  const driver = (consistency, tyres) => ({ attributes: { consistency, tyres, qualifying: 80, race: 80, wet: 80, feedback: 80 }, attributeSkill: 80, skill: 80, teamCar: 80 });
+  const mistake = rivalProfile(driver(70, 65));
+  const closes = rivalProfile(driver(88, 65));
+  assert.equal(mistake.press, 0.25);
+  assert.equal(mistake.pressure, 0.15);
+  assert.ok(closes.inside < 0 && closes.outside > 0);
+  assert.ok(rivalProfile(driver(80, 70)).late > 0);
+  assert.equal(rivalProfile(driver(80, 80)).late, undefined);
+  const options = finaleOptions('Norris', 'attack', { profile: mistake, mid: true });
+  assert.equal(options.safe, 'press');
+  assert.equal(options.options[2].id, 'press');
+
+  const player = { ...driver(80, 80), name: 'Jogador' };
+  const rival = { ...driver(70, 65), name: 'Norris' };
+  const outcome = (id, roll, duel) => resolveFinale({ result: [rival, player], dnfs: [] },
+    player, rival, id, 0.6, { next: () => roll }, 'attack', { profile: mistake, ...duel });
+  assert.equal(outcome('press', 0.20, { mid: true }).shift, 1);
+  assert.equal(outcome('press', 0.30, { mid: true }).shift, 0);
+  assert.notEqual(outcome('outside', 0.32, { pressure: false }).kind, 'good');
+  assert.equal(outcome('outside', 0.32, { pressure: true }).kind, 'good');
 });

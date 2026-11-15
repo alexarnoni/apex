@@ -7,7 +7,8 @@
 
 import { CONFIG } from './config.js';
 import { EFFECTS } from './events.js';
-import { racingSkill } from './driver-attributes.js';
+import { attackOption, chanceMod, NO_ATTACK } from './tyres.js';
+import { attributesOf, racingSkill } from './driver-attributes.js';
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -87,7 +88,27 @@ export function finaleSituation(w, player, carWeight) {
   return attack ? { mode: 'attack', rival: attack, pos: i + 1 } : null;
 }
 
-export function finaleOptions(rivalName, mode = 'attack') {
+export function rivalProfile(rival) {
+  const { consistency, tyres } = attributesOf(rival);
+  if (consistency <= 70) return { label: 'Erra sob pressão', text: 'Pressionar pode render a posição.', press: 0.25, pressure: 0.15 };
+  if (consistency >= 88) return { label: 'Fecha bem a porta por dentro', text: 'A linha de fora oferece mais espaço.', inside: -0.08, outside: 0.04 };
+  if (tyres <= 70) return { label: 'Gasta pneu no fim', text: 'Fica mais vulnerável nas voltas finais.', late: 0.08 };
+  return { label: 'Defesa comum', text: 'A disputa depende do ritmo e dos pneus.' };
+}
+
+function maneuverOdds(id, { tyre, fit = 0, profile = {}, pressure = false, mid = false }) {
+  const F = CONFIG.strategy.finale;
+  const mods = F.perFit * fit + chanceMod(tyre) + (profile[id] ?? 0)
+    + (mid ? 0 : profile.late ?? 0) + (pressure ? profile.pressure ?? 0.10 : 0);
+  const inside = id === 'inside';
+  return {
+    contact: inside ? F.inside.contact : 0,
+    good: clamp(F.pGood + (inside ? F.inside.successBonus : F.outside.successBonus) + mods, 0.05, 0.75),
+    bad: inside ? clamp(F.pBad - mods, 0.05, 0.60) : F.outside.loss,
+  };
+}
+
+export function finaleOptions(rivalName, mode = 'attack', duel = {}) {
   if (mode === 'defend') return {
     options: [
       { id: 'defend', label: 'Defender posição', description: `Disputar com ${rivalName}: pode manter a posição, mas uma defesa mal executada pode custar até duas posições.` },
@@ -97,14 +118,21 @@ export function finaleOptions(rivalName, mode = 'attack') {
   };
   return {
     options: [
-      { id: 'attack', label: 'Atacar', description: `Tentar a ultrapassagem sobre ${rivalName}: se der certo você sobe uma posição; se der errado, perde uma.` },
-      { id: 'manage', label: 'Administrar', description: 'Cuidar dos pneus e do carro e levar a posição para casa, sem risco.' },
+      ...['inside', 'outside'].map((id) => {
+        const { good, contact } = maneuverOdds(id, duel);
+        const chance = good >= 0.55 ? 'boa' : good >= 0.35 ? 'razoável' : 'difícil';
+        const risk = contact ? 'pode abandonar' : 'pode perder uma posição';
+        return attackOption({ id, attack: true, label: id === 'inside' ? 'Por dentro' : 'Por fora',
+          description: `Chance ${chance} contra ${rivalName}, ${risk}.` }, duel.tyre);
+      }),
+      duel.mid ? { id: 'press', label: 'Pressionar', description: 'Gasta um pouco de pneu e prepara outra tentativa contra o rival, sem risco de perder posição.' }
+        : { id: 'manage', label: 'Administrar', description: 'Preserva os pneus e a posição, sem risco.' },
     ],
-    safe: 'manage',
+    safe: duel.mid ? 'press' : 'manage',
   };
 }
 
-export function resolveFinale(w, player, rival, choiceId, carWeight, rng, mode = 'attack') {
+export function resolveFinale(w, player, rival, choiceId, carWeight, rng, mode = 'attack', duel = {}) {
   if (mode === 'defend') {
     const D = CONFIG.strategy.finale.defense;
     const before = w.result.indexOf(player);
@@ -112,7 +140,7 @@ export function resolveFinale(w, player, rival, choiceId, carWeight, rng, mode =
     let requestedShift = -1;
     let text = `Você cedeu a posição para ${rival.name} e evitou a disputa.`;
     if (choiceId === 'defend') {
-      const hold = clamp(D.holdChance + D.perFit * finaleFit(paceEdge(player, rival, carWeight)), D.minHold, D.maxHold);
+      const hold = clamp(D.holdChance + D.perFit * finaleFit(paceEdge(player, rival, carWeight)) + chanceMod(duel.tyre), D.minHold, D.maxHold);
       const roll = rng.next();
       if (roll < hold) {
         kind = 'good'; requestedShift = 0;
@@ -131,20 +159,33 @@ export function resolveFinale(w, player, rival, choiceId, carWeight, rng, mode =
     if (shift) text += ` Perdeu ${Math.abs(shift)} ${shift === -1 ? 'posição' : 'posições'}.`;
     return { kind, shift, label: choiceId === 'defend' ? 'Defender' : 'Ceder', text };
   }
-  if (choiceId !== 'attack') return { kind: 'none', shift: 0, label: 'Administrar', text: 'Você administrou o ritmo e levou a posição para casa.' };
-  const F = CONFIG.strategy.finale;
+  if (choiceId === 'attack') choiceId = 'inside';
+  if (choiceId === 'press') {
+    const good = duel.profile?.press && rng.next() < duel.profile.press;
+    if (good) EFFECTS.shift({ w, player }, 1);
+    return { kind: good ? 'good' : 'none', shift: good ? 1 : 0, label: 'Pressionar',
+      text: good ? `Sob pressão, ${rival.name} erra e você passa.` : `Você pressiona ${rival.name} e mantém a posição.` };
+  }
+  if (choiceId === 'manage') return { kind: 'none', shift: 0, label: 'Administrar', text: 'Você administrou o ritmo e levou a posição para casa.' };
+  const option = finaleOptions(rival.name, mode, duel).options.find(o => o.id === choiceId);
+  if (!option) throw new Error('Manobra inválida.');
+  if (option.disabled) throw new Error(NO_ATTACK);
   const fit = finaleFit(paceEdge(player, rival, carWeight));
-  const pGood = clamp(F.pGood + F.perFit * fit, 0.05, 0.7);
-  const pBad = clamp(F.pBad - F.perFit * fit, 0.05, 0.6);
-  const r = rng.next();
+  const { contact, good: pGood, bad: pBad } = maneuverOdds(choiceId, { ...duel, fit });
+  const roll = rng.next();
+  if (roll < contact) {
+    EFFECTS.dnf({ w, player });
+    return { kind: 'dnf', shift: null, label: option.label, text: `Toque na disputa com ${rival.name}. Sua corrida termina aqui.` };
+  }
+  const r = roll - contact;
   let kind = 'none';
   let shift = 0;
   if (r < pGood) { kind = 'good'; shift = 1; } else if (r < pGood + pBad) { kind = 'bad'; shift = -1; }
   if (shift !== 0) EFFECTS.shift({ w, player }, shift);
-  const text = kind === 'good' ? `Você atacou e passou ${rival.name}: +1 posição.`
+  const text = kind === 'good' ? `${option.label}: você passa ${rival.name}.`
     : kind === 'bad' ? `O ataque sobre ${rival.name} não deu certo e você perdeu uma posição.`
       : `Você atacou, mas ${rival.name} segurou a posição.`;
-  return { kind, shift, label: 'Atacar', text };
+  return { kind, shift, label: option.label, text };
 }
 
 // Resolve a aposta: sorteia bom, ruim ou neutro e move o jogador. Devolve { kind, shift, text, label }.

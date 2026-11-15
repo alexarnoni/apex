@@ -9,7 +9,7 @@ import { CONFIG } from './config.js';
 import { attributeView, trainAttributes, evolveAttributes } from './driver-attributes.js';
 import {
   enterF1, resolveSeasonFocus, resolveWeekendApproach, resolveRaceStrategy, resolveRaceStart, resolveRacePit, resolveRaceFinale, resolveTeamOrder,
-  resolveStoryEvent, resolveRaceEvent, resolveHomeRace, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View, legacyTier,
+  resolveStoryEvent, resolveRaceEvent, resolveHomeRace, openOffseason, resolveRetire, resolveF1Offer, resolveContractTerms, f1View, legacyTier, canChangeRacePosture,
 } from './f1.js';
 import { inboxView, headlineFor } from './inbox.js';
 import { createRng } from './rng.js';
@@ -164,6 +164,15 @@ export function advance(state) {
     return transition(state, (s, rng) => openOffseason(s, rng));
   }
   return state;
+}
+
+export function setRacePosture(state, id) {
+  if (!Object.hasOwn(CONFIG.tyres.posture, id)) throw new Error('Postura de corrida inválida.');
+  if (!canChangeRacePosture(state)) throw new Error('Troque a postura numa pausa em pista seca com trecho pela frente.');
+  if ((state.f1.racePosture ?? 'pace') === id) return state;
+  const next = transition(state, s => { s.f1.racePosture = id; });
+  next.history = [...(state.history ?? []), { type: 'race_posture', answer: { id } }];
+  return next;
 }
 
 export function applyDecision(state, answer) {

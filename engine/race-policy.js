@@ -6,6 +6,12 @@ export const PLAN_LABELS = { conservative: 'Preservar resultados', balanced: 'Eq
 export const racePlan = state => Object.hasOwn(PLAN_LABELS, state.f1?.racePlan) ? state.f1.racePlan : 'balanced';
 
 // Política transparente: só usa informações já exibidas na decisão, nunca RNG ou resultado oculto.
+function duelRecommendation(p) {
+  if (p.condition < 50 && p.options.some(o => o.id === 'outside' && !o.disabled)) return 'outside';
+  if (p.condition > 70 && p.faster && p.options.some(o => o.id === 'inside' && !o.disabled)) return 'inside';
+  return p.safe;
+}
+
 export function raceAdvice(state) {
   const pd = state.pendingDecision;
   if (!pd) return null;
@@ -55,14 +61,22 @@ export function raceAdvice(state) {
       id = defending > yielding * risk || (!relevant && edge >= 0 && plan !== 'conservative') ? 'defend' : 'yield';
       reason = `Você está em P${p.pos}; ${p.rival.name} pressiona logo atrás. ${relevant ? 'A disputa pode decidir pontos.' : 'O duelo envolve um adversário da sua temporada.'}`;
     } else {
-      id = edge >= (plan === 'risky' || goalUrgent ? 0 : F.opportunityEdge) && relevant && plan !== 'conservative' ? 'attack' : 'manage';
+      id = edge >= (plan === 'risky' || goalUrgent ? 0 : F.opportunityEdge) && relevant && plan !== 'conservative' ? (p.options.some(o => o.id === 'inside') ? 'inside' : 'attack') : 'manage';
       reason = `Você está em P${p.pos}; ${p.rival.name} segue logo à frente. ${relevant ? 'Há posições de pontos em disputa.' : 'Você pode enfrentar seu rival do ano.'}`;
     }
+    if (p.mode !== 'defend' && p.profile) id = duelRecommendation(p);
     if (goalUrgent && relevant) reason += ` Faltam ${goal.total - goal.done} etapas e a meta da equipe ainda não foi alcançada.`;
   } else if (pd.type === 'team_order') { id = 'obey'; important = true; reason = 'Ordem de equipe: sua decisão afeta o resultado e a confiança.'; }
   else if (pd.type === 'race_event') { important = p.options.length > 1; reason = `${p.title}: o lance acontece agora e a equipe não decide por você.`; }
   else if (pd.type === 'story_event') { important = p.options.length > 1; id = p.options[0].id; reason = 'Notícia com consequências para a carreira.'; }
   else return null;
+  if (pd.type === 'race_event' && p.eventId === 'duelo_pista') {
+    id = duelRecommendation(p);
+    reason = p.profile.text;
+  }
+  if (p.options?.some?.(o => o.id === id && o.disabled)) id = p.safe;
   if (!id) { important = true; reason = 'A equipe não tem recomendação segura para esta decisão salva.'; }
-  return { answer: id ? { id } : null, important, reason, plan, recommendation: p.options && Array.isArray(p.options) ? p.options.find(o => o.id === id)?.label : null };
+  const duel = p.eventId === 'duelo_pista' || (pd.type === 'race_finale' && p.profile && p.mode !== 'defend');
+  const automatic = duel ? p.safe : id;
+  return { answer: automatic ? { id: automatic } : null, important, reason, plan, recommendation: p.options && Array.isArray(p.options) ? p.options.find(o => o.id === id)?.label : null };
 }

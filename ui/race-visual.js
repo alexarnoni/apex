@@ -1,4 +1,4 @@
-import { TRACKS, TRACK_BOX } from '../data/trackPaths.js';
+import { TRACKS } from '../data/trackPaths.js';
 
 // Cena ilustrativa da corrida. A engine informa apenas a ordem dos carros em cada fase;
 // aqui o trecho entre duas fases vira uma volta animada, sem tempos nem distâncias reais.
@@ -10,7 +10,7 @@ const LIGHTS_MS = 1800;   // luzes de largada antes de o pelotão sair
 const SAMPLES = 720;
 const PRE_START = ['race_strategy', 'race_start'];
 // Rótulo dos lances entre duas decisões. "Largada" fica só para as luzes; o trecho depois dela já é corrida.
-const STAGE = { race_strategy: 'Primeiras voltas', race_start: 'Primeiras voltas', race_event: 'Na pista', race_pit: 'Depois do box', team_order: 'Rádio', race_finale: 'Final' };
+const STAGE = { race_strategy: 'Primeiras voltas', race_start: 'Primeiras voltas', race_event: 'Na pista', duelo_pista: 'Duelo na pista', race_pit: 'Depois do box', team_order: 'Rádio', race_finale: 'Final' };
 const STATUS = {
   waiting: 'Pista livre antes da corrida.', race_strategy: 'Grid formado.', race_start: 'Grid formado.',
   finish: 'Bandeirada.',
@@ -50,7 +50,7 @@ export function raceScene(map, key, animate) {
   if (animate && racing && before.length) {
     const was = new Map(before.map((car, i) => [car.name, i]));
     const now = new Map(names.map((name, i) => [name, i]));
-    const stage = map.phase === 'finish' ? 'Corrida' : STAGE[previousPhase] ?? 'Na pista';
+    const stage = map.phase === 'finish' ? 'Corrida' : STAGE[previousPhase === 'race_event' && scene.eventId === 'duelo_pista' ? scene.eventId : previousPhase] ?? 'Na pista';
     if (PRE_START.includes(previousPhase)) lines.push({ when: 'Largada', text: 'Apagam-se as luzes.', at: 0 });
     const gone = before.filter(car => !now.has(car.name));
     for (const car of gone) {
@@ -67,7 +67,10 @@ export function raceScene(map, key, animate) {
     if (names[0] !== before[0].name && now.has(before[0].name)) lines.push({ when: stage, text: `${names[0]} assume a liderança.`, at: moveAt(0, names.length) });
     const you = map.cars.findIndex(car => car.isPlayer);
     const yourDelta = you >= 0 ? scene.deltas[names[you]] : 0;
-    if (yourDelta) lines.push({ when: stage, text: `Você ${yourDelta > 0 ? 'ganha' : 'perde'} ${places(Math.abs(yourDelta))}: P${you + 1 + yourDelta} → P${you + 1}.`, at: moveAt(you, names.length) });
+    const moveTime = moveAt(you, names.length);
+    const playerGap = map.interruption === 'safety_car' ? GAP * .55 : GAP;
+    const moveSector = sectorAt(moveTime - (you + 1 + yourDelta / 2) * playerGap) + 1;
+    if (yourDelta) lines.push({ when: play && map.phase !== 'finish' ? `${stage} · S${moveSector}` : stage, text: `Você ${yourDelta > 0 ? 'ganha' : 'perde'} ${places(Math.abs(yourDelta))}: P${you + 1 + yourDelta} → P${you + 1}.`, at: moveAt(you, names.length) });
     moves.sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta));
     for (const move of moves.filter(m => Math.abs(m.delta) >= 2 && m.to > 1).slice(0, 2)) {
       lines.push({ when: stage, text: `${move.name} ${move.delta > 0 ? 'sobe' : 'cai'} de P${move.from} para P${move.to}.`, at: moveAt(move.to - 1, names.length) });
@@ -95,13 +98,14 @@ export function raceScene(map, key, animate) {
   lines.sort((a, b) => (a.at ?? 0) - (b.at ?? 0) || a.order - b.order);
   scene.feed.push(...lines);
   scene.fresh = scene.segment ? lines.length : 0;
-  Object.assign(scene, { key, phase: map.phase, cars: map.cars, paused: false });
+  Object.assign(scene, { key, phase: map.phase, eventId: map.eventId, cars: map.cars, paused: false });
   return model();
 }
 
 // Os traçados vêm em pontos inteiros numa grade de 200×140, o que deixa as curvas em degraus.
 // Corta os cantos duas vezes (Chaikin) só para desenhar; os dados de origem não mudam.
 const smoothed = new Map();
+const TRACK_ROTATION = { sau: -55, can: -50, ita: -45, abu: -48, bel: -35 };
 function smoothPath(id, d) {
   if (smoothed.has(id)) return smoothed.get(id);
   const nums = (d.match(/-?\d+(?:\.\d+)?/g) ?? []).map(Number);
@@ -109,6 +113,13 @@ function smoothPath(id, d) {
   for (let i = 0; i + 1 < nums.length; i += 2) pts.push([nums[i], nums[i + 1]]);
   let out = d;
   if (pts.length >= 4 && !/[^MLZ\d\s.,-]/i.test(d)) {
+    const rotation = TRACK_ROTATION[id];
+    if (rotation) {
+      const angle = rotation * Math.PI / 180;
+      const cos = Math.cos(angle);
+      const sin = Math.sin(angle);
+      pts = pts.map(([x, y]) => [100 + (x - 100) * cos - (y - 70) * sin, 70 + (x - 100) * sin + (y - 70) * cos]);
+    }
     for (let pass = 0; pass < 2; pass++) {
       const next = [];
       for (let i = 0; i < pts.length; i++) {
@@ -151,49 +162,163 @@ function at(points, fraction) {
   return { x: a[0] + (b[0] - a[0]) * t, y: a[1] + (b[1] - a[1]) * t, angle: Math.atan2(c[1] - a[1], c[0] - a[0]) };
 }
 
+const circuitDrawings = new Map();
+const SECTORS = ['#92e5eb', '#ffd07d', '#d6afff'];
+const sectorAt = fraction => Math.floor(((fraction % 1 + 1) % 1) * SECTORS.length);
+const distance = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+const nonlocal = (i, j) => Math.min(Math.abs(i - j), SAMPLES - Math.abs(i - j)) > 16;
+const pathFrom = points => `M${points.map(p => p.map(n => n.toFixed(2)).join(' ')).join('L')}`;
+
+function svgElement(svg, tag, attrs, parent = svg) {
+  const node = document.createElementNS(NS, tag);
+  for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
+  parent.append(node);
+  return node;
+}
+
+function circuitDrawing(id, points) {
+  if (circuitDrawings.has(id)) return circuitDrawings.get(id);
+  const nearby = points.map((p, i) => points.reduce((min, q, j) => nonlocal(i, j) ? Math.min(min, distance(p, q)) : min, Infinity));
+  const runs = [];
+  for (let i = 0; i < SAMPLES; i++) {
+    const sector = sectorAt((i + .5) / SAMPLES);
+    const narrow = nearby[i] < 6;
+    const run = runs.at(-1);
+    if (!run || run.sector !== sector || run.narrow !== narrow) runs.push({ sector, narrow, points: [points[i]] });
+    runs.at(-1).points.push(points[(i + 1) % SAMPLES]);
+  }
+
+  // Em Suzuka, a passagem em direção a 130R fica sobre a primeira passagem.
+  let bridge = null;
+  if (id === 'jpn') {
+    let closest = Infinity;
+    for (let i = 0; i < SAMPLES / 2; i++) {
+      for (let j = SAMPLES / 2; j < SAMPLES; j++) {
+        const gap = distance(points[i], points[j]);
+        if (nonlocal(i, j) && gap < closest) { closest = gap; bridge = j; }
+      }
+    }
+    if (closest > 2) bridge = null;
+  }
+
+  // Destaca as inflexões mais visíveis, mantendo espaço entre os números.
+  const bends = points.map((p, i) => {
+    const a = points[(i + SAMPLES - 7) % SAMPLES];
+    const b = points[(i + 7) % SAMPLES];
+    const score = 1 - distance(a, b) / (distance(a, p) + distance(p, b) || 1);
+    return { i, p, score };
+  }).filter(({ i, score }) => score > .035 && nearby[i] > 4 && i > 20 && i < SAMPLES - 20);
+  const corners = [];
+  for (const bend of bends.sort((a, b) => b.score - a.score)) {
+    if (corners.every(c => nonlocal(c.i, bend.i) && distance(c.p, bend.p) > 23)) corners.push(bend);
+    if (corners.length === 4) break;
+  }
+  corners.sort((a, b) => a.i - b.i);
+  const drawing = { runs, bridge, corners, nearby };
+  circuitDrawings.set(id, drawing);
+  return drawing;
+}
+
+function drawCircuit(svg, id, miniature = false) {
+  const d = smoothPath(id, TRACKS[id].d);
+  const add = (tag, attrs) => svgElement(svg, tag, attrs);
+  const guide = add('path', { d, class: 'track-guide' });
+  const points = lookup(id, guide);
+  const { x, y, width, height } = guide.getBBox();
+  const [left, top, w, h] = [x - 15, y - 17, width + 30, height + 34];
+  svg.setAttribute('viewBox', `${left} ${top} ${w} ${h}`);
+  const { runs, bridge, corners, nearby } = circuitDrawing(id, points);
+  for (const run of runs) {
+    const d = pathFrom(run.points);
+    add('path', { d, class: 'track-road', 'stroke-width': run.narrow ? 2.8 : 4.5 });
+    add('path', { d, class: 'track-sector', stroke: SECTORS[run.sector], 'stroke-width': run.narrow ? 1.45 : 2.6 });
+  }
+  if (bridge !== null) {
+    const d = pathFrom(points.slice(bridge - 7, bridge + 8));
+    add('path', { d, class: 'track-bridge-shadow', 'stroke-width': 8 });
+    add('path', { d, class: 'track-road', 'stroke-width': 5 });
+    add('path', { d, class: 'track-sector', stroke: SECTORS[sectorAt(bridge / SAMPLES)], 'stroke-width': 2.6 });
+  }
+
+  const start = at(points, 0);
+  const tx = Math.cos(start.angle);
+  const ty = Math.sin(start.angle);
+  // Box esquemático paralelo à largada. Escolhe o lado mais afastado do restante do circuito.
+  const clearance = side => points.reduce((min, q, i) => nonlocal(0, i) ?
+    Math.min(min, distance([start.x - ty * side * 8, start.y + tx * side * 8], q)) : min, Infinity);
+  const side = clearance(1) > clearance(-1) ? 1 : -1;
+  const local = (along, across) => [start.x + tx * along - ty * across * side, start.y + ty * along + tx * across * side];
+  add('path', { d: pathFrom([local(-12, 0), local(-8, 6), local(8, 6), local(12, 0)]), class: 'track-pit' });
+
+  const arrowCount = miniature ? 5 : 8;
+  for (let i = 0; i < arrowCount; i++) {
+    const target = Math.round((i + .6) * SAMPLES / arrowCount);
+    const index = Array.from({ length: 21 }, (_, k) => target - 10 + k)
+      .reduce((best, k) => nearby[k] > nearby[best] ? k : best, target);
+    const p = at(points, index / SAMPLES);
+    const offset = miniature ? 0 : 4.5;
+    const marker = side => [p.x - Math.sin(p.angle) * offset * side, p.y + Math.cos(p.angle) * offset * side];
+    const clearance = xy => points.reduce((min, q, j) => nonlocal(index, j) ? Math.min(min, distance(xy, q)) : min, Infinity);
+    const a = marker(-1);
+    const b = marker(1);
+    const [x, y] = !offset || clearance(a) > clearance(b) ? a : b;
+    add('path', { d: 'M-2.6 -2L2.4 0L-2.6 2Z', class: 'track-arrow',
+      transform: `translate(${x} ${y}) rotate(${p.angle * 180 / Math.PI})` });
+  }
+  for (const [cls, shift] of [['track-finish', 0], ['track-finish alt', .9]]) {
+    const [a, b] = [local(shift, 3.4), local(shift, -3.4)];
+    add('line', { class: cls, x1: a[0], y1: a[1], x2: b[0], y2: b[1] });
+  }
+  if (!miniature) {
+    const label = (text, point, cls) => {
+      const node = add('text', { x: point[0], y: point[1], class: cls });
+      node.textContent = text;
+      const box = node.getBBox();
+      const dx = Math.max(0, left + 2 - box.x) - Math.max(0, box.x + box.width - (left + w - 2));
+      const dy = Math.max(0, top + 2 - box.y) - Math.max(0, box.y + box.height - (top + h - 2));
+      node.setAttribute('x', point[0] + dx);
+      node.setAttribute('y', point[1] + dy);
+      return node;
+    };
+    const finishLabel = label('Largada / chegada', local(0, -8), 'track-caption').getBBox();
+    const pitLabel = label('Boxes', local(0, 10), 'track-caption');
+    const pitBox = pitLabel.getBBox();
+    if (pitBox.x < finishLabel.x + finishLabel.width && pitBox.x + pitBox.width > finishLabel.x
+        && pitBox.y < finishLabel.y + finishLabel.height && pitBox.y + pitBox.height > finishLabel.y) {
+      const below = finishLabel.y + finishLabel.height + 2;
+      const target = below + pitBox.height < top + h - 2 ? below : finishLabel.y - pitBox.height - 2;
+      pitLabel.setAttribute('y', Number(pitLabel.getAttribute('y')) + target - pitBox.y);
+    }
+    for (const [i, bend] of corners.entries()) {
+      const p = at(points, bend.i / SAMPLES);
+      const options = [-1, 1].map(side => [p.x - Math.sin(p.angle) * 6 * side, p.y + Math.cos(p.angle) * 6 * side]);
+      const gap = pt => points.reduce((min, q, j) => nonlocal(bend.i, j) ? Math.min(min, distance(pt, q)) : min, Infinity);
+      label(String(i + 1), gap(options[0]) > gap(options[1]) ? options[0] : options[1], 'track-corner');
+    }
+  }
+  return { points, left, top, w, h };
+}
+
+export function paintCircuitPreviews(root) {
+  for (const svg of root.querySelectorAll('[data-circuit-preview]')) {
+    const id = svg.dataset.circuitPreview;
+    if (Object.hasOwn(TRACKS, id)) drawCircuit(svg, id, true);
+  }
+}
+
 export function paintRaceScene(root, map, colors) {
   cancelAnimationFrame(frame);
   const panel = root.querySelector('.race-visual');
-  const track = TRACKS[map.circuit.id];
-  if (!panel || !track) return;
+  if (!panel || !TRACKS[map.circuit.id]) return;
   const svg = panel.querySelector('svg');
-  svg.setAttribute('viewBox', `0 0 ${TRACK_BOX.w} ${TRACK_BOX.h}`);
   svg.classList.toggle('wet', !!map.wet);
-  const element = (tag, attrs, parent = svg) => {
-    const node = document.createElementNS(NS, tag);
-    for (const [key, value] of Object.entries(attrs)) node.setAttribute(key, value);
-    parent.append(node);
-    return node;
-  };
-
-  // Pista em camadas: zebra por baixo, asfalto por cima e a linha central tracejada.
-  const d = smoothPath(map.circuit.id, track.d);
-  element('path', { d, class: 'track-kerb' });
-  element('path', { d, class: 'track-kerb-red' });
-  const road = element('path', { d, class: 'track-road' });
-  element('path', { d, class: 'track-centre' });
-  const points = lookup(map.circuit.id, road);
-  // Setas de sentido ao longo da pista: ajudam a ler traçados com trechos próximos ou que se cruzam.
-  for (const f of [.14, .39, .64, .89]) {
-    const p = at(points, f);
-    element('path', { d: 'M-1.3 -1.2L1.2 0L-1.3 1.2', class: 'track-arrow',
-      transform: `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)}) rotate(${(p.angle * 180 / Math.PI).toFixed(1)})` });
-  }
-  const line = at(points, 0);
-  const nx = -Math.sin(line.angle);
-  const ny = Math.cos(line.angle);
-  for (const [cls, shift] of [['track-finish', 0], ['track-finish alt', .9]]) {
-    element('line', {
-      class: cls,
-      x1: line.x + nx * 3.4 + Math.cos(line.angle) * shift, y1: line.y + ny * 3.4 + Math.sin(line.angle) * shift,
-      x2: line.x - nx * 3.4 + Math.cos(line.angle) * shift, y2: line.y - ny * 3.4 + Math.sin(line.angle) * shift,
-    });
-  }
+  const element = (tag, attrs, parent) => svgElement(svg, tag, attrs, parent);
+  const { points, left, top, w, h } = drawCircuit(svg, map.circuit.id);
   if (map.wet) {
     const rain = element('g', { class: 'track-rain', 'aria-hidden': 'true' });
     for (let i = 0; i < 36; i++) {
-      const x = (i * 37) % TRACK_BOX.w;
-      const y = (i * 53) % TRACK_BOX.h;
+      const x = left + (i * 37) % w;
+      const y = top + (i * 53) % h;
       element('line', { x1: x, y1: y, x2: x - 2, y2: y + 6 }, rain);
     }
   }
@@ -218,8 +343,9 @@ export function paintRaceScene(root, map, colors) {
   halo.toggleAttribute('hidden', !player);
 
   const lights = element('g', { class: 'start-lights', hidden: '' });
-  element('rect', { x: 78, y: 3, width: 44, height: 11, rx: 3 }, lights);
-  const lamps = [0, 1, 2, 3, 4].map(i => element('circle', { cx: 84 + i * 8, cy: 8.5, r: 2.6 }, lights));
+  const lightX = left + w / 2;
+  element('rect', { x: lightX - 22, y: top + 2, width: 44, height: 11, rx: 3 }, lights);
+  const lamps = [0, 1, 2, 3, 4].map(i => element('circle', { cx: lightX - 16 + i * 8, cy: top + 7.5, r: 2.6 }, lights));
 
   const put = (node, fraction, side, scale) => {
     const p = at(points, fraction);

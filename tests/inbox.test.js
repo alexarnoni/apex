@@ -76,3 +76,15 @@ test('manchete devolve null sem corrida e um texto com o nome quando há vitóri
   base.f1.season.lastRace.grid = 10;
   assert.match(headlineFor(base).title, /supera Rival/);
 });
+
+
+test('a estreia na F1 e um título da F2 ganham mensagens próprias', () => {
+  const s = playedF1(2);
+  const f2 = { year: s.year - 1, categoryId: 'f2', position: 1, team: 'Teste', points: 250 };
+  s.baseCareer.seasons = [f2, { ...f2, year: f2.year - 1, position: 2 }];
+  const inbox = inboxView(JSON.parse(JSON.stringify(s)));
+  assert.equal(inbox.filter(m => m.title === 'Estreia na F1').length, 1);
+  assert.equal(inbox.filter(m => m.title === 'Título da F2').length, 1);
+  assert.match(inbox.find(m => m.title === 'Título da F2').text, /250 pontos/);
+  assert.equal(getView(s).f1.firstRace, false);
+});

@@ -11,6 +11,7 @@ Todas rodam em Node, sem dependências, e usam só a API pública do jogo e o mo
 | Comando | O que mede | Tempo |
 |---|---|---|
 | `npm run balance` | O mundo da F1 em 200 x 25 temporadas (campeões distintos, dinastias, idade do campeão, p2 da equipe dominante) e a base (kart: posição média e distribuição de ofertas). É a ferramenta original (`tools/balance.js`). | ~2 min |
+| `npm run calibrate:kart` | Triagem do bônus do chassi e comparação de carreiras completas com o treinador e com a configuração atual. Use `-- --screen` para medir só a primeira temporada. | Varia com os candidatos |
 | `npm run calibrate:player -- --policy a --n 300` | Carreiras do jogador: % que chega à F1, % com ao menos um título, títulos e vitórias por carreira. | ~12 min por 300 |
 | `npm run calibrate:champions -- --runs 120` | Realismo por época: habilidade do campeão, títulos de equipes de orçamento baixo, campeão com piloto fraco, dinastias. | ~3 min |
 | `npm run calibrate:veterans -- --runs 120` | Veteranos: campeão com 35+ e 38+ anos, pilotos de 38+ no grid, veteranos no top 3 e top 5. | ~3 min |
@@ -186,3 +187,69 @@ Cada composto é o melhor em um tipo de pista: duros na técnica, macios na de r
 Rodadas de ajuste (ganho dos macios em pista comum): aderência 0,04 sem custo de parada +0,16; aderência 0,06 com custo 0,75 +0,04 (política `attack` 24% de títulos, reprovada); aderência 0,05 com custo 1 -0,17; final -0,09.
 
 Carreiras com título em 300 seeds (269 chegam à F1, 90%): base antes dos pneus 35 (13%); política `a` 32 (12%); política `attack` 48 (18%). Critérios: `a` dentro de ±4 pontos da base (ok); `attack` abaixo de 25% (ok) e no máximo 5 pontos acima de `a` (**6 pontos, no limite da margem de erro de ±2,3**). Não medido: quanto desses 6 pontos vem dos pneus e quanto dos ataques na largada, nos eventos e no duelo final, que já existiam; medir uma política "ataca mas usa médios" antes da etapa B.
+
+Em 2026-11-15, `node tools/calibrate/player.js --policy attack_medium --n 300` repetiu as decisões agressivas com médios na largada e nas paradas em pista seca. Das 300 carreiras, 269 chegaram à F1 e 56 ganharam título (21% das que chegaram, ±2,5 pontos). Na mesma faixa de seeds, os registros anteriores têm 48 carreiras com título com macios (18%) e 32 na política padrão (12%). A vantagem da política agressiva persistiu com médios. Na v0.18.0, as opções de evento ainda não têm a marcação de ataque, então as duas políticas agressivas usam a mesma escolha padrão nos eventos.
+
+### Etapas B e C (2026-11-15)
+
+Série controlada de 2.000 corridas por política e por composto, com o mesmo Ferrari, piloto de habilidade 85, seeds 1–2.000 e amostras nas 24 pistas. As 100 primeiras seeds foram medidas na pista de estreia. Na comparação por composto, só muda a escolha de largada em pista seca. Posição média de chegada calculada entre classificados e abandonos registrados à parte. A coluna com abandono em último inclui os abandonos como P23.
+
+| Etapa / política | Posição média entre classificados | Abandonos | Posição média com abandono em último |
+|---|---:|---:|---:|
+| B / padrão | 9,07 | 336 (16,8%) | 11,41 |
+| B / agressiva, macios | 8,75 | 412 (20,6%) | 11,69 |
+| C / padrão | 9,10 | 336 (16,8%) | 11,44 |
+| C / agressiva, macios | 8,73 | 437 (21,9%) | 11,85 |
+
+Com custo de 10 pontos de pneu e bônus por dentro de +0,10, a posição média agressiva entre classificados foi 9,12 em B e 9,10 em C. Aumentar só o bônus por dentro para +0,18 ou +0,24 ainda deixava B atrás da política padrão. Reduzir só o custo para 6 pontos melhorou as chegadas, mas por fora teve o maior ganho médio nos três níveis de condição testados. A configuração combinada usa custo de 6 pontos e bônus por dentro de +0,18, com o toque mantido em 3%.
+
+Na média com o mesmo peso para cada pista e abandono em P23, os compostos ficaram a menos de 0,10 posição entre si em B e C. Macios, médios e duros ficaram isolados em primeiro respectivamente em 10, 9 e 3 pistas em B e em 12, 9 e 3 em C.
+
+Nos duelos de ritmo igual (2.000 sorteios por manobra e condição, com médios), o ganho médio entre classificados por dentro/por fora foi +0,24/+0,18 com pneu a 90%, +0,07/+0,11 a 60% e -0,09/+0,03 a 30%. Por dentro teve 74 abandonos em cada condição (3,7%). Por fora e administrar terminaram todos os duelos.
+
+Na etapa C, 92 das 100 primeiras seeds de carreiras novas (idade 15) chegaram à F1. Na corrida de estreia, 73 delas (79%) tiveram três ou mais pausas, com média de 3,30 pausas.
+
+### Carreiras completas (300 seeds por política)
+
+A partir de B, a política padrão do calibrador passou a responder com a opção segura dos eventos. Na v0.18.0 histórica ela respondia com a primeira opção, que em alguns eventos arriscava posição ou abandono. Esta diferença deve ser levada em conta ao comparar as taxas de títulos.
+
+Na primeira rodada de B (desgaste 10, bônus por dentro +0,10), 269 das 300 carreiras chegaram à F1. A padrão teve 48 carreiras com título (18%), agressiva com macios 41 (15%) e agressiva com médios 38 (14%). A taxa padrão ficou acima da margem de 4 pontos sobre os 12% históricos.
+
+
+Configuração final com desgaste 6 e bônus por dentro de +0,18. Em cada linha, 269 das 300 carreiras chegaram à F1 (89,7%). As taxas usam essas 269 como denominador.
+
+| Etapa | Padrão | Agressiva com macios | Agressiva com médios |
+|---|---:|---:|---:|
+| B | 48 (17,8%) | 55 (20,4%) | 44 (16,4%) |
+| C | 44 (16,4%) | 54 (20,1%) | 63 (23,4%) |
+
+A política `attack` definida na especificação usa macios. Ela ficou 2,6 pontos acima do padrão em B e 3,7 em C, dentro do limite de 5 pontos e abaixo de 25%. A política adicional `attack_medium` ficou 7,1 pontos acima do padrão em C e também abaixo de 25%. A comparação com a v0.18.0 histórica (32 de 269, 11,9%) excede a margem de 4 pontos em B (+5,9) e C (+4,5).
+
+Controle na v0.18.0 publicada (código de `HEAD`), com a resposta segura nos eventos como nas etapas B e C. Das 300 carreiras, 269 chegaram à F1 e 48 conquistaram pelo menos um título (17,8%). Com a política igual, B ficou no mesmo percentual e C ficou 1,5 ponto abaixo, dentro da margem de 4 pontos. A chegada à F1 foi igual nas três versões. O controle reproduziu a alta observada em B em relação aos 11,9% históricos.
+
+### Postura de corrida (v0.18.3, 2026-11-15)
+
+Medição pareada nas 24 pistas com Ferrari e piloto de habilidade 85. Das seeds 1 a 1.200, 889 abriram decisão de pneus em pista seca. Foram repetidas com as nove combinações de postura fixa e composto de largada, usando a política padrão nas outras escolhas. Nenhum abandono ocorreu nessa amostra, que exclui corridas encerradas antes da escolha de pneus.
+
+| Composto | Atacar | Ritmo | Poupar |
+|---|---:|---:|---:|
+| Macios | 10,41 | 8,98 | **8,60** |
+| Médios | **8,88** | 9,04 | 9,09 |
+| Duros | **8,77** | 9,14 | 9,33 |
+
+Cada célula informa a posição média de chegada. A configuração usa multiplicadores de desgaste 1,65 / 1 / 0,50 e modificadores de ritmo +0,06 / 0 / -0,035 para Atacar, Ritmo e Poupar. Ritmo preserva o cálculo anterior. A amostra mede corridas, sem estimativa de títulos para as novas posturas.
+
+### Ajustador do chassi (v0.19, 2026-11-15)
+
+O comando `npm run calibrate:kart` usa 300 seeds pareadas por padrão. Compara a posição na primeira temporada e passa para a carreira completa quando o chassi melhora pelo menos meia posição sobre o treinador. Testa primeiro o menor bônus elegível. A taxa de títulos entre quem chega à F1 deve ficar entre 15% e 20% e a até 4 pontos percentuais do chassi atual. A chegada à F1 deve ficar a até 3 pontos do chassi atual. A ferramenta imprime uma proposta para revisão; a configuração do jogo continua em `engine/config.js`.
+
+Na triagem com 300 seeds, a chegada média foi 11,84 com treinador e 11,91, 11,45, 10,98 e 10,41 com chassi +2, +3, +4 e +5, respectivamente. Os bônus +4 e +5 cumpriram a vantagem imediata adotada na ferramenta.
+
+| Política | Chegaram à F1 | Com título entre quem chegou |
+|---|---:|---:|
+| Chassi +2 (atual) | 269/300 (89,67%) | 44/269 (16,36%) |
+| Treinador no kart | 263/300 (87,67%) | 54/263 (20,53%) |
+| Chassi +4 | 259/300 (86,33%) | 44/259 (16,99%) |
+| Chassi +5 | 260/300 (86,67%) | 48/260 (18,46%) |
+
+O chassi +4 ultrapassou a tolerância de chegada à F1 em 0,33 ponto percentual. O chassi +5 ficou no limite de 3 pontos de chegada e dentro da faixa de títulos, a 2,10 pontos do atual. A ferramenta sugeriu +5 para revisão; a v0.19.0 usa o chassi +2. O achado 35 segue aberto até a decisão de balanceamento.

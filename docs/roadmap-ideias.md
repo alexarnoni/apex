@@ -52,13 +52,14 @@ O intervalo entre etapas hoje é o trecho mais vazio. Quase tudo é interface. *
 
 Protege o progresso e prepara o volta a volta. **Pronto quando:** um save da v0.14 abre em qualquer versão futura e a simulação não trava a tela.
 
-- [ ] Migração de saves (B.7) e captura de erros (B.9).
-- [x] ~~Exportar e importar save em arquivo.~~ **Feito**, já disponível antes da v0.14.1, conferido em 2026-11-09. Migração de formato segue em B.7.
+- [x] ~~B.7 Migração de saves.~~ **Feito localmente em 2026-11-15.** Validado com saves da v0.14.7 no kart e na F1.
+- [x] ~~B.9 Captura de erros.~~ **Implementada localmente em 2026-11-15.** Envio opcional via Worker, validado com destino simulado. Entrega real pendente de verificação.
+- [x] ~~Exportar e importar save em arquivo.~~ **Feito**, já disponível antes da v0.14.1, conferido em 2026-11-09. Migração de formato implementada localmente em B.7.
 - [ ] **Novo:** aviso de duas abas no mesmo save e pedido de armazenamento persistente ao navegador.
 - [ ] **Novo:** Web Worker para simular fora da thread da tela.
 - [ ] Teste de desempenho em carreira longa e celular fraco (F.17); mais testes de regressão das fórmulas (seção "Pendências de qualidade").
-- [ ] Pipeline único de publicação (F.14).
-- [ ] **Novo:** ajustador automático de calibração: roda as simulações, compara com as metas de `calibracao.md` e propõe valores para `engine/config.js`. Ferramenta de desenvolvimento, sem IA e fora do navegador; a mudança só entra com aprovação.
+- [x] ~~F.14 Pipeline único de publicação.~~ **Implementado em 2026-11-15.** `npm run release` roda Node, balanceamento, build e Playwright. O Pages publica o artefato validado.
+- [x] ~~Ajustador automático de calibração.~~ **Feito em 2026-11-15.** `npm run calibrate:kart` sugeriu chassi +5 em 300 seeds por política. Configuração +2 em jogo até revisão do achado 35.
 - [ ] Separar os textos do código, primeira metade do F.18.
 - [ ] Atalhos de teclado (seção "Ideias para evoluir a tela de corrida").
 - [ ] **Novo:** acessibilidade além da cor: padrão por equipe, alto contraste e tamanho de fonte. Junto com "cores com significado" (seção "Imersão").

@@ -29,10 +29,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
       - run: npx playwright install --with-deps chromium --only-shell
-      - run: npm run test:ui
-      - run: npm run build
+      - run: npm run release
         env:
           # O botão "Enviar pelo GitHub" do formulário de feedback abre uma issue neste repositório.
           BANDEIRADA_FEEDBACK_URL: https://github.com/${{ github.repository }}/issues/new

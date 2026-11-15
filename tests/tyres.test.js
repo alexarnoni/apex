@@ -27,9 +27,9 @@ test('pista molhada: condição fixa, aderência zero', () => {
 
 test('spend, attacksLeft e isDead', () => {
   const t = startTyre('medium');
-  assert.equal(spend(t, T.attackWear), 90);
+  assert.equal(spend(t, T.attackWear), t.condition - T.attackWear);
   assert.equal(attacksLeft(t), Math.floor((100 - T.dead) / T.attackWear));
-  assert.equal(attacksLeft({ ...t, condition: 20 }), 0);
+  assert.equal(attacksLeft({ ...t, condition: T.dead + T.attackWear - 1 }), 0);
   assert.ok(isDead({ ...t, condition: T.dead }));
   assert.ok(!isDead({ ...t, condition: T.dead + 1 }));
 });
