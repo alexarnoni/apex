@@ -205,17 +205,19 @@ Aba **Mensagens** derivada do estado (`engine/inbox.js`): cartas do careerLog, u
 Campo opcional novo em `season.cur.tyre` (`compound`, `condition`, `wearFactor`, `fit`) e `season.cur.tyreLog`; lidos com valor padrão (condição 70, sem composto) quando faltam. Nova resposta `pit_soft` na janela de box. ENGINE_VERSION 1 sem mudança; saves antigos continuam abrindo (uma corrida em andamento nesse save segue sem pneu simulado). Corridas passam a sair diferentes das versões anteriores com a mesma seed.
 
 
-## v0.18.1 e v0.18.2 implementadas localmente
+## v0.18.1 e v0.18.2 incluídas na v0.19.0
 
 A etapa B passa a consumir pneu nos ataques e aceita o ID antigo `attack` como sinônimo de `inside` no duelo final. A etapa C acrescenta `season.cur.pressure` e `season.cur.overtakes` opcionais, o rival da decisão de meio da corrida em `season.pendingRace.duelRival` e o total de ultrapassagens próprias no resultado da corrida. Saves antigos seguem sem migração com `ENGINE_VERSION` 1 e usam 0 ultrapassagens para calcular a nota quando o campo falta.
 
 
-## v0.18.3 implementada localmente
+## v0.18.3 incluída na v0.19.0
 
 Campo opcional `f1.racePosture` guarda Atacar, Ritmo ou Poupar. Saves anteriores usam Ritmo. A troca durante uma pausa em pista seca entra no histórico como `race_posture`, sem responder à decisão pendente e sem consumir RNG. ENGINE_VERSION 1 preservada.
 
 
 ## v0.19.0
+
+Publicada em 2026-11-15 no commit `356ad93`. A versão servida foi confirmada no domínio público após o [deploy do Pages](https://github.com/alexarnoni/apex/actions/runs/43770403753).
 
 Os envelopes de slot e de exportação passam a registrar `schemaVersion: 1`, separado de `ENGINE_VERSION`. Envelopes legados sem revisão migram em memória, inicializando histórico e postura quando faltam. O próximo salvamento grava o formato atual. Outra aba que já tenha alterado o slot gera um aviso e bloqueia a gravação desatualizada. O menu oferece o pedido de armazenamento persistente quando o navegador expõe essa opção. Com Worker configurado e opção ativada em Ajuda, falhas disparam diagnósticos limitados a versão, classe do erro, origem e linha/coluna quando disponíveis.
 
